@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="openjfx-24.0.1_windows-x64_bin-sdk">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/main/java/util/openjfx-24.0.1_windows-x64_bin-sdk.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

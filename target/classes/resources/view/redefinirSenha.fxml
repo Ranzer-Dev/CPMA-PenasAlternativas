@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.control.PasswordField?>
+
+<StackPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.RedefinirSenhaController">
+   <children>
+      <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0">
+         <children>
+            <Text boundsType="VISUAL" fill="#3836af" layoutX="410.0" layoutY="57.0" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER" wrappingWidth="173.9375">
+               <font>
+                  <Font name="System Bold" size="32.0" />
+               </font>
+            </Text>
+            <Text boundsType="VISUAL" fill="#3836af" layoutX="444.0" layoutY="68.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER">
+               <font>
+                  <Font size="6.0" />
+               </font>
+            </Text>
+            <TextField fx:id="campoRespostaSecreta" layoutX="171.0" layoutY="171.0" prefHeight="25.0" prefWidth="233.0" visible="false" />
+            <Label fx:id="labelPerguntaSecreta" layoutX="171.0" layoutY="87.0" text="Pergunta secreta" visible="false">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Label>
+            <Text fx:id="campoPerguntaSecreta" layoutX="171.0" layoutY="130.0" strokeType="OUTSIDE" strokeWidth="0.0" visible="false" />
+            <Label fx:id="labelRespostaSecreta" layoutX="171.0" layoutY="146.0" text="Resposta secreta" visible="false">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Label>
+            <TextField fx:id="campoUsuario" layoutX="171.0" layoutY="114.0" prefHeight="25.0" prefWidth="233.0" />
+            <Label fx:id="labelUsuario" layoutX="171.0" layoutY="87.0" text="Usuário">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Label>
+            <Button fx:id="procurar" layoutX="257.0" layoutY="210.0" mnemonicParsing="false" text="Procurar">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+            </Button>
+            <Label fx:id="mensagemErro" layoutX="221.0" layoutY="247.0" text="*Usuário não encontrado" visible="false" />
+            <PasswordField fx:id="campoNovaSenha" layoutX="172.0" layoutY="159.0" prefHeight="25.0" prefWidth="233.0" visible="false" />
+            <Label fx:id="labelNovaSenha" layoutX="172.0" layoutY="138.0" text="Digite a nova senha" visible="false">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Label>
+            <Button fx:id="telaInicio" layoutX="472.0" layoutY="324.0" mnemonicParsing="false" text="Inicio" />
+         </children>
+      </AnchorPane>
+   </children>
+</StackPane>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="672.0" prefWidth="859.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.LoginController">
+   <children>
+      <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0">
+         <children>
+            <TextField fx:id="campoUsuario" layoutX="881.0" layoutY="486.0" prefHeight="32.0" prefWidth="208.0" promptText="CPF" />
+            <Button fx:id="botaoEntrar" layoutX="936.0" layoutY="658.0" mnemonicParsing="false" prefWidth="100.0" styleClass="botao_login" text="Entrar" textAlignment="CENTER" textFill="WHITE" />
+            <PasswordField fx:id="campoSenha" layoutX="881.0" layoutY="540.0" prefHeight="32.0" prefWidth="208.0" promptText="Senha" />
+            <Text boundsType="VISUAL" fill="#3836af" layoutX="834.0" layoutY="401.0" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER" wrappingWidth="297.8203125">
+               <font>
+                  <Font name="System Bold" size="80.0" />
+               </font>
+            </Text>
+            <Text boundsType="VISUAL" fill="#3836af" layoutX="808.0" layoutY="431.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER">
+               <font>
+                  <Font size="20.0" />
+               </font>
+            </Text>
+            <Hyperlink fx:id="linkRedefinirSenha" layoutX="940.0" layoutY="578.0" text="Redefinir Senha" textFill="#626262" />
+            <Label fx:id="mensagemErro" layoutX="914.0" layoutY="632.0" text="*CPF ou senha incorretos" textFill="RED" visible="false" />
+            <ImageView fitHeight="85.0" fitWidth="150.0" layoutX="1002.0" layoutY="743.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@fatec_ra_sorocaba_votorantim_cor.png" />
+               </image>
+            </ImageView>
+            <ImageView fitHeight="96.0" fitWidth="133.0" layoutX="797.0" layoutY="714.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@Votorantim_Brasao.png" />
+               </image>
+            </ImageView>
+            <Text layoutX="1089.0" layoutY="841.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Desenvolvido pela Fatec Votorantim  versão 1.0" />
+         </children>
+      </AnchorPane>
+   </children>
+</StackPane>

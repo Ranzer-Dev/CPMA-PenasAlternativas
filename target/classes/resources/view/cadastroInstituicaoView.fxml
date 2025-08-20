@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<StackPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CadastrarInstituicaoController">
+    <children>
+        <AnchorPane prefHeight="620.0" prefWidth="600.0">
+            <children>
+
+                <Text fill="#3836af" layoutX="32.0" layoutY="49.0" text="CPMA">
+                    <font><Font name="System Bold" size="32.0" /></font>
+                </Text>
+                <Text fill="#3836af" layoutX="25.0" layoutY="64.0" text="Central de Penas e Medidas Alternativas">
+                    <font><Font size="6.0" /></font>
+                </Text>
+
+                <Label layoutX="30.0" layoutY="90.0" text="Nome" />
+                <TextField fx:id="nome" layoutX="30.0" layoutY="110.0" prefHeight="25.0" prefWidth="540.0" />
+
+                <ComboBox fx:id="comboInstituicoes" layoutX="307.0" layoutY="110.0" prefHeight="25.0" prefWidth="263.0" promptText="Selecione uma Instituição p/ Editar" visible="false" />
+
+                <Label layoutX="30.0" layoutY="150.0" text="Endereço" />
+                <TextField fx:id="endereco" layoutX="30.0" layoutY="170.0" prefWidth="540.0" />
+
+                <Label layoutX="30.0" layoutY="210.0" text="Cidade" />
+                <TextField fx:id="cidade" layoutX="30.0" layoutY="230.0" prefHeight="25.0" prefWidth="189.0" />
+
+                <Label layoutX="238.0" layoutY="210.0" text="UF" />
+                <TextField fx:id="uf" layoutX="238.0" layoutY="230.0" prefWidth="50.0" />
+
+                <Label layoutX="313.0" layoutY="210.0" text="Bairro" />
+                <TextField fx:id="bairro" layoutX="306.0" layoutY="230.0" prefHeight="25.0" prefWidth="264.0" />
+
+                <Label layoutX="30.0" layoutY="270.0" text="CEP" />
+                <TextField fx:id="cep" layoutX="30.0" layoutY="290.0" prefWidth="180.0" />
+
+                <Label layoutX="228.0" layoutY="270.0" text="Tipo de Instituição" />
+                <ComboBox fx:id="comboTipo" layoutX="228.0" layoutY="290.0" prefWidth="342.0" />
+
+                <Label layoutX="30.0" layoutY="330.0" text="Responsável" />
+                <TextField fx:id="responsavel" layoutX="30.0" layoutY="350.0" prefWidth="540.0" />
+
+                <Label layoutX="30.0" layoutY="390.0" text="Telefone" />
+                <TextField fx:id="telefone" layoutX="30.0" layoutY="410.0" prefWidth="180.0" />
+
+                <TableView fx:id="tabelaHorarios" layoutX="30.0" layoutY="450.0" prefWidth="540.0" prefHeight="100.0" editable="false">
+                    <columns>
+                        <TableColumn fx:id="colDia" text="Dia da Semana" prefWidth="180.0" />
+                        <TableColumn fx:id="colInicio1" text="Início 1" prefWidth="90.0" />
+                        <TableColumn fx:id="colInicio2" text="Início 2" prefWidth="90.0" />
+                        <TableColumn fx:id="colFim1" text="Fim 1" prefWidth="90.0" />
+                        <TableColumn fx:id="colFim2" text="Fim 2" prefWidth="90.0" />
+                        <TableColumn fx:id="colAcao" text="" prefWidth="50.0" />
+                    </columns>
+                </TableView>
+
+                <Button fx:id="btnAdicionarHorario" layoutX="30.0" layoutY="560.0" prefWidth="160.0" text="Adicionar Horário" />
+                <Button fx:id="btnRemoverHorario" layoutX="210.0" layoutY="560.0" prefWidth="160.0" text="Remover Selecionado" />
+
+                <Button fx:id="btnCadastrar" layoutX="150.0" layoutY="590.0" prefWidth="130.0" text="Cadastrar" />
+                <Button fx:id="btnCancelar" layoutX="320.0" layoutY="590.0" prefWidth="130.0" text="Cancelar" />
+
+            </children>
+        </AnchorPane>
+    </children>
+</StackPane>

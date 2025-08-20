@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+<StackPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.DetalheApenadoController">
+   <children>
+      <AnchorPane prefWidth="650" prefHeight="650">
+         <children>
+            <Text layoutX="32"  layoutY="49"  text="CPMA" fill="#3836af">
+               <font><Font name="System Bold" size="32"/></font>
+            </Text>
+            <Text layoutX="25"  layoutY="64"  text="Central de Penas e Medidas Alternativas"
+                  fill="#3836af"><font><Font size="6"/></font></Text>
+
+            <ImageView fx:id="imgFoto" layoutX="25" layoutY="80" fitWidth="100" fitHeight="100"/>
+
+            <Label text="Nome"              layoutX="145" layoutY="80"/>
+            <TextField fx:id="txtNome"      layoutX="145" layoutY="100" prefWidth="470" editable="false"/>
+
+            <Label text="CPF"               layoutX="145" layoutY="135"/>
+            <TextField fx:id="txtCpf"       layoutX="145" layoutY="155" prefWidth="135" editable="false"/>
+
+            <Label text="Data nasc."        layoutX="295" layoutY="135"/>
+            <TextField fx:id="txtDataNasc"  layoutX="295" layoutY="155" prefWidth="135" editable="false"/>
+
+            <Label text="Código"            layoutX="445" layoutY="135"/>
+            <TextField fx:id="txtCodigo"    layoutX="445" layoutY="155" prefWidth="135" editable="false"/>
+
+            <Label text="Endereço"          layoutX="25"  layoutY="190"/>
+            <TextField fx:id="txtEndereco"  layoutX="25"  layoutY="210" prefWidth="405" editable="false"/>
+
+            <Label text="Bairro"            layoutX="25"  layoutY="245"/>
+            <TextField fx:id="txtBairro"    layoutX="25"  layoutY="265" prefWidth="200" editable="false"/>
+
+            <Label text="Cidade"            layoutX="240" layoutY="245"/>
+            <TextField fx:id="txtCidade"    layoutX="240" layoutY="265" prefWidth="190" editable="false"/>
+
+            <Label text="UF"                layoutX="445" layoutY="245"/>
+            <TextField fx:id="txtUf"        layoutX="445" layoutY="265" prefWidth="50"  editable="false"/>
+
+            <Label text="Nacionalidade"     layoutX="510" layoutY="245"/>
+            <TextField fx:id="txtNac"       layoutX="510" layoutY="265" prefWidth="105" editable="false"/>
+
+            <Label text="Data cadastro"     layoutX="25"  layoutY="300"/>
+            <TextField fx:id="txtDataCad"   layoutX="25"  layoutY="320" prefWidth="150" editable="false"/>
+
+            <Label text="Telefone"          layoutX="190" layoutY="300"/>
+            <TextField fx:id="txtFone"      layoutX="190" layoutY="320" prefWidth="150" editable="false"/>
+            <Label text="Registros de Trabalho" layoutX="25" layoutY="360"/>
+
+            <TableView fx:id="tblRegistros" layoutX="25" layoutY="380" prefWidth="590" prefHeight="180">
+               <columns>
+                  <TableColumn fx:id="colData"     text="DATA"             prefWidth="135"/>
+                  <TableColumn fx:id="colCumprida" text="Horas cumpridas"  prefWidth="135"/>
+                  <TableColumn fx:id="colFalta"    text="Horas a cumprir"  prefWidth="135"/>
+                  <TableColumn fx:id="colInst" text="Instituição" prefWidth="185"/>
+               </columns>
+            </TableView>
+
+            <Button text="Imprimir" layoutX="160" layoutY="580" fx:id="btnImprimir" styleClass="botao_login"/>
+            <Button text="Editar"   layoutX="270" layoutY="580" fx:id="btnEditar"   styleClass="botao_login"/>
+            <Button text="Voltar"   layoutX="380" layoutY="580" fx:id="btnVoltar"   styleClass="botao_login"/>
+         </children>
+      </AnchorPane>
+   </children>
+</StackPane>
