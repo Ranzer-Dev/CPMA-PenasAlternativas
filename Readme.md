@@ -187,10 +187,6 @@ mvn exec:java -Dexec.mainClass="database.TestaConexaoBanco"
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
-## 📄 Licença
-
-Este projeto está sob a licença [inserir tipo de licença]. Veja o arquivo `LICENSE` para mais detalhes.
-
 ## 👥 Autores
 
 - **Equipe CPMA** - Desenvolvimento inicial
