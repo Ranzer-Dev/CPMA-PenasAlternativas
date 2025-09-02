@@ -33,6 +33,13 @@ O **CPMA (Centro de Penas e Medidas Alternativas)** é um sistema desktop desenv
 - **Acordos de Trabalho**: Contratos entre usuários e instituições
 - **Relatórios**: Sistema de busca e consulta de cadastros
 
+### 🔍 Identificação Facial
+
+- **Reconhecimento Facial**: Identificação de penados através de imagens faciais
+- **Captura de Imagem**: Suporte para webcam e upload de arquivos
+- **Cadastro de Dados Faciais**: Armazenamento de descritores faciais para identificação
+- **Busca por Similaridade**: Algoritmo de comparação facial para identificação automática
+
 ## 🏗️ Arquitetura do Sistema
 
 ### Padrão MVC (Model-View-Controller)
@@ -155,6 +162,7 @@ mvn javafx:run
 - **Administrador**: Usuários do sistema
 - **RegistroDeTrabalho**: Controle de atividades
 - **AcordoDeTrabalho**: Contratos estabelecidos
+- **DadosFaciais**: Informações faciais para identificação biométrica
 
 ### Relacionamentos
 
@@ -162,6 +170,7 @@ mvn javafx:run
 - Pena ↔ Instituicao (N:1)
 - Usuário ↔ RegistroDeTrabalho (1:N)
 - Instituicao ↔ DisponibilidadeInstituicao (1:N)
+- Usuário ↔ DadosFaciais (1:1)
 
 ## 🔐 Segurança
 
@@ -177,6 +186,19 @@ Para testar a conexão com o banco de dados:
 ```bash
 # Executar a classe de teste de conexão
 mvn exec:java -Dexec.mainClass="database.TestaConexaoBanco"
+```
+
+### Teste de Identificação Facial
+
+Para testar a funcionalidade de identificação facial:
+
+```bash
+# Compilar e executar a aplicação
+mvn clean compile
+mvn javafx:run
+
+# Navegar para a tela de identificação facial
+# Usar a opção "Carregar Arquivo" para testar com imagens
 ```
 
 ## 📝 Contribuição

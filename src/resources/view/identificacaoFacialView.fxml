@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="controller.IdentificacaoFacialController"
+      spacing="20" padding="20" styleClass="root">
+
+    <fx:define>
+        <Font fx:id="titleFont" size="24" family="System Bold"/>
+        <Font fx:id="headerFont" size="16" family="System Bold"/>
+        <Font fx:id="normalFont" size="14" family="System"/>
+    </fx:define>
+
+    <!-- Título da Tela -->
+    <Label text="Identificação Facial de Penados" 
+           font="$titleFont" 
+           styleClass="title-label"
+           alignment="CENTER"/>
+
+    <!-- Área de Imagem -->
+    <VBox spacing="10" alignment="CENTER">
+        <Label text="Imagem do Rosto" font="$headerFont"/>
+        
+        <ImageView fx:id="imageView" 
+                   fitWidth="400" 
+                   fitHeight="300"
+                   styleClass="image-view"
+                   preserveRatio="true"/>
+        
+        <!-- Botões de Captura/Carregamento -->
+        <HBox spacing="10" alignment="CENTER">
+            <Button fx:id="btnCapturar" 
+                    text="📷 Capturar da Webcam" 
+                    styleClass="action-button"
+                    prefWidth="180" prefHeight="40"/>
+            
+            <Button fx:id="btnCarregar" 
+                    text="📁 Carregar Arquivo" 
+                    styleClass="action-button"
+                    prefWidth="180" prefHeight="40"/>
+        </HBox>
+    </VBox>
+
+    <!-- Botões de Ação -->
+    <VBox spacing="10" alignment="CENTER">
+        <HBox spacing="10" alignment="CENTER">
+            <Button fx:id="btnIdentificar" 
+                    text="🔍 Identificar Usuário" 
+                    styleClass="primary-button"
+                    prefWidth="200" prefHeight="45"
+                    disable="true"/>
+            
+            <Button fx:id="btnCadastrar" 
+                    text="➕ Cadastrar Dados Faciais" 
+                    styleClass="secondary-button"
+                    prefWidth="200" prefHeight="45"
+                    disable="true"/>
+        </HBox>
+    </VBox>
+
+    <!-- Status -->
+    <VBox spacing="5" alignment="CENTER">
+        <Label fx:id="lblStatus" 
+               text="Selecione ou capture uma imagem para começar" 
+               font="$normalFont"
+               styleClass="status-label"
+               alignment="CENTER"
+               wrapText="true"/>
+    </VBox>
+
+    <!-- Informações do Usuário Identificado -->
+    <VBox spacing="10" alignment="CENTER" styleClass="user-info-panel">
+        <Label text="Dados do Usuário Identificado" font="$headerFont"/>
+        
+        <VBox spacing="5" alignment="CENTER_LEFT" styleClass="user-details">
+            <Label fx:id="lblUsuario" text="Nome: " font="$normalFont"/>
+            <Label fx:id="lblCPF" text="CPF: " font="$normalFont"/>
+            <Label fx:id="lblEndereco" text="Endereço: " font="$normalFont"/>
+        </VBox>
+    </VBox>
+
+    <!-- Botão Voltar -->
+    <HBox alignment="CENTER">
+        <Button text="← Voltar ao Menu Principal" 
+                styleClass="back-button"
+                prefWidth="200" prefHeight="40"
+                onAction="#navegarPara('/resources/view/buscaCadastroView.fxml')"/>
+    </HBox>
+
+    <stylesheets>
+        <String fx:value="/resources/view/style.css"/>
+    </stylesheets>
+
+</VBox>
