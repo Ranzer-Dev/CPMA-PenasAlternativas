@@ -1,7 +1,5 @@
 package database;
 
-import database.ConnectionFactory;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,7 +15,7 @@ public class TestaConexaoBanco {
             }
 
             try (Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT DB_NAME() AS CurrentDatabase")) {
+                    ResultSet rs = stmt.executeQuery("SELECT DB_NAME() AS CurrentDatabase")) {
 
                 if (rs.next()) {
                     System.out.println("Conectado ao banco: " + rs.getString("CurrentDatabase"));

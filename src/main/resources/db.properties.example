@@ -1,0 +1,20 @@
+db.url=jdbc:sqlserver://localhost:1433;databaseName=penas_alternativas;encrypt=true;trustServerCertificate=true
+db.user=sa
+db.password=MinhaSenha_forte123
+
+#
+
+# Para verificar quais dbs existem no seu container
+# /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'MinhaSenha_forte123' -C
+
+# Para fazer uma listagem dos dbs
+# SELECT name FROM sys.databases;
+# GO
+
+# Para rodar o script da cria��o das tabelas
+# Coloque o script sql no container em uma pasta temp para rodar l� dentro, rodar esse comando dentro da pasta que tiver o script
+# docker cp ./penas_alternativas.sql sqlserver_dev:/tmp/penas_alternativas.sql
+
+# rodar o script dentro do container
+# docker exec -it sqlserver_dev /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'MinhaSenha_forte123' -i /tmp/penas-alternativas.sql -C
+
