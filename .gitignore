@@ -3,8 +3,8 @@
 
 ### Maven ###
 # Pasta de saída da compilação
-/target/
-
+/target
+./target/classes
 # Arquivos de log do Maven
 *.log
 /logs/
@@ -16,6 +16,7 @@ replay_pid*
 
 ### Arquivos de Compilação Java ###
 # Embora geralmente estejam na pasta /target, é uma boa prática ignorá-los
+*.classes
 *.class
 *.jar
 *.war
@@ -26,10 +27,10 @@ replay_pid*
 
 # IntelliJ IDEA
 .idea/
+*.xml
 *.iml
 *.iws
 /out/
-
 # Eclipse
 .classpath
 .project

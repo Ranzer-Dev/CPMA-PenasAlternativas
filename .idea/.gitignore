@@ -1,3 +1,62 @@
-# Default ignored files
-/shelf/
-/workspace.xml
+# Arquivo .gitignore para Projeto Java com Maven
+# Gerado por Gemini em 23/08/2025
+
+### Maven ###
+# Pasta de saída da compilação
+/target
+classes/
+# Arquivos de log do Maven
+*.log
+/logs/
+
+# Arquivos de crash da JVM (Java Virtual Machine)
+hs_err_pid*
+replay_pid*
+
+
+### Arquivos de Compilação Java ###
+# Embora geralmente estejam na pasta /target, é uma boa prática ignorá-los
+*.class
+*.jar
+*.war
+*.ear
+
+
+### Configurações de IDEs ###
+
+# IntelliJ IDEA
+.idea/
+/idea
+*.iml
+*.iws
+/out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+/bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+.nb-gradle/
+
+# Visual Studio Code
+.vscode/
+
+
+### Arquivos de Configuração e Senhas (NÃO ENVIAR) ###
+# Arquivo de propriedades do banco de dados com senhas
+db.properties
+
+
+### Sistema Operacional e Diversos ###
+# Arquivos de backup de editores (Linux/macOS)
+*~
+.*.swp
+
+# Arquivos do macOS
+.DS_Store
