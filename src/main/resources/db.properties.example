@@ -1,6 +1,6 @@
-db.url=jdbc:sqlserver://localhost:1433;databaseName=penas_alternativas;encrypt=true;trustServerCertificate=true
-db.user=sa
-db.password=MinhaSenha_forte123
+db.url='url do seu db'
+db.user=<nome do usario master do sql server>
+db.password=<senha de admin sql server>
 
 #
 
