@@ -4,6 +4,7 @@ module com.mycompany.cpma {
     requires java.sql;
     requires javafx.graphics;
     requires java.desktop;
+    requires opencv;
 
     opens view to javafx.graphics, javafx.fxml;
     opens controller to javafx.fxml;

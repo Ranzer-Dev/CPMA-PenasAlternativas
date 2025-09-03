@@ -9,6 +9,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import model.Instituicao;
@@ -16,6 +17,18 @@ import model.Pena;
 import model.Usuario;
 import util.HashUtil;
 import util.ValidadorCPF;
+import javafx.scene.control.Button;
+import javafx.scene.image.Image;
+import javafx.event.ActionEvent;
+import javafx.application.Platform;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.videoio.VideoCapture;
+import java.io.ByteArrayInputStream;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import java.io.IOException;
 import java.sql.Date;
@@ -27,17 +40,39 @@ import java.util.Map;
 
 public class CadastrarUsuarioController {
 
-    @FXML private TextField cep;
-    @FXML private TextField codigo;
-    @FXML private TextField telefone;
-    @FXML private ComboBox<String> comboTipoPena;
-    @FXML private ComboBox<Usuario> comboUsuarios;
-    @FXML private DatePicker dataNascimento, dataCadastro;
-    @FXML private TextField nome, cpf, senha, nacionalidade;
-    @FXML private TextField endereco, bairro ,cidade, uf;
-    @FXML private TextArea observacao;
-    @FXML private ComboBox<String> comboInstituicao;
-    @FXML private Button btnCadastrar;
+    @FXML
+    private TextField cep;
+    @FXML
+    private TextField codigo;
+    @FXML
+    private TextField telefone;
+    @FXML
+    private ComboBox<String> comboTipoPena;
+    @FXML
+    private ComboBox<Usuario> comboUsuarios;
+    @FXML
+    private DatePicker dataNascimento, dataCadastro;
+    @FXML
+    private TextField nome, cpf, senha, nacionalidade;
+    @FXML
+    private TextField endereco, bairro, cidade, uf;
+    @FXML
+    private TextArea observacao;
+    @FXML
+    private ComboBox<String> comboInstituicao;
+    @FXML
+    private Button btnCadastrar;
+    @FXML
+    private ImageView imageViewCamera;
+    @FXML
+    private Button btnIniciarCamera;
+    @FXML
+    private Button btnCapturar;
+
+    private VideoCapture camera;
+    private ScheduledExecutorService timer;
+    private boolean cameraAtiva = false;
+    private Mat frameCapturado;
 
     private Usuario usuarioEditando = null;
     private boolean modoEdicao = false;
@@ -57,11 +92,104 @@ public class CadastrarUsuarioController {
             }
         });
 
-        telefone.setTextFormatter(new TextFormatter<>(c ->
-                c.getControlNewText().matches("[0-9()\\-]*") ? c : null));
+        telefone.setTextFormatter(new TextFormatter<>(c
+                -> c.getControlNewText().matches("[0-9()\\-]*") ? c : null));
 
-        cep.setTextFormatter(new TextFormatter<>(c ->
-                c.getControlNewText().matches("[0-9()\\-]*") ? c : null));
+        cep.setTextFormatter(new TextFormatter<>(c
+                -> c.getControlNewText().matches("[0-9()\\-]*") ? c : null));
+    }
+
+    /**
+     * Ação do botão "Tirar Foto". Inicia ou para a webcam.
+     */
+    @FXML
+    private void iniciarCamera(ActionEvent event) {
+        if (!cameraAtiva) {
+            // Inicia a câmera
+            camera = new VideoCapture(0); // 0 para a câmera padrão
+
+            if (camera.isOpened()) {
+                cameraAtiva = true;
+
+                // Cria um serviço para ficar pegando os frames da câmera
+                Runnable frameGrabber = () -> {
+                    Mat frame = new Mat();
+                    if (camera.read(frame)) {
+                        Image imageToShow = matToImage(frame);
+                        Platform.runLater(() -> imageViewCamera.setImage(imageToShow));
+                        frameCapturado = frame; // Guarda o último frame para a captura
+                    }
+                };
+
+                this.timer = Executors.newSingleThreadScheduledExecutor();
+                this.timer.scheduleAtFixedRate(frameGrabber, 0, 33, TimeUnit.MILLISECONDS); // ~30 FPS
+
+                // Atualiza a UI
+                btnIniciarCamera.setText("Parar Câmera");
+                btnCapturar.setVisible(true);
+            } else {
+                System.err.println("Erro: Não foi possível abrir a câmera.");
+            }
+        } else {
+            // Para a câmera
+            pararCamera();
+        }
+    }
+
+    /**
+     * Ação do botão "Capturar". Tira a foto.
+     */
+    @FXML
+    private void capturarFoto(ActionEvent event) {
+        if (frameCapturado != null && !frameCapturado.empty()) {
+            // Converte o frame capturado para uma imagem e exibe
+            Image foto = matToImage(frameCapturado);
+            imageViewCamera.setImage(foto);
+
+            // Para a câmera após a captura
+            pararCamera();
+            System.out.println("Foto capturada!");
+
+            // AGORA VOCÊ PODE SALVAR O 'frameCapturado'
+            // Exemplo: você precisará de um método para converter Mat para byte[] e depois para Blob
+            // byte[] imageData = matToBytes(frameCapturado);
+            // Blob blob = new SerialBlob(imageData);
+            // E então, associar esse blob ao seu objeto Usuario/DadosFaciais
+        }
+    }
+
+    /**
+     * Para a execução da câmera e limpa os recursos.
+     */
+    private void pararCamera() {
+        if (this.timer != null && !this.timer.isShutdown()) {
+            try {
+                this.timer.shutdown();
+                this.timer.awaitTermination(33, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                System.err.println("Erro ao parar a captura de frames: " + e.getMessage());
+            }
+        }
+        if (camera.isOpened()) {
+            camera.release();
+        }
+        cameraAtiva = false;
+        btnIniciarCamera.setText("Tirar Foto");
+        btnCapturar.setVisible(false);
+    }
+
+    /**
+     * Converte um objeto Mat (OpenCV) para um objeto Image (JavaFX).
+     */
+    private Image matToImage(Mat frame) {
+        try {
+            MatOfByte buffer = new MatOfByte();
+            Imgcodecs.imencode(".png", frame, buffer);
+            return new Image(new ByteArrayInputStream(buffer.toArray()));
+        } catch (Exception e) {
+            System.err.println("Não foi possível converter o Mat para Image: " + e);
+            return null;
+        }
     }
 
     public static int cadastrarUsuario(
@@ -70,40 +198,51 @@ public class CadastrarUsuarioController {
             String endereco, String bairro, String cidade, String uf,
             String observacao, String telefone, String cep, String codigo) {
 
-        if (nome == null || nome.trim().isEmpty() || !nome.matches("[a-zA-ZÀ-ú\\s]+"))
+        if (nome == null || nome.trim().isEmpty() || !nome.matches("[a-zA-ZÀ-ú\\s]+")) {
             throw new IllegalArgumentException("Nome inválido.");
+        }
 
         String cpfLimpo = cpf.replaceAll("\\D", "");
-        if (cpfLimpo.length() != 11 || !ValidadorCPF.isCPFValido(cpfLimpo))
+        if (cpfLimpo.length() != 11 || !ValidadorCPF.isCPFValido(cpfLimpo)) {
             throw new IllegalArgumentException("CPF inválido.");
+        }
 
         String foneLimpo = telefone.replaceAll("\\D", "");
-        if (foneLimpo.length() < 8 || foneLimpo.length() > 15)
+        if (foneLimpo.length() < 8 || foneLimpo.length() > 15) {
             throw new IllegalArgumentException("Telefone inválido.");
+        }
 
-        if (UsuarioDAO.cpfExiste(cpfLimpo))
+        if (UsuarioDAO.cpfExiste(cpfLimpo)) {
             throw new IllegalArgumentException("CPF já cadastrado.");
+        }
 
-        if (senha == null || senha.trim().isEmpty())
+        if (senha == null || senha.trim().isEmpty()) {
             throw new IllegalArgumentException("Senha vazia.");
+        }
 
-        if (nacionalidade == null || nacionalidade.trim().isEmpty())
+        if (nacionalidade == null || nacionalidade.trim().isEmpty()) {
             throw new IllegalArgumentException("Nacionalidade inválida.");
+        }
 
-        if (dataNascimento == null || dataNascimento.isAfter(LocalDate.now()))
+        if (dataNascimento == null || dataNascimento.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("Data de nascimento inválida.");
+        }
 
-        if (endereco == null || endereco.trim().isEmpty())
+        if (endereco == null || endereco.trim().isEmpty()) {
             throw new IllegalArgumentException("Endereço inválido.");
+        }
 
-        if (bairro == null || bairro.trim().isEmpty())
+        if (bairro == null || bairro.trim().isEmpty()) {
             throw new IllegalArgumentException("Bairro inválido.");
+        }
 
-        if (cidade == null || cidade.trim().isEmpty())
+        if (cidade == null || cidade.trim().isEmpty()) {
             throw new IllegalArgumentException("Cidade inválida.");
+        }
 
-        if (uf == null || !uf.trim().matches("^[A-Z]{2}$"))
+        if (uf == null || !uf.trim().matches("^[A-Z]{2}$")) {
             throw new IllegalArgumentException("UF inválida.");
+        }
 
         Usuario usuario = new Usuario();
         usuario.setNome(nome.trim());
@@ -127,7 +266,9 @@ public class CadastrarUsuarioController {
 
     private void cadastrarUsuario() {
         try {
-            if (!validarCpf(cpf.getText())) return;
+            if (!validarCpf(cpf.getText())) {
+                return;
+            }
 
             idUsuarioInserido = cadastrarUsuario(
                     nome.getText(), cpf.getText(), senha.getText(), nacionalidade.getText(),
@@ -155,7 +296,9 @@ public class CadastrarUsuarioController {
 
         comboUsuarios.setOnAction(e -> {
             Usuario u = comboUsuarios.getValue();
-            if (u != null) preencherCamposComUsuario(u);
+            if (u != null) {
+                preencherCamposComUsuario(u);
+            }
         });
     }
 
@@ -164,13 +307,22 @@ public class CadastrarUsuarioController {
         comboUsuarios.setItems(FXCollections.observableArrayList(lista));
 
         comboUsuarios.setConverter(new StringConverter<>() {
-            @Override public String toString(Usuario u) { return u == null ? "" : u.getNome(); }
-            @Override public Usuario fromString(String s) { return null; }
+            @Override
+            public String toString(Usuario u) {
+                return u == null ? "" : u.getNome();
+            }
+
+            @Override
+            public Usuario fromString(String s) {
+                return null;
+            }
         });
     }
 
     private void salvarAlteracoes() {
-        if (!validarCpf(cpf.getText())) return;
+        if (!validarCpf(cpf.getText())) {
+            return;
+        }
 
         try {
             usuarioEditando.setNome(nome.getText());
@@ -244,7 +396,9 @@ public class CadastrarUsuarioController {
     }
 
     private LocalDate convertToLocalDate(java.util.Date d) {
-        if (d == null) return null;
+        if (d == null) {
+            return null;
+        }
 
         if (d instanceof java.sql.Date sqlDate) {
             return sqlDate.toLocalDate();
@@ -257,32 +411,41 @@ public class CadastrarUsuarioController {
 
     private void limitarUF() {
         uf.textProperty().addListener((obs, ov, nv) -> {
-            if (nv.length() > 2 || !nv.matches("[a-zA-Z]*")) uf.setText(ov);
+            if (nv.length() > 2 || !nv.matches("[a-zA-Z]*")) {
+                uf.setText(ov);
+            }
         });
     }
 
     private void mostrarAlerta(String titulo, String mensagem) {
         Alert a = new Alert(Alert.AlertType.INFORMATION, mensagem, ButtonType.OK);
-        a.setTitle(titulo); a.setHeaderText(null); a.showAndWait();
+        a.setTitle(titulo);
+        a.setHeaderText(null);
+        a.showAndWait();
     }
 
     private void marcarErro(Control c) {
-        if (!c.getStyleClass().contains("erro-campo")) c.getStyleClass().add("erro-campo");
+        if (!c.getStyleClass().contains("erro-campo")) {
+            c.getStyleClass().add("erro-campo");
+        }
     }
-    private void limparErro(Control c) { c.getStyleClass().remove("erro-campo"); }
+
+    private void limparErro(Control c) {
+        c.getStyleClass().remove("erro-campo");
+    }
 
     private void configurarListenersRemocaoErro() {
-        telefone.textProperty().addListener((o,ov,nv)->limparErro(telefone));
-        cep.textProperty().addListener((o,ov,nv)->limparErro(cep));
-        nome.textProperty().addListener((o,ov,nv)->limparErro(nome));
-        cpf.textProperty().addListener((o,ov,nv)->limparErro(cpf));
-        senha.textProperty().addListener((o,ov,nv)->limparErro(senha));
-        nacionalidade.textProperty().addListener((o,ov,nv)->limparErro(nacionalidade));
-        dataNascimento.valueProperty().addListener((o,ov,nv)->limparErro(dataNascimento));
-        endereco.textProperty().addListener((o,ov,nv)->limparErro(endereco));
-        bairro.textProperty().addListener((o,ov,nv)->limparErro(bairro));
-        cidade.textProperty().addListener((o,ov,nv)->limparErro(cidade));
-        uf.textProperty().addListener((o,ov,nv)->limparErro(uf));
+        telefone.textProperty().addListener((o, ov, nv) -> limparErro(telefone));
+        cep.textProperty().addListener((o, ov, nv) -> limparErro(cep));
+        nome.textProperty().addListener((o, ov, nv) -> limparErro(nome));
+        cpf.textProperty().addListener((o, ov, nv) -> limparErro(cpf));
+        senha.textProperty().addListener((o, ov, nv) -> limparErro(senha));
+        nacionalidade.textProperty().addListener((o, ov, nv) -> limparErro(nacionalidade));
+        dataNascimento.valueProperty().addListener((o, ov, nv) -> limparErro(dataNascimento));
+        endereco.textProperty().addListener((o, ov, nv) -> limparErro(endereco));
+        bairro.textProperty().addListener((o, ov, nv) -> limparErro(bairro));
+        cidade.textProperty().addListener((o, ov, nv) -> limparErro(cidade));
+        uf.textProperty().addListener((o, ov, nv) -> limparErro(uf));
     }
 
     private void carregarPenas() {
@@ -316,6 +479,16 @@ public class CadastrarUsuarioController {
             st.setTitle("Cadastrar Instituicao");
             st.setScene(new Scene(root));
             st.show();
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void fecharJanela() {
+        if (cameraAtiva) {
+            pararCamera();
+        }
+        Stage stage = (Stage) btnIniciarCamera.getScene().getWindow();
+        stage.close();
     }
 }
