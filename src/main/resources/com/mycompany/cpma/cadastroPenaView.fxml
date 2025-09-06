@@ -97,7 +97,7 @@
                 <Label layoutX="28.0" layoutY="525.0" text="Atividades Acordadas" />
                 <TextArea fx:id="atividadesAcordadas" layoutX="28.0" layoutY="545.0" prefHeight="80.0" prefWidth="650.0" />
 
-                <Button fx:id="btnCadastrarPena" layoutX="285.0" layoutY="643.0" prefHeight="38.0" prefWidth="130.0" styleClass="botao_login" text="Cadastrar" />
+                <Button fx:id="btnCadastrarPena" layoutX="285.0" layoutY="643.0" prefHeight="38.0" prefWidth="130.0" styleClass="botao-login" text="Cadastrar" />
             </children>
         </AnchorPane>
     </children>
