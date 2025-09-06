@@ -1,30 +1,44 @@
 package controller;
 
+import java.io.IOException;
+
 import dao.UsuarioDAO;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import model.Usuario;
 
-import java.io.IOException;
-
 public class BuscarCadastrarController {
 
-    @FXML private Button btnEditarUsuario;
-    @FXML private Button botaoSair;
-    @FXML private Button btnEditarAdmin;
-    @FXML private Button btnEditarInst;
-    @FXML private Button btnEditarPena;
-    @FXML private Button btnEditarPonto;
-    @FXML private Button btnEditarAcordo;
-    @FXML private TextField campoBuscarNomeCpf;
-    @FXML private Button botaoBuscar, botaoCadastrar, botaoEditar;
-    @FXML private Button btnInst, btnPena, btnPonto, btnAcordo, btnAdmin, btnUsuario;
-    @FXML private AnchorPane painelCadastro, painelEditar;
+    @FXML
+    private Button btnEditarUsuario;
+    @FXML
+    private Button botaoSair;
+    @FXML
+    private Button btnEditarAdmin;
+    @FXML
+    private Button btnEditarInst;
+    @FXML
+    private Button btnEditarPena;
+    @FXML
+    private Button btnEditarPonto;
+    @FXML
+    private Button btnEditarAcordo;
+    @FXML
+    private TextField campoBuscarNomeCpf;
+    @FXML
+    private Button botaoBuscar, botaoCadastrar, botaoEditar;
+    @FXML
+    private Button btnInst, btnPena, btnPonto, btnAcordo, btnAdmin, btnUsuario;
+    @FXML
+    private AnchorPane painelCadastro, painelEditar;
 
     @FXML
     private void initialize() {
@@ -62,41 +76,41 @@ public class BuscarCadastrarController {
         botaoEditar.setOnAction(e -> mostrarPainelEditar());
         botaoSair.setOnAction(e -> voltarParaLogin());
 
-        btnUsuario.setOnAction(e ->
-                abrir("/com.mycompany.cpma/telaCadastroUsuario.fxml", "Cadastro de Usuário"));
+        btnUsuario.setOnAction(e
+                -> abrir("/com/mycompany/cpma/telaCadastroUsuario.fxml", "Cadastro de Usuário"));
 
-        btnInst.setOnAction(e ->
-                abrir("/com.mycompany.cpma/cadastroInstituicaoView.fxml", "Cadastro de Instituição"));
+        btnInst.setOnAction(e
+                -> abrir("/com/mycompany/cpma/cadastroInstituicaoView.fxml", "Cadastro de Instituição"));
 
-        btnPena.setOnAction(e ->
-                abrir("/com.mycompany.cpma/cadastroPenaView.fxml", "Cadastro de Pena"));
+        btnPena.setOnAction(e
+                -> abrir("/com/mycompany/cpma/cadastroPenaView.fxml", "Cadastro de Pena"));
 
-        btnPonto.setOnAction(e ->
-                abrir("/com.mycompany.cpma/cadastroRegistroDeTrabalhoView.fxml", "Cadastro de Ponto"));
+        btnPonto.setOnAction(e
+                -> abrir("/com/mycompany/cpma/cadastroRegistroDeTrabalhoView.fxml", "Cadastro de Ponto"));
 
-        btnAcordo.setOnAction(e ->
-                abrir("/com.mycompany.cpma/cadastroAcordoDeTrabalhoView.fxml", "Cadastro de Acordo"));
+        btnAcordo.setOnAction(e
+                -> abrir("/com/mycompany/cpma/cadastroAcordoDeTrabalhoView.fxml", "Cadastro de Acordo"));
 
-        btnAdmin.setOnAction(e ->
-                abrir("/resources/view/cadastroAdministradorView.fxml", "Cadastro de Administrador"));
+        btnAdmin.setOnAction(e
+                -> abrir("/resources/view/cadastroAdministradorView.fxml", "Cadastro de Administrador"));
 
-        btnEditarUsuario.setOnAction(e ->
-                abrir("/com.mycompany.cpma/telaCadastroUsuario.fxml", "Editar Usuário", true));
+        btnEditarUsuario.setOnAction(e
+                -> abrir("/com/mycompany/cpma/telaCadastroUsuario.fxml", "Editar Usuário", true));
 
-        btnEditarAdmin.setOnAction(e ->
-                abrir("/resources/view/cadastroAdministradorView.fxml", "Editar Administrador", true));
+        btnEditarAdmin.setOnAction(e
+                -> abrir("/resources/view/cadastroAdministradorView.fxml", "Editar Administrador", true));
 
-        btnEditarInst.setOnAction(e ->
-                abrir("/com.mycompany.cpma/cadastroInstituicaoView.fxml", "Editar Instituição", true));
+        btnEditarInst.setOnAction(e
+                -> abrir("/com/mycompany/cpma/cadastroInstituicaoView.fxml", "Editar Instituição", true));
 
-        btnEditarPena.setOnAction(e ->
-                abrir("/com.mycompany.cpma/cadastroPenaView.fxml", "Editar Pena", true));
+        btnEditarPena.setOnAction(e
+                -> abrir("/com/mycompany/cpma/cadastroPenaView.fxml", "Editar Pena", true));
 
-        btnEditarPonto.setOnAction(e ->
-                abrir("/com.mycompany.cpma/cadastroRegistroDeTrabalhoView.fxml", "Editar Ponto", true));
+        btnEditarPonto.setOnAction(e
+                -> abrir("/com/mycompany/cpma/cadastroRegistroDeTrabalhoView.fxml", "Editar Ponto", true));
 
-        btnEditarAcordo.setOnAction(e ->
-                abrir("/com.mycompany.cpma/cadastroAcordoDeTrabalhoView.fxml", "Editar Acordo", true));
+        btnEditarAcordo.setOnAction(e
+                -> abrir("/com/mycompany/cpma/cadastroAcordoDeTrabalhoView.fxml", "Editar Acordo", true));
 
     }
 
@@ -142,7 +156,9 @@ public class BuscarCadastrarController {
     }
 
     private Usuario buscarUsuario(String termo) {
-        if (termo == null || termo.isEmpty()) return null;
+        if (termo == null || termo.isEmpty()) {
+            return null;
+        }
         return new UsuarioDAO().buscarPorCpf(termo);
     }
 
@@ -158,7 +174,7 @@ public class BuscarCadastrarController {
 
     private void voltarParaLogin() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com.mycompany.cpma/login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/login.fxml"));
             Parent root = loader.load();
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/com/mycompany/cpma/style.css").toExternalForm());

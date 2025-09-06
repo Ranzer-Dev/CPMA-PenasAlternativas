@@ -14,17 +14,28 @@ import java.io.IOException;
 
 public class RedefinirSenhaController {
 
-    @FXML private TextField campoNovaSenha;
-    @FXML private Label labelNovaSenha;
-    @FXML private Label labelUsuario;
-    @FXML private TextField campoUsuario;
-    @FXML private Label mensagemErro;
-    @FXML private Label labelPerguntaSecreta;
-    @FXML private Text campoPerguntaSecreta;
-    @FXML private Label labelRespostaSecreta;
-    @FXML private TextField campoRespostaSecreta;
-    @FXML private Button procurar;
-    @FXML private Button telaInicio;
+    @FXML
+    private TextField campoNovaSenha;
+    @FXML
+    private Label labelNovaSenha;
+    @FXML
+    private Label labelUsuario;
+    @FXML
+    private TextField campoUsuario;
+    @FXML
+    private Label mensagemErro;
+    @FXML
+    private Label labelPerguntaSecreta;
+    @FXML
+    private Text campoPerguntaSecreta;
+    @FXML
+    private Label labelRespostaSecreta;
+    @FXML
+    private TextField campoRespostaSecreta;
+    @FXML
+    private Button procurar;
+    @FXML
+    private Button telaInicio;
 
     private Administrador adminAtual;
     private final AdminDAO adminDAO = new AdminDAO();
@@ -110,7 +121,9 @@ public class RedefinirSenhaController {
     }
 
     private void adicionarEstiloErro(Control campo) {
-        if (!campo.getStyleClass().contains("erro-login")) campo.getStyleClass().add("erro-login");
+        if (!campo.getStyleClass().contains("erro-login")) {
+            campo.getStyleClass().add("erro-login");
+        }
     }
 
     private void limparEstilosErro() {
@@ -122,7 +135,7 @@ public class RedefinirSenhaController {
 
     private void voltarParaTelaDeLogin() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com.mycompany.cpma/login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/login.fxml"));
             Parent root = loader.load();
             Stage stage = (Stage) procurar.getScene().getWindow();
             Scene scene = new Scene(root);
