@@ -25,6 +25,7 @@ public class LoginController {
 
     @FXML
     private void initialize() {
+        campoUsuario.setText("68481444014");
         botaoEntrar.setOnAction(this::autenticarUsuario);
         campoUsuario.textProperty().addListener((obs, oldText, newText) -> limparErros());
         linkRedefinirSenha.setOnAction(this::abrirRedefinirSenha);
@@ -37,7 +38,7 @@ public class LoginController {
         if (autenticar(cpf, senha)) {
             SessaoUsuario.setAdminLogado(adminAutenticado);
             limparErros();
-            trocarCena("/resources/view/buscaCadastroView.fxml", event);
+            trocarCena("/com/mycompany/cpma/buscaCadastroView.fxml", event);
         } else {
             mostrarErroLogin();
         }
@@ -56,7 +57,7 @@ public class LoginController {
     }
 
     private void abrirRedefinirSenha(javafx.event.ActionEvent event) {
-        trocarCena("/resources/view/redefinirSenha.fxml", event);
+        trocarCena("/com/mycompany/cpma/redefinirSenha.fxml", event);
     }
 
     private void trocarCena(String fxml, javafx.event.ActionEvent event) {
@@ -65,7 +66,7 @@ public class LoginController {
             Parent raiz = loader.load();
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             Scene cena = new Scene(raiz);
-            cena.getStylesheets().add(getClass().getResource("/resources/view/style.css").toExternalForm());
+            cena.getStylesheets().add(getClass().getResource("/com/mycompany/cpma/style.css").toExternalForm());
             stage.setScene(cena);
             stage.show();
         } catch (Exception e) {

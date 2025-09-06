@@ -474,7 +474,7 @@ public class CadastrarUsuarioController {
 
     private void abrirCadastroInstituicao() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/resources/view/cadastroInstituicaoView.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/com.mycompany.cpma/cadastroInstituicaoView.fxml"));
             Stage st = new Stage();
             st.setTitle("Cadastrar Instituicao");
             st.setScene(new Scene(root));

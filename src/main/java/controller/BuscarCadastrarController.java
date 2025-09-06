@@ -39,7 +39,7 @@ public class BuscarCadastrarController {
             if (u != null) {
                 try {
                     FXMLLoader loader = new FXMLLoader(getClass()
-                            .getResource("/resources/view/detalheApenadoView.fxml"));
+                            .getResource("/com.mycompany.cpma/detalheApenadoView.fxml"));
                     Parent root = loader.load();
 
                     DetalheApenadoController det = loader.getController();
@@ -63,40 +63,40 @@ public class BuscarCadastrarController {
         botaoSair.setOnAction(e -> voltarParaLogin());
 
         btnUsuario.setOnAction(e ->
-                abrir("/resources/view/telaCadastroUsuario.fxml", "Cadastro de Usuário"));
+                abrir("/com.mycompany.cpma/telaCadastroUsuario.fxml", "Cadastro de Usuário"));
 
         btnInst.setOnAction(e ->
-                abrir("/resources/view/cadastroInstituicaoView.fxml", "Cadastro de Instituição"));
+                abrir("/com.mycompany.cpma/cadastroInstituicaoView.fxml", "Cadastro de Instituição"));
 
         btnPena.setOnAction(e ->
-                abrir("/resources/view/cadastroPenaView.fxml", "Cadastro de Pena"));
+                abrir("/com.mycompany.cpma/cadastroPenaView.fxml", "Cadastro de Pena"));
 
         btnPonto.setOnAction(e ->
-                abrir("/resources/view/cadastroRegistroDeTrabalhoView.fxml", "Cadastro de Ponto"));
+                abrir("/com.mycompany.cpma/cadastroRegistroDeTrabalhoView.fxml", "Cadastro de Ponto"));
 
         btnAcordo.setOnAction(e ->
-                abrir("/resources/view/cadastroAcordoDeTrabalhoView.fxml", "Cadastro de Acordo"));
+                abrir("/com.mycompany.cpma/cadastroAcordoDeTrabalhoView.fxml", "Cadastro de Acordo"));
 
         btnAdmin.setOnAction(e ->
                 abrir("/resources/view/cadastroAdministradorView.fxml", "Cadastro de Administrador"));
 
         btnEditarUsuario.setOnAction(e ->
-                abrir("/resources/view/telaCadastroUsuario.fxml", "Editar Usuário", true));
+                abrir("/com.mycompany.cpma/telaCadastroUsuario.fxml", "Editar Usuário", true));
 
         btnEditarAdmin.setOnAction(e ->
                 abrir("/resources/view/cadastroAdministradorView.fxml", "Editar Administrador", true));
 
         btnEditarInst.setOnAction(e ->
-                abrir("/resources/view/cadastroInstituicaoView.fxml", "Editar Instituição", true));
+                abrir("/com.mycompany.cpma/cadastroInstituicaoView.fxml", "Editar Instituição", true));
 
         btnEditarPena.setOnAction(e ->
-                abrir("/resources/view/cadastroPenaView.fxml", "Editar Pena", true));
+                abrir("/com.mycompany.cpma/cadastroPenaView.fxml", "Editar Pena", true));
 
         btnEditarPonto.setOnAction(e ->
-                abrir("/resources/view/cadastroRegistroDeTrabalhoView.fxml", "Editar Ponto", true));
+                abrir("/com.mycompany.cpma/cadastroRegistroDeTrabalhoView.fxml", "Editar Ponto", true));
 
         btnEditarAcordo.setOnAction(e ->
-                abrir("/resources/view/cadastroAcordoDeTrabalhoView.fxml", "Editar Acordo", true));
+                abrir("/com.mycompany.cpma/cadastroAcordoDeTrabalhoView.fxml", "Editar Acordo", true));
 
     }
 
@@ -158,10 +158,10 @@ public class BuscarCadastrarController {
 
     private void voltarParaLogin() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/resources/view/login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com.mycompany.cpma/login.fxml"));
             Parent root = loader.load();
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/resources/view/style.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/com/mycompany/cpma/style.css").toExternalForm());
 
             Stage stage = (Stage) botaoSair.getScene().getWindow();
             stage.setScene(scene);

@@ -1,11 +1,19 @@
 module com.mycompany.cpma {
     requires javafx.controls;
     requires javafx.fxml;
-    requires java.sql;
     requires javafx.graphics;
-    requires java.desktop;
-    requires opencv;
 
-    opens view to javafx.graphics, javafx.fxml;
+    requires com.microsoft.sqlserver.jdbc;
+    requires java.sql;
+
+    requires org.bytedeco.javacv;
+    requires org.bytedeco.opencv;
+
+    requires java.desktop;
+
+    opens com.mycompany.cpma to javafx.fxml;
     opens controller to javafx.fxml;
+    opens model to javafx.base;
+    exports com.mycompany.cpma;
 }
+

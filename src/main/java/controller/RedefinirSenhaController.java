@@ -122,11 +122,11 @@ public class RedefinirSenhaController {
 
     private void voltarParaTelaDeLogin() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/resources/view/login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com.mycompany.cpma/login.fxml"));
             Parent root = loader.load();
             Stage stage = (Stage) procurar.getScene().getWindow();
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/resources/view/style.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/com/mycompany/cpma/style.css").toExternalForm());
             stage.setScene(scene);
             stage.show();
         } catch (IOException e) {

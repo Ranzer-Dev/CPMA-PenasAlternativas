@@ -28,7 +28,7 @@
 
       <ImageView fx:id="foto" fitHeight="105.0" fitWidth="104.0" layoutX="32.0" layoutY="77.0" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@camera.png" />
+            <Image url="@../../../resources/view/camera.png" />
          </image>
       </ImageView>
 

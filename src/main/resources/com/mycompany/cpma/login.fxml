@@ -16,8 +16,8 @@
    <children>
       <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0">
          <children>
-            <TextField fx:id="campoUsuario" layoutX="881.0" layoutY="486.0" prefHeight="32.0" prefWidth="208.0" promptText="CPF" value="68481444014" />
-            <Button fx:id="botaoEntrar" layoutX="936.0" layoutY="658.0" mnemonicParsing="false" prefWidth="100.0" styleClass="botao_login" text="Entrar" textAlignment="CENTER" textFill="WHITE" />
+            <TextField fx:id="campoUsuario" layoutX="881.0" layoutY="486.0" prefHeight="32.0" prefWidth="208.0" promptText="CPF"/>
+            <Button fx:id="botaoEntrar" layoutX="936.0" layoutY="658.0" mnemonicParsing="false" prefWidth="100.0" styleClass="botao-login" text="Entrar" textAlignment="CENTER" textFill="WHITE" />
             <PasswordField fx:id="campoSenha" layoutX="881.0" layoutY="540.0" prefHeight="32.0" prefWidth="208.0" promptText="Senha" />
             <Text boundsType="VISUAL" fill="#3836af" layoutX="834.0" layoutY="401.0" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER" wrappingWidth="297.8203125">
                <font>
@@ -33,12 +33,12 @@
             <Label fx:id="mensagemErro" layoutX="914.0" layoutY="632.0" text="*CPF ou senha incorretos" textFill="RED" visible="false" />
             <ImageView fitHeight="85.0" fitWidth="150.0" layoutX="1002.0" layoutY="743.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@fatec_ra_sorocaba_votorantim_cor.png" />
+                  <Image url="@../../../images/fatec_ra_sorocaba_votorantim_cor.png" />
                </image>
             </ImageView>
             <ImageView fitHeight="96.0" fitWidth="133.0" layoutX="797.0" layoutY="714.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@Votorantim_Brasao.png" />
+                  <Image url="@../../../images/Votorantim_Brasao.png" />
                </image>
             </ImageView>
             <Text layoutX="1089.0" layoutY="841.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Desenvolvido pela Fatec Votorantim  versão 1.0" />

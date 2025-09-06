@@ -9,7 +9,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -153,7 +152,7 @@ public class CadastrarInstituicaoController {
 
     private void abrirCadastroTipoInstituicao() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/resources/view/cadastroTipoInstituicao.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com.mycompany.cpma/cadastroTipoInstituicao.fxml"));
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(loader.load()));
@@ -166,7 +165,7 @@ public class CadastrarInstituicaoController {
 
     private void abrirCadastroDisponibilidade(int idInstituicao) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/resources/view/cadastroDisponibilidade.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com.mycompany.cpma/cadastroDisponibilidade.fxml"));
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(loader.load()));
@@ -254,7 +253,7 @@ public class CadastrarInstituicaoController {
 
     private void abrirCadastroDisponibilidadeTemp() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/resources/view/cadastroDisponibilidade.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com.mycompany.cpma/cadastroDisponibilidade.fxml"));
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(loader.load()));
