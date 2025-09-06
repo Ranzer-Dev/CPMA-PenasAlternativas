@@ -1,60 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.Cursor?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
-<?import javafx.scene.control.PasswordField?>
 
-<StackPane xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.RedefinirSenhaController">
+<StackPane prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.RedefinirSenhaController">
    <children>
-      <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0">
+      <AnchorPane prefHeight="500.0" prefWidth="700.0" styleClass="main-container">
          <children>
-            <Text boundsType="VISUAL" fill="#3836af" layoutX="410.0" layoutY="57.0" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER" wrappingWidth="173.9375">
-               <font>
-                  <Font name="System Bold" size="32.0" />
-               </font>
-            </Text>
-            <Text boundsType="VISUAL" fill="#3836af" layoutX="444.0" layoutY="68.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER">
-               <font>
-                  <Font size="6.0" />
-               </font>
-            </Text>
-            <TextField fx:id="campoRespostaSecreta" layoutX="171.0" layoutY="171.0" prefHeight="25.0" prefWidth="233.0" visible="false" />
-            <Label fx:id="labelPerguntaSecreta" layoutX="171.0" layoutY="87.0" text="Pergunta secreta" visible="false">
-               <font>
-                  <Font name="System Bold" size="12.0" />
-               </font>
-            </Label>
-            <Text fx:id="campoPerguntaSecreta" layoutX="171.0" layoutY="130.0" strokeType="OUTSIDE" strokeWidth="0.0" visible="false" />
-            <Label fx:id="labelRespostaSecreta" layoutX="171.0" layoutY="146.0" text="Resposta secreta" visible="false">
-               <font>
-                  <Font name="System Bold" size="12.0" />
-               </font>
-            </Label>
-            <TextField fx:id="campoUsuario" layoutX="171.0" layoutY="114.0" prefHeight="25.0" prefWidth="233.0" />
-            <Label fx:id="labelUsuario" layoutX="171.0" layoutY="87.0" text="Usuário">
-               <font>
-                  <Font name="System Bold" size="12.0" />
-               </font>
-            </Label>
-            <Button fx:id="procurar" layoutX="257.0" layoutY="210.0" mnemonicParsing="false" text="Procurar">
-               <cursor>
-                  <Cursor fx:constant="HAND" />
-               </cursor>
-            </Button>
-            <Label fx:id="mensagemErro" layoutX="221.0" layoutY="247.0" text="*Usuário não encontrado" visible="false" />
-            <PasswordField fx:id="campoNovaSenha" layoutX="172.0" layoutY="159.0" prefHeight="25.0" prefWidth="233.0" visible="false" />
-            <Label fx:id="labelNovaSenha" layoutX="172.0" layoutY="138.0" text="Digite a nova senha" visible="false">
-               <font>
-                  <Font name="System Bold" size="12.0" />
-               </font>
-            </Label>
-            <Button fx:id="telaInicio" layoutX="472.0" layoutY="324.0" mnemonicParsing="false" text="Inicio" />
+            <!-- Container principal com card -->
+            <VBox alignment="CENTER" layoutX="50.0" layoutY="30.0" prefHeight="440.0" prefWidth="600.0" styleClass="content-card">
+               <children>
+                  <!-- Cabeçalho -->
+                  <VBox alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Text fill="#2563eb" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
+                           <font>
+                              <Font name="Segoe UI Bold" size="32.0" />
+                           </font>
+                        </Text>
+                        <Text fill="#64748b" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER">
+                           <font>
+                              <Font name="Segoe UI" size="14.0" />
+                           </font>
+                        </Text>
+                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Redefinir Senha" textAlignment="CENTER">
+                           <font>
+                              <Font name="Segoe UI Bold" size="24.0" />
+                           </font>
+                        </Text>
+                     </children>
+                  </VBox>
+                  
+                  <!-- Formulário de redefinição -->
+                  <VBox spacing="20.0" prefWidth="500.0">
+                     <children>
+                        <!-- Campo de usuário -->
+                        <VBox spacing="8.0">
+                           <children>
+                              <Label fx:id="labelUsuario" text="Usuário" styleClass="label-primary" />
+                              <TextField fx:id="campoUsuario" promptText="Digite seu CPF ou nome de usuário" styleClass="input-field" />
+                           </children>
+                        </VBox>
+                        
+                        <!-- Botão procurar -->
+                        <HBox alignment="CENTER">
+                           <children>
+                              <Button fx:id="procurar" mnemonicParsing="false" prefHeight="40.0" prefWidth="120.0" styleClass="btn-primary" text="Procurar" />
+                           </children>
+                        </HBox>
+                        
+                        <!-- Mensagem de erro -->
+                        <Label fx:id="mensagemErro" text="Usuário não encontrado" styleClass="message-error" visible="false" />
+                        
+                        <!-- Pergunta secreta -->
+                        <VBox fx:id="painelPerguntaSecreta" spacing="8.0" visible="false">
+                           <children>
+                              <Label fx:id="labelPerguntaSecreta" text="Pergunta Secreta" styleClass="label-primary" />
+                              <Text fx:id="campoPerguntaSecreta" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="label-secondary" />
+                              <Label fx:id="labelRespostaSecreta" text="Resposta Secreta" styleClass="label-primary" />
+                              <TextField fx:id="campoRespostaSecreta" promptText="Digite sua resposta" styleClass="input-field" />
+                           </children>
+                        </VBox>
+                        
+                        <!-- Nova senha -->
+                        <VBox fx:id="painelNovaSenha" spacing="8.0" visible="false">
+                           <children>
+                              <Label fx:id="labelNovaSenha" text="Nova Senha" styleClass="label-primary" />
+                              <PasswordField fx:id="campoNovaSenha" promptText="Digite sua nova senha" styleClass="input-field" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+                  
+                  <!-- Botões de ação -->
+                  <HBox alignment="CENTER" spacing="20.0">
+                     <children>
+                        <Button fx:id="telaInicio" mnemonicParsing="false" prefHeight="40.0" prefWidth="120.0" styleClass="btn-secondary" text="Voltar ao Início" />
+                     </children>
+                  </HBox>
+               </children>
+               <padding>
+                  <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+               </padding>
+            </VBox>
          </children>
       </AnchorPane>
    </children>

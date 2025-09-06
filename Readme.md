@@ -116,6 +116,13 @@ docker cp ./script/penas-alternativas.sql sqlserver_dev:/tmp/
 docker exec -it sqlserver_dev /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U SA -P 'MinhaSenha_forte123' \
   -i /tmp/penas-alternativas.sql -C
+
+# Executar para ver as tabelas
+docker exec -it sqlserver_dev /bin/bash
+
+# Entrar no container
+/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'MinhaSenha_forte123'
+
 ```
 
 ### 2. Configuração da Aplicação
