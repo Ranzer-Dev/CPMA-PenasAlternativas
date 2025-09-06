@@ -30,12 +30,12 @@
                               <!-- Logo e título principal -->
                               <VBox alignment="CENTER" spacing="10.0">
                                  <children>
-                                    <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
+                                    <Text fill="#1d4ed8" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
                                        <font>
                                           <Font name="Segoe UI Bold" size="64.0" />
                                        </font>
                                     </Text>
-                                    <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER" wrappingWidth="400.0">
+                                    <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER" wrappingWidth="400.0">
                                        <font>
                                           <Font name="Segoe UI" size="18.0" />
                                        </font>
@@ -44,7 +44,7 @@
                               </VBox>
                               
                               <!-- Descrição do sistema -->
-                              <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="Sistema de gestão para controle e acompanhamento de penas alternativas" textAlignment="CENTER" wrappingWidth="450.0">
+                              <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Sistema de gestão para controle e acompanhamento de penas alternativas" textAlignment="CENTER" wrappingWidth="450.0">
                                  <font>
                                     <Font name="Segoe UI" size="16.0" />
                                  </font>
@@ -71,12 +71,12 @@
                         <!-- Informações de desenvolvimento -->
                         <VBox alignment="CENTER" spacing="5.0">
                            <children>
-                              <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="Desenvolvido pela Fatec Votorantim" textAlignment="CENTER">
+                              <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Desenvolvido pela Fatec Votorantim" textAlignment="CENTER">
                                  <font>
                                     <Font name="Segoe UI" size="12.0" />
                                  </font>
                               </Text>
-                              <Text fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="Versão 1.0" textAlignment="CENTER">
+                              <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Versão 1.0" textAlignment="CENTER">
                                  <font>
                                     <Font name="Segoe UI" size="12.0" />
                                  </font>

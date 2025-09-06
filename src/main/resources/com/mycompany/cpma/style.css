@@ -1,32 +1,15 @@
 /* ===== DESIGN SYSTEM MODERNO ===== */
 
-/* Cores principais */
-:root {
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #dbeafe;
-  --secondary-color: #64748b;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --error-color: #ef4444;
-  --background-color: #f8fafc;
-  --surface-color: #ffffff;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --border-color: #e2e8f0;
-  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
+/* Cores principais - JavaFX CSS não suporta variáveis CSS, usando valores diretos */
 
 /* ===== LAYOUT PRINCIPAL ===== */
 .main-container {
-  -fx-background-color: var(--background-color);
+  -fx-background-color: #f8fafc;
   -fx-padding: 20;
 }
 
 .content-card {
-  -fx-background-color: var(--surface-color);
+  -fx-background-color: #ffffff;
   -fx-background-radius: 12px;
   -fx-border-radius: 12px;
   -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0, 0, 2);
@@ -35,14 +18,14 @@
 
 /* ===== CABEÇALHO ===== */
 .header-title {
-  -fx-text-fill: var(--primary-color);
+  -fx-text-fill: #2563eb;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-weight: bold;
   -fx-font-size: 32px;
 }
 
 .header-subtitle {
-  -fx-text-fill: var(--text-secondary);
+  -fx-text-fill: #64748b;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 14px;
   -fx-font-weight: normal;
@@ -50,7 +33,7 @@
 
 /* ===== BOTÕES ===== */
 .btn-primary {
-  -fx-background-color: var(--primary-color);
+  -fx-background-color: #2563eb;
   -fx-text-fill: white;
   -fx-background-radius: 8px;
   -fx-border-radius: 8px;
@@ -63,15 +46,15 @@
 }
 
 .btn-primary:hover {
-  -fx-background-color: var(--primary-hover);
+  -fx-background-color: #1d4ed8;
   -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.4), 6, 0, 0, 3);
 }
 
 .btn-secondary {
-  -fx-background-color: var(--surface-color);
-  -fx-text-fill: var(--text-primary);
+  -fx-background-color: #ffffff;
+  -fx-text-fill: #1e293b;
   -fx-background-radius: 8px;
-  -fx-border-color: var(--border-color);
+  -fx-border-color: #e2e8f0;
   -fx-border-radius: 8px;
   -fx-border-width: 1px;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
@@ -82,12 +65,12 @@
 }
 
 .btn-secondary:hover {
-  -fx-background-color: var(--background-color);
-  -fx-border-color: var(--primary-color);
+  -fx-background-color: #f8fafc;
+  -fx-border-color: #2563eb;
 }
 
 .btn-success {
-  -fx-background-color: var(--success-color);
+  -fx-background-color: #10b981;
   -fx-text-fill: white;
   -fx-background-radius: 8px;
   -fx-border-radius: 8px;
@@ -99,7 +82,7 @@
 }
 
 .btn-danger {
-  -fx-background-color: var(--error-color);
+  -fx-background-color: #ef4444;
   -fx-text-fill: white;
   -fx-background-radius: 8px;
   -fx-border-radius: 8px;
@@ -112,38 +95,38 @@
 
 /* ===== CAMPOS DE ENTRADA ===== */
 .input-field {
-  -fx-background-color: var(--surface-color);
-  -fx-border-color: var(--border-color);
+  -fx-background-color: #ffffff;
+  -fx-border-color: #e2e8f0;
   -fx-border-radius: 8px;
   -fx-background-radius: 8px;
   -fx-border-width: 1px;
   -fx-padding: 12 16 12 16;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 14px;
-  -fx-text-fill: var(--text-primary);
+  -fx-text-fill: #1e293b;
 }
 
 .input-field:focused {
-  -fx-border-color: var(--primary-color);
+  -fx-border-color: #2563eb;
   -fx-border-width: 2px;
   -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.2), 4, 0, 0, 0);
 }
 
 .input-field:error {
-  -fx-border-color: var(--error-color);
+  -fx-border-color: #ef4444;
   -fx-border-width: 2px;
 }
 
 /* ===== LABELS ===== */
 .label-primary {
-  -fx-text-fill: var(--text-primary);
+  -fx-text-fill: #1e293b;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 14px;
   -fx-font-weight: 600;
 }
 
 .label-secondary {
-  -fx-text-fill: var(--text-secondary);
+  -fx-text-fill: #64748b;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 12px;
   -fx-font-weight: normal;
@@ -151,8 +134,8 @@
 
 /* ===== COMBOBOX ===== */
 .combo-box {
-  -fx-background-color: var(--surface-color);
-  -fx-border-color: var(--border-color);
+  -fx-background-color: #ffffff;
+  -fx-border-color: #e2e8f0;
   -fx-border-radius: 8px;
   -fx-background-radius: 8px;
   -fx-border-width: 1px;
@@ -162,25 +145,25 @@
 }
 
 .combo-box:focused {
-  -fx-border-color: var(--primary-color);
+  -fx-border-color: #2563eb;
   -fx-border-width: 2px;
 }
 
 /* ===== TEXTAREA ===== */
 .text-area {
-  -fx-background-color: var(--surface-color);
-  -fx-border-color: var(--border-color);
+  -fx-background-color: #ffffff;
+  -fx-border-color: #e2e8f0;
   -fx-border-radius: 8px;
   -fx-background-radius: 8px;
   -fx-border-width: 1px;
   -fx-padding: 12 16 12 16;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 14px;
-  -fx-text-fill: var(--text-primary);
+  -fx-text-fill: #1e293b;
 }
 
 .text-area:focused {
-  -fx-border-color: var(--primary-color);
+  -fx-border-color: #2563eb;
   -fx-border-width: 2px;
 }
 
@@ -188,57 +171,57 @@
 .check-box {
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 14px;
-  -fx-text-fill: var(--text-primary);
+  -fx-text-fill: #1e293b;
 }
 
 .check-box .box {
-  -fx-background-color: var(--surface-color);
-  -fx-border-color: var(--border-color);
+  -fx-background-color: #ffffff;
+  -fx-border-color: #e2e8f0;
   -fx-border-radius: 4px;
   -fx-background-radius: 4px;
   -fx-border-width: 1px;
 }
 
 .check-box:selected .box {
-  -fx-background-color: var(--primary-color);
-  -fx-border-color: var(--primary-color);
+  -fx-background-color: #2563eb;
+  -fx-border-color: #2563eb;
 }
 
 /* ===== TABELA ===== */
 .table-view {
-  -fx-background-color: var(--surface-color);
-  -fx-border-color: var(--border-color);
+  -fx-background-color: #ffffff;
+  -fx-border-color: #e2e8f0;
   -fx-border-radius: 8px;
   -fx-background-radius: 8px;
   -fx-border-width: 1px;
 }
 
 .table-view .column-header {
-  -fx-background-color: var(--background-color);
-  -fx-text-fill: var(--text-primary);
+  -fx-background-color: #f8fafc;
+  -fx-text-fill: #1e293b;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 12px;
   -fx-font-weight: 600;
-  -fx-border-color: var(--border-color);
+  -fx-border-color: #e2e8f0;
 }
 
 .table-view .table-cell {
-  -fx-text-fill: var(--text-primary);
+  -fx-text-fill: #1e293b;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 14px;
-  -fx-border-color: var(--border-color);
+  -fx-border-color: #e2e8f0;
 }
 
 /* ===== MENSAGENS ===== */
 .message-error {
-  -fx-text-fill: var(--error-color);
+  -fx-text-fill: #ef4444;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 12px;
   -fx-font-weight: 500;
 }
 
 .message-success {
-  -fx-text-fill: var(--success-color);
+  -fx-text-fill: #10b981;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 12px;
   -fx-font-weight: 500;
@@ -246,8 +229,8 @@
 
 /* ===== CONTAINER DE IMAGEM ===== */
 .image-view-container {
-  -fx-background-color: var(--background-color);
-  -fx-border-color: var(--border-color);
+  -fx-background-color: #f8fafc;
+  -fx-border-color: #e2e8f0;
   -fx-border-width: 2px;
   -fx-border-style: dashed;
   -fx-border-radius: 12px;
@@ -257,20 +240,20 @@
 }
 
 .image-view-container:hover {
-  -fx-background-color: var(--primary-light);
-  -fx-border-color: var(--primary-color);
+  -fx-background-color: #dbeafe;
+  -fx-border-color: #2563eb;
 }
 
 /* ===== LINKS ===== */
 .hyperlink {
-  -fx-text-fill: var(--primary-color);
+  -fx-text-fill: #2563eb;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 14px;
   -fx-underline: false;
 }
 
 .hyperlink:hover {
-  -fx-text-fill: var(--primary-hover);
+  -fx-text-fill: #1d4ed8;
   -fx-underline: true;
 }
 
@@ -284,7 +267,7 @@
 /* ===== COMPATIBILIDADE COM CLASSES ANTIGAS ===== */
 .botao-login,
 .botao_login {
-  -fx-background-color: var(--primary-color);
+  -fx-background-color: #2563eb;
   -fx-text-fill: white;
   -fx-background-radius: 8px;
   -fx-border-radius: 8px;
@@ -298,14 +281,14 @@
 
 .botao-login:hover,
 .botao_login:hover {
-  -fx-background-color: var(--primary-hover);
+  -fx-background-color: #1d4ed8;
   -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.4), 6, 0, 0, 3);
 }
 
 .erro-login,
 .erro-campo {
-  -fx-border-color: var(--error-color);
-  -fx-text-fill: var(--error-color);
+  -fx-border-color: #ef4444;
+  -fx-text-fill: #ef4444;
   -fx-border-width: 2px;
   -fx-border-radius: 8px;
 }
