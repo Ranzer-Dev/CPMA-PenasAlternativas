@@ -1,11 +1,14 @@
 package controller;
 
+import java.io.IOException;
+
 import dao.AdminDAO;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -38,8 +41,11 @@ public class LoginController {
         botaoEntrar.setOnAction(this::autenticarUsuario);
         campoUsuario.textProperty().addListener((obs, oldText, newText) -> limparErros());
         linkRedefinirSenha.setOnAction(this::abrirRedefinirSenha);
+        campoSenha.setOnAction(this::autenticarUsuario);
+        campoUsuario.setOnAction(this::autenticarUsuario);
     }
 
+    @FXML
     private void autenticarUsuario(javafx.event.ActionEvent event) {
         String cpf = campoUsuario.getText();
         System.out.println("CPF: " + cpf);
@@ -80,8 +86,13 @@ public class LoginController {
             cena.getStylesheets().add(getClass().getResource("/com/mycompany/cpma/style.css").toExternalForm());
             stage.setScene(cena);
             stage.show();
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erro de Navegação");
+            alert.setHeaderText("Não foi possível carregar a tela.");
+            alert.setContentText("Ocorreu um erro ao tentar abrir o arquivo da interface. Por favor, contate o suporte.");
+            alert.showAndWait();
         }
     }
 

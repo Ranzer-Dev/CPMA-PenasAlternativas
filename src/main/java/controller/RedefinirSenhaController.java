@@ -1,21 +1,32 @@
 package controller;
 
+import java.io.IOException;
+
 import dao.AdminDAO;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Control;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import model.Administrador;
 
-import java.io.IOException;
-
 public class RedefinirSenhaController {
 
     @FXML
-    private TextField campoNovaSenha;
+    private VBox painelProcurarUsuario;
+    @FXML
+    private VBox painelPerguntaSecreta;
+    @FXML
+    private VBox painelNovaSenha;
+    @FXML
+    private PasswordField campoNovaSenha;
     @FXML
     private Label labelNovaSenha;
     @FXML
@@ -64,18 +75,36 @@ public class RedefinirSenhaController {
 
     private void prepararPerguntaSecreta(Administrador admin) {
         adminAtual = admin;
-
         campoPerguntaSecreta.setText(admin.getPerguntaSecreta());
-        campoPerguntaSecreta.setVisible(true);
-        campoRespostaSecreta.setVisible(true);
-        labelPerguntaSecreta.setVisible(true);
-        labelRespostaSecreta.setVisible(true);
-        labelUsuario.setVisible(false);
-        campoUsuario.setVisible(false);
         mensagemErro.setVisible(false);
 
+        // Esconde o painel do passo 1
+        painelProcurarUsuario.setVisible(false);
+        painelProcurarUsuario.setManaged(false); // Libera o espaço do painel
+
+        // Mostra o painel do passo 2
+        painelPerguntaSecreta.setVisible(true);
+        painelPerguntaSecreta.setManaged(true);
+
+        // Reconfigura o botão para a próxima ação
         procurar.setText("Responder");
         procurar.setOnAction(e -> verificarResposta());
+    }
+
+    private void mostrarCampoNovaSenha() {
+        mensagemErro.setVisible(false);
+
+        // Esconde o painel do passo 2
+        painelPerguntaSecreta.setVisible(false);
+        painelPerguntaSecreta.setManaged(false);
+
+        // Mostra o painel do passo 3
+        painelNovaSenha.setVisible(true);
+        painelNovaSenha.setManaged(true);
+
+        // Reconfigura o botão para a ação final
+        procurar.setText("Redefinir");
+        procurar.setOnAction(e -> redefinirSenha());
     }
 
     private void verificarResposta() {
@@ -87,19 +116,6 @@ public class RedefinirSenhaController {
             mostrarErro("Resposta incorreta.");
             adicionarEstiloErro(campoRespostaSecreta);
         }
-    }
-
-    private void mostrarCampoNovaSenha() {
-        campoNovaSenha.setVisible(true);
-        labelNovaSenha.setVisible(true);
-        campoPerguntaSecreta.setVisible(false);
-        campoRespostaSecreta.setVisible(false);
-        labelPerguntaSecreta.setVisible(false);
-        labelRespostaSecreta.setVisible(false);
-        mensagemErro.setVisible(false);
-
-        procurar.setText("Redefinir");
-        procurar.setOnAction(e -> redefinirSenha());
     }
 
     private void redefinirSenha() {

@@ -3,6 +3,11 @@
 /* Cores principais - JavaFX CSS não suporta variáveis CSS, usando valores diretos */
 
 /* ===== LAYOUT PRINCIPAL ===== */
+
+.root {
+  -fx-background-color: #f8fafc; /* Você pode usar a cor que desejar para o fundo */
+}
+
 .main-container {
   -fx-background-color: #f8fafc;
   -fx-padding: 20;
@@ -90,6 +95,20 @@
   -fx-font-size: 14px;
   -fx-font-weight: 600;
   -fx-padding: 12 24 12 24;
+  -fx-cursor: hand;
+}
+
+.btn-back {
+  -fx-background-color: #ffffff;
+  -fx-text-fill: #64748b;
+  -fx-background-radius: 8px;
+  -fx-border-color: #e2e8f0;
+  -fx-border-radius: 8px;
+  -fx-border-width: 1px;
+  -fx-font-family: "Segoe UI", "Roboto", sans-serif;
+  -fx-font-size: 14px;
+  -fx-font-weight: 500;
+  -fx-padding: 8 16 8 16;
   -fx-cursor: hand;
 }
 
