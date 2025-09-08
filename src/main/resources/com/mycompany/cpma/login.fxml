@@ -117,7 +117,7 @@
                                     <VBox spacing="8.0">
                                        <children>
                                           <Label text="CPF" styleClass="label-primary" />
-                                          <TextField fx:id="campoUsuario" promptText="Digite seu CPF" styleClass="input-field" />
+                                          <TextField fx:id="campoUsuario" onAction='#autenticarUsuario' promptText="Digite seu CPF" styleClass="input-field" />
                                        </children>
                                     </VBox>
                                     
@@ -125,7 +125,7 @@
                                     <VBox spacing="8.0">
                                        <children>
                                           <Label text="Senha" styleClass="label-primary" />
-                                          <PasswordField fx:id="campoSenha" promptText="Digite sua senha" styleClass="input-field" />
+                                          <PasswordField fx:id="campoSenha" onAction='#autenticarUsuario' promptText="Digite sua senha" styleClass="input-field" />
                                        </children>
                                     </VBox>
                                     
@@ -140,7 +140,7 @@
                                     <Label fx:id="mensagemErro" text="CPF ou senha incorretos" styleClass="message-error" visible="false" />
                                     
                                     <!-- Botão de login -->
-                                    <Button fx:id="botaoEntrar" mnemonicParsing="false" prefHeight="48.0" prefWidth="400.0" styleClass="btn-primary" text="Entrar" />
+                                    <Button fx:id="botaoEntrar" onAction='#autenticarUsuario' mnemonicParsing="false" prefHeight="48.0" prefWidth="400.0" styleClass="btn-primary" text="Entrar" />
                                  </children>
                               </VBox>
                            </children>

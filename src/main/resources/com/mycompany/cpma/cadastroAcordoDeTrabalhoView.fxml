@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<StackPane prefHeight="700.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+<StackPane prefHeight="700.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17.0.1" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="controller.IdentificacaoFacialController">
     <children>
         <AnchorPane prefHeight="700.0" prefWidth="900.0" styleClass="main-container">

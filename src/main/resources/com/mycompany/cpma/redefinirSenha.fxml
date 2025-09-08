@@ -40,59 +40,56 @@
                      </children>
                   </VBox>
                   
-                  <!-- Formulário de redefinição -->
-                  <VBox spacing="20.0" prefWidth="500.0">
-                     <children>
-                        <!-- Campo de usuário -->
-                        <VBox spacing="8.0">
-                           <children>
-                              <Label fx:id="labelUsuario" text="Usuário" styleClass="label-primary" />
-                              <TextField fx:id="campoUsuario" promptText="Digite seu CPF ou nome de usuário" styleClass="input-field" />
-                           </children>
-                        </VBox>
-                        
-                        <!-- Botão procurar -->
-                        <HBox alignment="CENTER">
-                           <children>
-                              <Button fx:id="procurar" mnemonicParsing="false" prefHeight="40.0" prefWidth="120.0" styleClass="btn-primary" text="Procurar" />
-                           </children>
-                        </HBox>
-                        
-                        <!-- Mensagem de erro -->
-                        <Label fx:id="mensagemErro" text="Usuário não encontrado" styleClass="message-error" visible="false" />
-                        
-                        <!-- Pergunta secreta -->
-                        <VBox fx:id="painelPerguntaSecreta" spacing="8.0" visible="false">
-                           <children>
-                              <Label fx:id="labelPerguntaSecreta" text="Pergunta Secreta" styleClass="label-primary" />
-                              <Text fx:id="campoPerguntaSecreta" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="label-secondary" />
-                              <Label fx:id="labelRespostaSecreta" text="Resposta Secreta" styleClass="label-primary" />
-                              <TextField fx:id="campoRespostaSecreta" promptText="Digite sua resposta" styleClass="input-field" />
-                           </children>
-                        </VBox>
-                        
-                        <!-- Nova senha -->
-                        <VBox fx:id="painelNovaSenha" spacing="8.0" visible="false">
-                           <children>
-                              <Label fx:id="labelNovaSenha" text="Nova Senha" styleClass="label-primary" />
-                              <PasswordField fx:id="campoNovaSenha" promptText="Digite sua nova senha" styleClass="input-field" />
-                           </children>
-                        </VBox>
-                     </children>
-                  </VBox>
+<VBox spacing="20.0" prefWidth="500.0">
+    <children>
+        
+        <VBox fx:id="painelProcurarUsuario" alignment="CENTER" spacing="20.0">
+            <children>
+                <VBox spacing="8.0">
+                    <children>
+                        <Label fx:id="labelUsuario" text="Usuário" styleClass="label-primary" />
+                        <TextField fx:id="campoUsuario" promptText="Digite seu CPF ou nome de usuário" styleClass="input-field" />
+                    </children>
+                </VBox>
+                
+
+            </children>
+        </VBox>
+        
+        <Label fx:id="mensagemErro" text="Usuário não encontrado" styleClass="message-error" visible="false" />
+        
+        <VBox fx:id="painelPerguntaSecreta" spacing="8.0" visible="false">
+            <children>
+                <Label fx:id="labelPerguntaSecreta" text="Pergunta Secreta" styleClass="label-primary" />
+                <Text fx:id="campoPerguntaSecreta" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="label-secondary" />
+                <Label fx:id="labelRespostaSecreta" text="Resposta Secreta" styleClass="label-primary" />
+                <TextField fx:id="campoRespostaSecreta" promptText="Digite sua resposta" styleClass="input-field" />
+            </children>
+        </VBox>
+        
+        <VBox fx:id="painelNovaSenha" spacing="8.0" visible="false">
+            <children>
+                <Label fx:id="labelNovaSenha" text="Nova Senha" styleClass="label-primary" />
+                <PasswordField fx:id="campoNovaSenha" promptText="Digite sua nova senha" styleClass="input-field" />
+            </children>
+        </VBox>
+        
+    </children>
+                    <HBox alignment="CENTER">
+                    <children>
+                        <Button fx:id="procurar" mnemonicParsing="false" prefHeight="40.0" prefWidth="120.0" styleClass="btn-primary" text="Procurar" />
+                    </children>
+                </HBox>
+</VBox>
                   
-                  <!-- Botões de ação -->
-                  <HBox alignment="CENTER" spacing="20.0">
-                     <children>
-                        <Button fx:id="telaInicio" mnemonicParsing="false" prefHeight="40.0" prefWidth="120.0" styleClass="btn-secondary" text="Voltar ao Início" />
-                     </children>
-                  </HBox>
                </children>
+                  <!-- Botões de ação -->
                <padding>
                   <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
                </padding>
             </VBox>
          </children>
+                  <Button fx:id="telaInicio" mnemonicParsing="false" text="← Voltar" styleClass="btn-back" />
       </AnchorPane>
    </children>
 </StackPane>
