@@ -21,10 +21,12 @@ import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.event.ActionEvent;
 import javafx.application.Platform;
+
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
+
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,6 +39,17 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.net.URL;
+import java.net.URLConnection;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+
+import javafx.scene.control.ProgressIndicator; // Supondo que o tenha no FXML
+
+import org.json.JSONObject; // Requer a biblioteca org.json no projeto
+
+import javafx.concurrent.Task;
 
 public class CadastrarUsuarioController {
 
@@ -68,6 +81,8 @@ public class CadastrarUsuarioController {
     private Button btnIniciarCamera;
     @FXML
     private Button btnCapturar;
+    @FXML
+    private ProgressIndicator loadingCep;
 
     private VideoCapture camera;
     private ScheduledExecutorService timer;
@@ -81,6 +96,7 @@ public class CadastrarUsuarioController {
 
     @FXML
     public void initialize() {
+        System.out.println("Inicializando CadastrarUsuarioController...");
         limitarUF();
         configurarListenersRemocaoErro();
 
@@ -96,7 +112,12 @@ public class CadastrarUsuarioController {
                 -> c.getControlNewText().matches("[0-9()\\-]*") ? c : null));
 
         cep.setTextFormatter(new TextFormatter<>(c
-                -> c.getControlNewText().matches("[0-9()\\-]*") ? c : null));
+                -> c.getControlNewText().matches("[0-9\\-]*") ? c : null));
+
+        // Configurar listener para buscar CEP automaticamente
+        System.out.println("Configurando busca de CEP...");
+        configurarBuscaCEP();
+        System.out.println("Busca de CEP configurada!");
     }
 
     /**
@@ -491,4 +512,96 @@ public class CadastrarUsuarioController {
         Stage stage = (Stage) btnIniciarCamera.getScene().getWindow();
         stage.close();
     }
+
+    /**
+     * Configura o listener para buscar CEP automaticamente quando o campo for
+     * preenchido
+     */
+    private void configurarBuscaCEP() {
+        cep.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            // Se o campo PERDEU o foco (!newVal) e tem um CEP válido...
+            if (!newVal) {
+                String cepLimpo = cep.getText().replaceAll("\\D", "");
+                if (cepLimpo.length() == 8) {
+                    buscarCEPComTask(cepLimpo);
+                }
+            }
+        });
+    }
+
+    /**
+     * Busca informações do CEP na API ViaCEP
+     */
+    private void buscarCEPComTask(String cep) {
+        // Cria uma Task para a operação de rede
+        Task<JSONObject> task = new Task<>() {
+            @Override
+            protected JSONObject call() throws Exception {
+                // Este código é executado numa thread de segundo plano
+                URL url = new URL("https://viacep.com.br/ws/" + cep + "/json/");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+    
+                if (conn.getResponseCode() != 200) {
+                    throw new RuntimeException("Falha : HTTP error code : " + conn.getResponseCode());
+                }
+    
+                // Ler a resposta
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        response.append(line);
+                    }
+                    return new JSONObject(response.toString());
+                } finally {
+                    conn.disconnect();
+                }
+            }
+        };
+    
+        // O que fazer QUANDO a task for bem-sucedida
+        task.setOnSucceeded(e -> {
+            JSONObject enderecoJson = task.getValue();
+            if (enderecoJson.has("erro")) {
+                mostrarAlerta("CEP não encontrado", "O CEP informado não foi encontrado.");
+            } else {
+                preencherCamposEnderecoComJson(enderecoJson);
+            }
+            setCarregando(false); // Esconde o indicador de "a carregar"
+        });
+    
+        // O que fazer SE a task falhar
+        task.setOnFailed(e -> {
+            mostrarAlerta("Erro de Rede", "Não foi possível conectar à API do ViaCEP.");
+            setCarregando(false);
+            task.getException().printStackTrace(); // Para depuração
+        });
+    
+        // Inicia o processo de "a carregar" e a task
+        setCarregando(true);
+        new Thread(task).start();
+    }
+    
+    
+   private void preencherCamposEnderecoComJson(JSONObject json) {
+       // Platform.runLater não é necessário aqui porque onSucceeded já corre na thread da UI
+       endereco.setText(json.optString("logradouro", ""));
+       bairro.setText(json.optString("bairro", ""));
+       cidade.setText(json.optString("localidade", ""));
+       uf.setText(json.optString("uf", ""));
+   }
+   
+   /**
+    * Controla a visibilidade do indicador de "a carregar" e desativa/ativa os campos.
+    */
+   private void setCarregando(boolean carregando) {
+       if (loadingCep != null) {
+           loadingCep.setVisible(carregando);
+       }
+       endereco.setDisable(carregando);
+       bairro.setDisable(carregando);
+       cidade.setDisable(carregando);
+       uf.setDisable(carregando);
+   }
 }
