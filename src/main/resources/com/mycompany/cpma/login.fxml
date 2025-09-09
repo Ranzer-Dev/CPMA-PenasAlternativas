@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
@@ -8,40 +9,149 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="672.0" prefWidth="859.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.LoginController">
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.LoginController">
    <children>
-      <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0">
+      <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1200.0" styleClass="main-container">
          <children>
-            <TextField fx:id="campoUsuario" layoutX="881.0" layoutY="486.0" prefHeight="32.0" prefWidth="208.0" promptText="CPF"/>
-            <Button fx:id="botaoEntrar" layoutX="936.0" layoutY="658.0" mnemonicParsing="false" prefWidth="100.0" styleClass="botao-login" text="Entrar" textAlignment="CENTER" textFill="WHITE" />
-            <PasswordField fx:id="campoSenha" layoutX="881.0" layoutY="540.0" prefHeight="32.0" prefWidth="208.0" promptText="Senha" />
-            <Text boundsType="VISUAL" fill="#3836af" layoutX="834.0" layoutY="401.0" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER" wrappingWidth="297.8203125">
-               <font>
-                  <Font name="System Bold" size="80.0" />
-               </font>
-            </Text>
-            <Text boundsType="VISUAL" fill="#3836af" layoutX="808.0" layoutY="431.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER">
-               <font>
-                  <Font size="20.0" />
-               </font>
-            </Text>
-            <Hyperlink fx:id="linkRedefinirSenha" layoutX="940.0" layoutY="578.0" text="Redefinir Senha" textFill="#626262" />
-            <Label fx:id="mensagemErro" layoutX="914.0" layoutY="632.0" text="*CPF ou senha incorretos" textFill="RED" visible="false" />
-            <ImageView fitHeight="85.0" fitWidth="150.0" layoutX="1002.0" layoutY="743.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@../../../images/fatec_ra_sorocaba_votorantim_cor.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="96.0" fitWidth="133.0" layoutX="797.0" layoutY="714.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@../../../images/Votorantim_Brasao.png" />
-               </image>
-            </ImageView>
-            <Text layoutX="1089.0" layoutY="841.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Desenvolvido pela Fatec Votorantim  versão 1.0" />
+            <!-- Layout principal com duas colunas -->
+            <HBox alignment="CENTER" layoutX="0.0" layoutY="0.0" prefHeight="720.0" prefWidth="1200.0" spacing="0.0">
+               <children>
+                  <!-- Coluna esquerda - Informações e branding -->
+                  <VBox alignment="CENTER" prefHeight="720.0" prefWidth="600.0" style="-fx-background-color: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+                     <children>
+                        <VBox alignment="CENTER" spacing="20.0">
+                           <children>
+                              <!-- Logo e título principal -->
+                              <VBox alignment="CENTER" spacing="10.0">
+                                 <children>
+                                    <Text fill="#1d4ed8" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
+                                       <font>
+                                          <Font name="Segoe UI Bold" size="64.0" />
+                                       </font>
+                                    </Text>
+                                    <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER" wrappingWidth="400.0">
+                                       <font>
+                                          <Font name="Segoe UI" size="18.0" />
+                                       </font>
+                                    </Text>
+                                 </children>
+                              </VBox>
+                              
+                              <!-- Descrição do sistema -->
+                              <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Sistema de gestão para controle e acompanhamento de penas alternativas" textAlignment="CENTER" wrappingWidth="450.0">
+                                 <font>
+                                    <Font name="Segoe UI" size="16.0" />
+                                 </font>
+                              </Text>
+                              
+                              <!-- Logos das instituições -->
+                              <HBox alignment="CENTER" spacing="30.0">
+                                 <children>
+                                    <ImageView fitHeight="80.0" fitWidth="140.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../../../images/fatec_ra_sorocaba_votorantim_cor.png" />
+                                       </image>
+                                    </ImageView>
+                                    <ImageView fitHeight="90.0" fitWidth="125.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../../../images/Votorantim_Brasao.png" />
+                                       </image>
+                                    </ImageView>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                        
+                        <!-- Informações de desenvolvimento -->
+                        <VBox alignment="CENTER" spacing="5.0">
+                           <children>
+                              <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Desenvolvido pela Fatec Votorantim" textAlignment="CENTER">
+                                 <font>
+                                    <Font name="Segoe UI" size="12.0" />
+                                 </font>
+                              </Text>
+                              <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Versão 1.0" textAlignment="CENTER">
+                                 <font>
+                                    <Font name="Segoe UI" size="12.0" />
+                                 </font>
+                              </Text>
+                           </children>
+                        </VBox>
+                     </children>
+                     <padding>
+                        <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+                     </padding>
+                  </VBox>
+                  
+                  <!-- Coluna direita - Formulário de login -->
+                  <VBox alignment="CENTER" prefHeight="720.0" prefWidth="600.0" styleClass="content-card">
+                     <children>
+                        <VBox alignment="CENTER" spacing="30.0">
+                           <children>
+                              <!-- Título da seção de login -->
+                              <VBox alignment="CENTER" spacing="10.0">
+                                 <children>
+                                    <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Bem-vindo de volta" textAlignment="CENTER">
+                                       <font>
+                                          <Font name="Segoe UI" size="28.0" />
+                                       </font>
+                                    </Text>
+                                    <Text fill="#64748b" strokeType="OUTSIDE" strokeWidth="0.0" text="Faça login para acessar o sistema" textAlignment="CENTER">
+                                       <font>
+                                          <Font name="Segoe UI" size="16.0" />
+                                       </font>
+                                    </Text>
+                                 </children>
+                              </VBox>
+                              
+                              <!-- Formulário de login -->
+                              <VBox alignment="CENTER" spacing="20.0" prefWidth="400.0">
+                                 <children>
+                                    <!-- Campo CPF -->
+                                    <VBox spacing="8.0">
+                                       <children>
+                                          <Label text="CPF" styleClass="label-primary" />
+                                          <TextField fx:id="campoUsuario" onAction='#autenticarUsuario' promptText="Digite seu CPF" styleClass="input-field" />
+                                       </children>
+                                    </VBox>
+                                    
+                                    <!-- Campo Senha -->
+                                    <VBox spacing="8.0">
+                                       <children>
+                                          <Label text="Senha" styleClass="label-primary" />
+                                          <PasswordField fx:id="campoSenha" onAction='#autenticarUsuario' promptText="Digite sua senha" styleClass="input-field" />
+                                       </children>
+                                    </VBox>
+                                    
+                                    <!-- Link redefinir senha -->
+                                    <HBox alignment="CENTER_RIGHT" prefWidth="400.0">
+                                       <children>
+                                          <Hyperlink fx:id="linkRedefinirSenha" text="Esqueceu sua senha?" />
+                                       </children>
+                                    </HBox>
+                                    
+                                    <!-- Mensagem de erro -->
+                                    <Label fx:id="mensagemErro" text="CPF ou senha incorretos" styleClass="message-error" visible="false" />
+                                    
+                                    <!-- Botão de login -->
+                                    <Button fx:id="botaoEntrar" onAction='#autenticarUsuario' mnemonicParsing="false" prefHeight="48.0" prefWidth="400.0" styleClass="btn-primary" text="Entrar" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </VBox>
+                     </children>
+                     <padding>
+                        <Insets bottom="60.0" left="60.0" right="60.0" top="60.0" />
+                     </padding>
+                  </VBox>
+               </children>
+            </HBox>
          </children>
       </AnchorPane>
    </children>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
@@ -8,96 +9,276 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<StackPane prefHeight="720.0" prefWidth="705.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CadastrarPenaController">
-
+<StackPane prefHeight="800.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CadastrarPenaController">
     <children>
-        <AnchorPane prefHeight="720.0" prefWidth="711.0">
+        <AnchorPane prefHeight="800.0" prefWidth="1000.0" styleClass="main-container">
             <children>
-                <Text fill="#3836af" layoutX="32.0" layoutY="49.0" text="CPMA">
-                    <font><Font name="System Bold" size="32.0" /></font>
-                </Text>
-
-                <Text fill="#3836af" layoutX="25.0" layoutY="64.0" text="Central de Penas e Medidas Alternativas">
-                    <font><Font size="6.0" /></font>
-                </Text>
-
-                <Label layoutX="28.0" layoutY="90.0" text="Usuário" />
-                <ComboBox fx:id="usuario" layoutX="28.0" layoutY="110.0" prefHeight="25.0" prefWidth="312.0" />
-
-                <Label layoutX="364.0" layoutY="90.0" text="Instituição" />
-                <ComboBox fx:id="instituicao" layoutX="360.0" layoutY="110.0" prefHeight="25.0" prefWidth="312.0" />
-
-                <Label layoutX="28.0" layoutY="150.0" text="Tipo de pena" />
-                <TextField fx:id="tipoPena" layoutX="28.0" layoutY="170.0" prefHeight="25.0" prefWidth="312.0" />
-
-                <Label layoutX="367.0" layoutY="150.0" text="Tempo (meses)" />
-                <TextField fx:id="tempoPena" layoutX="363.0" layoutY="170.0" prefHeight="25.0" prefWidth="312.0" />
-
-                <Label layoutX="28.0" layoutY="210.0" text="Horas semanais" />
-                <TextField fx:id="horasSemanais" layoutX="28.0" layoutY="230.0" prefHeight="25.0" prefWidth="146.0" />
-
-                <Label layoutX="192.0" layoutY="210.0" text="Horas totais" />
-                <TextField fx:id="horasTotais" layoutX="192.0" layoutY="230.0" prefHeight="25.0" prefWidth="146.0" />
-
-                <Label layoutX="355.0" layoutY="210.0" text="Data de início" />
-                <DatePicker fx:id="dataInicio" layoutX="355.0" layoutY="230.0" prefHeight="25.0" prefWidth="146.0" />
-
-                <Label layoutX="520.0" layoutY="210.0" text="Data de término" />
-                <DatePicker fx:id="dataTermino" layoutX="520.0" layoutY="230.0" prefHeight="25.0" prefWidth="155.0" />
-
-                <Label layoutX="28.0" layoutY="270.0" text="Descrição" />
-                <TextArea fx:id="descricao" layoutX="28.0" layoutY="290.0" prefHeight="70.0" prefWidth="650.0" />
-
-                <!-- Linhas de dias e horários -->
-                <Label layoutX="262.0" layoutY="369.0" text="Horários de cumprimento da pena" />
-
-                <!-- Segunda e Terça -->
-                <CheckBox fx:id="checkSegunda" layoutX="28.0" layoutY="400.0" text="Segunda" />
-                <TextField fx:id="inicioSeg" layoutX="100.0" layoutY="400.0" prefWidth="50" promptText="Início" />
-                <TextField fx:id="saidaSeg" layoutX="155.0" layoutY="400.0" prefWidth="50" promptText="Saída" />
-                <TextField fx:id="inicioSeg2" layoutX="210.0" layoutY="400.0" prefWidth="50" promptText="Início 2" />
-                <TextField fx:id="saidaSeg2" layoutX="265.0" layoutY="400.0" prefWidth="50" promptText="Saída 2" />
-
-                <CheckBox fx:id="checkTerca" layoutX="350.0" layoutY="400.0" text="Terça" />
-                <TextField fx:id="inicioTer" layoutX="420.0" layoutY="400.0" prefWidth="50" />
-                <TextField fx:id="saidaTer" layoutX="475.0" layoutY="400.0" prefWidth="50" />
-                <TextField fx:id="inicioTer2" layoutX="530.0" layoutY="400.0" prefWidth="50" />
-                <TextField fx:id="saidaTer2" layoutX="585.0" layoutY="400.0" prefWidth="50" />
-
-                <!-- Quarta e Quinta -->
-                <CheckBox fx:id="checkQuarta" layoutX="28.0" layoutY="440.0" text="Quarta" />
-                <TextField fx:id="inicioQua" layoutX="100.0" layoutY="440.0" prefWidth="50" />
-                <TextField fx:id="saidaQua" layoutX="155.0" layoutY="440.0" prefWidth="50" />
-                <TextField fx:id="inicioQua2" layoutX="210.0" layoutY="440.0" prefWidth="50" />
-                <TextField fx:id="saidaQua2" layoutX="265.0" layoutY="440.0" prefWidth="50" />
-
-                <CheckBox fx:id="checkQuinta" layoutX="350.0" layoutY="440.0" text="Quinta" />
-                <TextField fx:id="inicioQui" layoutX="420.0" layoutY="440.0" prefWidth="50" />
-                <TextField fx:id="saidaQui" layoutX="475.0" layoutY="440.0" prefWidth="50" />
-                <TextField fx:id="inicioQui2" layoutX="530.0" layoutY="440.0" prefWidth="50" />
-                <TextField fx:id="saidaQui2" layoutX="585.0" layoutY="440.0" prefWidth="50" />
-
-                <!-- Sexta e Sábado -->
-                <CheckBox fx:id="checkSexta" layoutX="28.0" layoutY="480.0" text="Sexta" />
-                <TextField fx:id="inicioSex" layoutX="100.0" layoutY="480.0" prefWidth="50" />
-                <TextField fx:id="saidaSex" layoutX="155.0" layoutY="480.0" prefWidth="50" />
-                <TextField fx:id="inicioSex2" layoutX="210.0" layoutY="480.0" prefWidth="50" />
-                <TextField fx:id="saidaSex2" layoutX="265.0" layoutY="480.0" prefWidth="50" />
-
-                <CheckBox fx:id="checkSabado" layoutX="350.0" layoutY="480.0" text="Sábado" />
-                <TextField fx:id="inicioSab" layoutX="420.0" layoutY="480.0" prefWidth="50" />
-                <TextField fx:id="saidaSab" layoutX="475.0" layoutY="480.0" prefWidth="50" />
-                <TextField fx:id="inicioSab2" layoutX="530.0" layoutY="480.0" prefWidth="50" />
-                <TextField fx:id="saidaSab2" layoutX="585.0" layoutY="480.0" prefWidth="50" />
-
-                <Label layoutX="28.0" layoutY="525.0" text="Atividades Acordadas" />
-                <TextArea fx:id="atividadesAcordadas" layoutX="28.0" layoutY="545.0" prefHeight="80.0" prefWidth="650.0" />
-
-                <Button fx:id="btnCadastrarPena" layoutX="285.0" layoutY="643.0" prefHeight="38.0" prefWidth="130.0" styleClass="botao_login" text="Cadastrar" />
+                <!-- Container principal com card -->
+                <VBox alignment="CENTER" layoutX="50.0" layoutY="20.0" prefHeight="760.0" prefWidth="900.0" styleClass="content-card">
+                    <children>
+                        <!-- Cabeçalho -->
+                        <VBox alignment="CENTER" spacing="10.0">
+                            <children>
+                                <Text fill="#2563eb" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI Bold" size="32.0" />
+                                    </font>
+                                </Text>
+                                <Text fill="#64748b" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI" size="14.0" />
+                                    </font>
+                                </Text>
+                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Cadastro de Pena" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI Bold" size="24.0" />
+                                    </font>
+                                </Text>
+                            </children>
+                        </VBox>
+                        
+                        <!-- Seção de informações básicas -->
+                        <VBox spacing="20.0" prefWidth="800.0">
+                            <children>
+                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Informações Básicas" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI Bold" size="18.0" />
+                                    </font>
+                                </Text>
+                                
+                                <!-- Usuário e Instituição -->
+                                <GridPane hgap="20.0" vgap="15.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                            <children>
+                                                <Label text="Usuário" styleClass="label-primary" />
+                                                <ComboBox fx:id="usuario" styleClass="combo-box" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                            <children>
+                                                <Label text="Instituição" styleClass="label-primary" />
+                                                <ComboBox fx:id="instituicao" styleClass="combo-box" />
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </GridPane>
+                                
+                                <!-- Tipo de pena e Tempo -->
+                                <GridPane hgap="20.0" vgap="15.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                            <children>
+                                                <Label text="Tipo de Pena" styleClass="label-primary" />
+                                                <TextField fx:id="tipoPena" promptText="Digite o tipo de pena" styleClass="input-field" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                            <children>
+                                                <Label text="Tempo (meses)" styleClass="label-primary" />
+                                                <TextField fx:id="tempoPena" promptText="Duração em meses" styleClass="input-field" />
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </GridPane>
+                                
+                                <!-- Horas e Datas -->
+                                <GridPane hgap="20.0" vgap="15.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                            <children>
+                                                <Label text="Horas Semanais" styleClass="label-primary" />
+                                                <TextField fx:id="horasSemanais" promptText="Horas/semana" styleClass="input-field" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                            <children>
+                                                <Label text="Horas Totais" styleClass="label-primary" />
+                                                <TextField fx:id="horasTotais" promptText="Total de horas" styleClass="input-field" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="5.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                            <children>
+                                                <Label text="Data de Início" styleClass="label-primary" />
+                                                <DatePicker fx:id="dataInicio" styleClass="combo-box" />
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="5.0" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                                            <children>
+                                                <Label text="Data de Término" styleClass="label-primary" />
+                                                <DatePicker fx:id="dataTermino" styleClass="combo-box" />
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </GridPane>
+                                
+                                <!-- Descrição -->
+                                <VBox spacing="5.0">
+                                    <children>
+                                        <Label text="Descrição" styleClass="label-primary" />
+                                        <TextArea fx:id="descricao" promptText="Descreva os detalhes da pena..." styleClass="text-area" />
+                                    </children>
+                                </VBox>
+                            </children>
+                        </VBox>
+                        
+                        <!-- Seção de horários -->
+                        <VBox spacing="20.0" prefWidth="800.0">
+                            <children>
+                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Horários de Cumprimento da Pena" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI Bold" size="18.0" />
+                                    </font>
+                                </Text>
+                                
+                                <!-- Grid de horários -->
+                                <GridPane hgap="15.0" vgap="10.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <!-- Cabeçalhos -->
+                                        <Label text="Dia" styleClass="label-primary" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                        <Label text="Início 1" styleClass="label-primary" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <Label text="Saída 1" styleClass="label-primary" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                                        <Label text="Início 2" styleClass="label-primary" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                                        <Label text="Saída 2" styleClass="label-primary" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+                                        
+                                        <!-- Segunda-feira -->
+                                        <CheckBox fx:id="checkSegunda" text="Segunda" styleClass="check-box" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                        <TextField fx:id="inicioSeg" promptText="08:00" styleClass="input-field" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <TextField fx:id="saidaSeg" promptText="12:00" styleClass="input-field" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                        <TextField fx:id="inicioSeg2" promptText="14:00" styleClass="input-field" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                        <TextField fx:id="saidaSeg2" promptText="18:00" styleClass="input-field" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+                                        
+                                        <!-- Terça-feira -->
+                                        <CheckBox fx:id="checkTerca" text="Terça" styleClass="check-box" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                        <TextField fx:id="inicioTer" promptText="08:00" styleClass="input-field" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <TextField fx:id="saidaTer" promptText="12:00" styleClass="input-field" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                        <TextField fx:id="inicioTer2" promptText="14:00" styleClass="input-field" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                                        <TextField fx:id="saidaTer2" promptText="18:00" styleClass="input-field" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+                                        
+                                        <!-- Quarta-feira -->
+                                        <CheckBox fx:id="checkQuarta" text="Quarta" styleClass="check-box" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                        <TextField fx:id="inicioQua" promptText="08:00" styleClass="input-field" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <TextField fx:id="saidaQua" promptText="12:00" styleClass="input-field" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                                        <TextField fx:id="inicioQua2" promptText="14:00" styleClass="input-field" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                                        <TextField fx:id="saidaQua2" promptText="18:00" styleClass="input-field" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+                                    </children>
+                                </GridPane>
+                                
+                                <!-- Segunda linha de dias -->
+                                <GridPane hgap="15.0" vgap="10.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <!-- Quinta-feira -->
+                                        <CheckBox fx:id="checkQuinta" text="Quinta" styleClass="check-box" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                        <TextField fx:id="inicioQui" promptText="08:00" styleClass="input-field" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <TextField fx:id="saidaQui" promptText="12:00" styleClass="input-field" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                                        <TextField fx:id="inicioQui2" promptText="14:00" styleClass="input-field" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                                        <TextField fx:id="saidaQui2" promptText="18:00" styleClass="input-field" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+                                        
+                                        <!-- Sexta-feira -->
+                                        <CheckBox fx:id="checkSexta" text="Sexta" styleClass="check-box" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                        <TextField fx:id="inicioSex" promptText="08:00" styleClass="input-field" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                        <TextField fx:id="saidaSex" promptText="12:00" styleClass="input-field" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                        <TextField fx:id="inicioSex2" promptText="14:00" styleClass="input-field" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                        <TextField fx:id="saidaSex2" promptText="18:00" styleClass="input-field" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+                                    </children>
+                                </GridPane>
+                                
+                                <!-- Sábado -->
+                                <GridPane hgap="15.0" vgap="10.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <CheckBox fx:id="checkSabado" text="Sábado" styleClass="check-box" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                        <TextField fx:id="inicioSab" promptText="08:00" styleClass="input-field" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                        <TextField fx:id="saidaSab" promptText="12:00" styleClass="input-field" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                                        <TextField fx:id="inicioSab2" promptText="14:00" styleClass="input-field" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                                        <TextField fx:id="saidaSab2" promptText="18:00" styleClass="input-field" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+                                    </children>
+                                </GridPane>
+                            </children>
+                        </VBox>
+                        
+                        <!-- Seção de atividades acordadas -->
+                        <VBox spacing="10.0" prefWidth="800.0">
+                            <children>
+                                <Label text="Atividades Acordadas" styleClass="label-primary" />
+                                <TextArea fx:id="atividadesAcordadas" promptText="Descreva as atividades que serão realizadas durante o cumprimento da pena..." styleClass="text-area" />
+                            </children>
+                        </VBox>
+                        
+                        <!-- Botão de cadastro -->
+                        <HBox alignment="CENTER" spacing="20.0">
+                            <children>
+                                <Button fx:id="btnCadastrarPena" mnemonicParsing="false" prefHeight="48.0" prefWidth="180.0" styleClass="btn-primary" text="Cadastrar Pena" />
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+                    </padding>
+                </VBox>
             </children>
         </AnchorPane>
     </children>

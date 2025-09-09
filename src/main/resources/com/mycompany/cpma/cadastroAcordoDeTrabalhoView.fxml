@@ -1,99 +1,129 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="controller.IdentificacaoFacialController"
-      spacing="20" padding="20" styleClass="root">
+<StackPane prefHeight="700.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17.0.1" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.IdentificacaoFacialController">
+    <children>
+        <AnchorPane prefHeight="700.0" prefWidth="900.0" styleClass="main-container">
+            <children>
+                <!-- Container principal com card -->
+                <VBox alignment="CENTER" layoutX="50.0" layoutY="20.0" prefHeight="660.0" prefWidth="800.0" styleClass="content-card">
+                    <children>
+                        <!-- Cabeçalho -->
+                        <VBox alignment="CENTER" spacing="10.0">
+                            <children>
+                                <Text fill="#2563eb" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI Bold" size="32.0" />
+                                    </font>
+                                </Text>
+                                <Text fill="#64748b" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI" size="14.0" />
+                                    </font>
+                                </Text>
+                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Identificação Facial de Penados" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI Bold" size="24.0" />
+                                    </font>
+                                </Text>
+                            </children>
+                        </VBox>
+                        
+                        <!-- Área de Imagem -->
+                        <VBox spacing="20.0" alignment="CENTER" prefWidth="700.0">
+                            <children>
+                                <Label text="Imagem do Rosto" styleClass="label-primary" />
+                                
+                                <ImageView fx:id="imageView"
+                                           fitWidth="400"
+                                           fitHeight="300"
+                                           styleClass="image-view-container"
+                                           preserveRatio="true"/>
 
-    <fx:define>
-        <Font fx:id="titleFont" size="24" />
-        <Font fx:id="headerFont" size="16" />
-        <Font fx:id="normalFont" size="14" />
-    </fx:define>
+                                <!-- Botões de Captura/Carregamento -->
+                                <HBox spacing="15.0" alignment="CENTER">
+                                    <children>
+                                        <Button fx:id="btnCapturar"
+                                                text="📷 Capturar da Webcam"
+                                                styleClass="btn-primary"
+                                                prefWidth="180" prefHeight="40"/>
 
-    <!-- Título da Tela -->
-    <Label text="Identificação Facial de Penados"
-           font="$titleFont"
-           styleClass="title-label"
-           alignment="CENTER"/>
+                                        <Button fx:id="btnCarregar"
+                                                text="📁 Carregar Arquivo"
+                                                styleClass="btn-secondary"
+                                                prefWidth="180" prefHeight="40"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
 
-    <!-- Área de Imagem -->
-    <VBox spacing="10" alignment="CENTER">
-        <Label text="Imagem do Rosto" font="$headerFont"/>
+                        <!-- Botões de Ação -->
+                        <VBox spacing="20.0" alignment="CENTER">
+                            <children>
+                                <HBox spacing="15.0" alignment="CENTER">
+                                    <children>
+                                        <Button fx:id="btnIdentificar"
+                                                text="🔍 Identificar Usuário"
+                                                styleClass="btn-primary"
+                                                prefWidth="200" prefHeight="45"
+                                                disable="true"/>
 
-        <ImageView fx:id="imageView"
-                   fitWidth="400"
-                   fitHeight="300"
-                   styleClass="image-view"
-                   preserveRatio="true"/>
+                                        <Button fx:id="btnCadastrar"
+                                                text="➕ Cadastrar Dados Faciais"
+                                                styleClass="btn-success"
+                                                prefWidth="200" prefHeight="45"
+                                                disable="true"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
 
-        <!-- Botões de Captura/Carregamento -->
-        <HBox spacing="10" alignment="CENTER">
-            <Button fx:id="btnCapturar"
-                    text="📷 Capturar da Webcam"
-                    styleClass="action-button"
-                    prefWidth="180" prefHeight="40"/>
+                        <!-- Status -->
+                        <VBox spacing="10.0" alignment="CENTER">
+                            <children>
+                                <Label fx:id="lblStatus"
+                                       text="Selecione ou capture uma imagem para começar"
+                                       styleClass="label-secondary"
+                                       alignment="CENTER"
+                                       wrapText="true"/>
+                            </children>
+                        </VBox>
 
-            <Button fx:id="btnCarregar"
-                    text="📁 Carregar Arquivo"
-                    styleClass="action-button"
-                    prefWidth="180" prefHeight="40"/>
-        </HBox>
-    </VBox>
+                        <!-- Informações do Usuário Identificado -->
+                        <VBox spacing="15.0" alignment="CENTER" prefWidth="700.0" styleClass="content-card">
+                            <children>
+                                <Label text="Dados do Usuário Identificado" styleClass="label-primary" />
 
-    <!-- Botões de Ação -->
-    <VBox spacing="10" alignment="CENTER">
-        <HBox spacing="10" alignment="CENTER">
-            <Button fx:id="btnIdentificar"
-                    text="🔍 Identificar Usuário"
-                    styleClass="primary-button"
-                    prefWidth="200" prefHeight="45"
-                    disable="true"/>
+                                <VBox spacing="8.0" alignment="CENTER_LEFT">
+                                    <children>
+                                        <Label fx:id="lblUsuario" text="Nome: " styleClass="label-secondary"/>
+                                        <Label fx:id="lblCPF" text="CPF: " styleClass="label-secondary"/>
+                                        <Label fx:id="lblEndereco" text="Endereço: " styleClass="label-secondary"/>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </VBox>
 
-            <Button fx:id="btnCadastrar"
-                    text="➕ Cadastrar Dados Faciais"
-                    styleClass="secondary-button"
-                    prefWidth="200" prefHeight="45"
-                    disable="true"/>
-        </HBox>
-    </VBox>
-
-    <!-- Status -->
-    <VBox spacing="5" alignment="CENTER">
-        <Label fx:id="lblStatus"
-               text="Selecione ou capture uma imagem para começar"
-               font="$normalFont"
-               styleClass="status-label"
-               alignment="CENTER"
-               wrapText="true"/>
-    </VBox>
-
-    <!-- Informações do Usuário Identificado -->
-    <VBox spacing="10" alignment="CENTER" styleClass="user-info-panel">
-        <Label text="Dados do Usuário Identificado" font="$headerFont"/>
-
-        <VBox spacing="5" alignment="CENTER_LEFT" styleClass="user-details">
-            <Label fx:id="lblUsuario" text="Nome: " font="$normalFont"/>
-            <Label fx:id="lblCPF" text="CPF: " font="$normalFont"/>
-            <Label fx:id="lblEndereco" text="Endereço: " font="$normalFont"/>
-        </VBox>
-    </VBox>
-
-    <!-- Botão Voltar -->
-    <HBox alignment="CENTER">
-        <Button text="← Voltar ao Menu Principal"
-                styleClass="back-button"
-                prefWidth="200" prefHeight="40"/>
-<!--                onAction="#navegarPara('/resources/view/buscaCadastroView.fxml')"/>-->
-    </HBox>
-
-    <stylesheets>
-<!--        <String fx:value="/resources/view/style.css"/>-->
-    </stylesheets>
-
-</VBox>
+                        <!-- Botão Voltar -->
+                        <HBox alignment="CENTER">
+                            <children>
+                                <Button text="← Voltar ao Menu Principal"
+                                        styleClass="btn-secondary"
+                                        prefWidth="200" prefHeight="40"/>
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+                    </padding>
+                </VBox>
+            </children>
+        </AnchorPane>
+    </children>
+</StackPane>

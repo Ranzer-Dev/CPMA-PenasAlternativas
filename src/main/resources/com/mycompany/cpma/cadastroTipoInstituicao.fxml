@@ -1,23 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane prefHeight="200.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/23.0.1"
+<StackPane prefHeight="300.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/23.0.1"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="controller.CadastroTipoInstituicaoController">
     <children>
-        <Text layoutX="20.0" layoutY="40.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Novo Tipo de Instituição">
-            <font>
-                <Font name="System Bold" size="18.0"/>
-            </font>
-        </Text>
-        <Label layoutX="20.0" layoutY="60.0" text="Tipo" />
-        <TextField fx:id="campoTipo" layoutX="20.0" layoutY="80.0" prefWidth="360.0" />
-
-        <Button fx:id="btnSalvar" layoutX="100.0" layoutY="130.0" text="Salvar" prefWidth="100.0"/>
-        <Button fx:id="btnCancelar" layoutX="210.0" layoutY="130.0" text="Cancelar" prefWidth="100.0"/>
+        <AnchorPane prefHeight="300.0" prefWidth="500.0" styleClass="main-container">
+            <children>
+                <!-- Container principal com card -->
+                <VBox alignment="CENTER" layoutX="50.0" layoutY="30.0" prefHeight="240.0" prefWidth="400.0" styleClass="content-card">
+                    <children>
+                        <!-- Cabeçalho -->
+                        <VBox alignment="CENTER" spacing="10.0">
+                            <children>
+                                <Text fill="#2563eb" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI Bold" size="24.0" />
+                                    </font>
+                                </Text>
+                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Novo Tipo de Instituição" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI Bold" size="18.0" />
+                                    </font>
+                                </Text>
+                            </children>
+                        </VBox>
+                        
+                        <!-- Formulário -->
+                        <VBox spacing="20.0" prefWidth="350.0">
+                            <children>
+                                <VBox spacing="8.0">
+                                    <children>
+                                        <Label text="Tipo de Instituição" styleClass="label-primary" />
+                                        <TextField fx:id="campoTipo" promptText="Digite o tipo de instituição" styleClass="input-field" />
+                                    </children>
+                                </VBox>
+                            </children>
+                        </VBox>
+                        
+                        <!-- Botões de ação -->
+                        <HBox alignment="CENTER" spacing="20.0">
+                            <children>
+                                <Button fx:id="btnSalvar" mnemonicParsing="false" prefHeight="40.0" prefWidth="120.0" styleClass="btn-primary" text="Salvar" />
+                                <Button fx:id="btnCancelar" mnemonicParsing="false" prefHeight="40.0" prefWidth="120.0" styleClass="btn-secondary" text="Cancelar" />
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                    </padding>
+                </VBox>
+            </children>
+        </AnchorPane>
     </children>
-</AnchorPane>
+</StackPane>

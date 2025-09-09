@@ -22,15 +22,22 @@ import java.util.List;
 
 public class CadastrarInstituicaoController {
 
-    @FXML private ComboBox<Instituicao> comboInstituicoes;
-    @FXML private TextField nome, endereco, cidade, uf, bairro, cep, responsavel, telefone;
-    @FXML private ComboBox<TipoInstituicao> comboTipo;
-    @FXML private TableView<DisponibilidadeInstituicao> tabelaHorarios;
-    @FXML private TableColumn<DisponibilidadeInstituicao, String> colDia, colInicio1, colFim1, colInicio2, colFim2;
-    @FXML private Button btnCadastrar, btnCancelar;
-    @FXML private Button btnAdicionarHorario, btnRemoverHorario;
-    @FXML private TableColumn<DisponibilidadeInstituicao, Void> colAcao;
-
+    @FXML
+    private ComboBox<Instituicao> comboInstituicoes;
+    @FXML
+    private TextField nome, endereco, cidade, uf, bairro, cep, responsavel, telefone;
+    @FXML
+    private ComboBox<TipoInstituicao> comboTipo;
+    @FXML
+    private TableView<DisponibilidadeInstituicao> tabelaHorarios;
+    @FXML
+    private TableColumn<DisponibilidadeInstituicao, String> colDia, colInicio1, colFim1, colInicio2, colFim2;
+    @FXML
+    private Button btnCadastrar, btnCancelar;
+    @FXML
+    private Button btnAdicionarHorario, btnRemoverHorario;
+    @FXML
+    private TableColumn<DisponibilidadeInstituicao, Void> colAcao;
 
     private boolean modoEdicao = false;
     private Instituicao instituicaoAtual;
@@ -74,7 +81,9 @@ public class CadastrarInstituicaoController {
         carregarInstituicoesNaComboBox();
         comboInstituicoes.setOnAction(e -> {
             Instituicao inst = comboInstituicoes.getValue();
-            if (inst != null) preencherCampos(inst);
+            if (inst != null) {
+                preencherCampos(inst);
+            }
         });
     }
 
@@ -82,8 +91,15 @@ public class CadastrarInstituicaoController {
         List<Instituicao> lista = InstituicaoDAO.buscarTodasInstituicoes();
         comboInstituicoes.setItems(FXCollections.observableArrayList(lista));
         comboInstituicoes.setConverter(new StringConverter<>() {
-            @Override public String toString(Instituicao i) { return i == null ? "" : i.getNome(); }
-            @Override public Instituicao fromString(String s) { return null; }
+            @Override
+            public String toString(Instituicao i) {
+                return i == null ? "" : i.getNome();
+            }
+
+            @Override
+            public Instituicao fromString(String s) {
+                return null;
+            }
         });
 
         if (!lista.isEmpty()) {
@@ -97,10 +113,15 @@ public class CadastrarInstituicaoController {
         tipos.add(new TipoInstituicao(-1, "Adicionar outros..."));
         comboTipo.setItems(FXCollections.observableArrayList(tipos));
         comboTipo.setConverter(new StringConverter<>() {
-            @Override public String toString(TipoInstituicao t) {
+            @Override
+            public String toString(TipoInstituicao t) {
                 return t == null ? "" : t.getTipo();
             }
-            @Override public TipoInstituicao fromString(String s) { return null; }
+
+            @Override
+            public TipoInstituicao fromString(String s) {
+                return null;
+            }
         });
     }
 
@@ -152,7 +173,7 @@ public class CadastrarInstituicaoController {
 
     private void abrirCadastroTipoInstituicao() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com.mycompany.cpma/cadastroTipoInstituicao.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/cadastroTipoInstituicao.fxml"));
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(loader.load()));
@@ -165,7 +186,7 @@ public class CadastrarInstituicaoController {
 
     private void abrirCadastroDisponibilidade(int idInstituicao) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com.mycompany.cpma/cadastroDisponibilidade.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/cadastroDisponibilidade.fxml"));
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(loader.load()));
@@ -194,7 +215,9 @@ public class CadastrarInstituicaoController {
             ButtonType nao = new ButtonType("Não", ButtonBar.ButtonData.NO);
             alerta.getButtonTypes().setAll(sim, nao);
 
-            if (alerta.showAndWait().orElse(nao) == nao) return;
+            if (alerta.showAndWait().orElse(nao) == nao) {
+                return;
+            }
         }
 
         Instituicao inst = modoEdicao ? instituicaoAtual : new Instituicao();
@@ -222,8 +245,8 @@ public class CadastrarInstituicaoController {
             }
         }
 
-        mostrarAlerta(ok ? "Sucesso" : "Erro", ok ?
-                (modoEdicao ? "Instituição atualizada com sucesso." : "Instituição cadastrada com sucesso.")
+        mostrarAlerta(ok ? "Sucesso" : "Erro", ok
+                ? (modoEdicao ? "Instituição atualizada com sucesso." : "Instituição cadastrada com sucesso.")
                 : "Erro ao salvar instituição.");
 
         if (ok) {
@@ -253,7 +276,7 @@ public class CadastrarInstituicaoController {
 
     private void abrirCadastroDisponibilidadeTemp() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com.mycompany.cpma/cadastroDisponibilidade.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/cadastroDisponibilidade.fxml"));
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(loader.load()));
@@ -290,22 +313,57 @@ public class CadastrarInstituicaoController {
 
     private boolean validar() {
         boolean ok = true;
-        if (nome.getText().trim().isEmpty()) { marcarErro(nome); ok = false; }
-        if (endereco.getText().trim().isEmpty()) { marcarErro(endereco); ok = false; }
-        if (cidade.getText().trim().isEmpty()) { marcarErro(cidade); ok = false; }
-        if (!uf.getText().trim().matches("^[A-Z]{2}$")) { marcarErro(uf); ok = false; }
-        if (bairro.getText().trim().isEmpty()) { marcarErro(bairro); ok = false; }
-        if (responsavel.getText().trim().isEmpty()) { marcarErro(responsavel); ok = false; }
-        if (telefone.getText().trim().isEmpty()) { marcarErro(telefone); ok = false; }
-        if (comboTipo.getValue() == null || comboTipo.getValue().getIdTipo() == -1) { marcarErro(comboTipo); ok = false; }
+        if (nome.getText().trim().isEmpty()) {
+            marcarErro(nome);
+            ok = false;
+        }
+        if (endereco.getText().trim().isEmpty()) {
+            marcarErro(endereco);
+            ok = false;
+        }
+        if (cidade.getText().trim().isEmpty()) {
+            marcarErro(cidade);
+            ok = false;
+        }
+        if (!uf.getText().trim().matches("^[A-Z]{2}$")) {
+            marcarErro(uf);
+            ok = false;
+        }
+        if (bairro.getText().trim().isEmpty()) {
+            marcarErro(bairro);
+            ok = false;
+        }
+        if (responsavel.getText().trim().isEmpty()) {
+            marcarErro(responsavel);
+            ok = false;
+        }
+        if (telefone.getText().trim().isEmpty()) {
+            marcarErro(telefone);
+            ok = false;
+        }
+        if (comboTipo.getValue() == null || comboTipo.getValue().getIdTipo() == -1) {
+            marcarErro(comboTipo);
+            ok = false;
+        }
         return ok;
     }
 
-    private void marcarErro(Control c) { c.setStyle("-fx-border-color: red;"); }
-    private void limparErro(Control c)  { c.setStyle(""); }
+    private void marcarErro(Control c) {
+        c.setStyle("-fx-border-color: red;");
+    }
+
+    private void limparErro(Control c) {
+        c.setStyle("");
+    }
+
     private void limparErros() {
-        limparErro(nome); limparErro(endereco); limparErro(cidade); limparErro(uf);
-        limparErro(bairro); limparErro(responsavel); limparErro(telefone);
+        limparErro(nome);
+        limparErro(endereco);
+        limparErro(cidade);
+        limparErro(uf);
+        limparErro(bairro);
+        limparErro(responsavel);
+        limparErro(telefone);
         limparErro(comboTipo);
     }
 
@@ -338,15 +396,24 @@ public class CadastrarInstituicaoController {
 
     private void limitarUF() {
         uf.textProperty().addListener((obs, ov, nv) -> {
-            if (nv == null) return;
-            if (!nv.matches("[a-zA-Z]*")) uf.setText(ov);
-            else if (nv.length() > 2) uf.setText(nv.substring(0, 2));
+            if (nv == null) {
+                return;
+            }
+            if (!nv.matches("[a-zA-Z]*")) {
+                uf.setText(ov);
+            } else if (nv.length() > 2) {
+                uf.setText(nv.substring(0, 2));
+            }
         });
     }
 
     private void mostrarAlerta(String titulo, String msg) {
-        new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK) {{
-            setTitle(titulo); setHeaderText(null); showAndWait();
-        }};
+        new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK) {
+            {
+                setTitle(titulo);
+                setHeaderText(null);
+                showAndWait();
+            }
+        };
     }
 }
