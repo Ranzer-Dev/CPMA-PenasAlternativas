@@ -1,10 +1,7 @@
 package controller;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.Date;
@@ -17,9 +14,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javafx.stage.Modality;
+import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.javacv.Frame;
+
+import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.bytedeco.javacv.OpenCVFrameGrabber;
 import org.json.JSONObject;
 import org.opencv.core.Core;
-import org.opencv.core.Mat;
+
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
@@ -57,24 +61,13 @@ import model.Usuario;
 import util.HashUtil;
 import util.ReconhecimentoFacial;
 import util.ValidadorCPF;
+import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.global.opencv_imgcodecs;
+
+import javax.imageio.ImageIO;
+
 
 public class CadastrarUsuarioController {
-
-    // Static block to load OpenCV native library
-    private static boolean openCVDisponivel = false;
-
-    static {
-        try {
-            System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-            openCVDisponivel = true;
-            System.out.println("OpenCV carregado com sucesso!");
-        } catch (UnsatisfiedLinkError e) {
-            openCVDisponivel = false;
-            System.err.println("Erro ao carregar OpenCV: " + e.getMessage());
-            System.err.println("A funcionalidade de câmera não estará disponível.");
-        }
-    }
-
     @FXML
     private TextField cep;
     @FXML
@@ -105,11 +98,11 @@ public class CadastrarUsuarioController {
     private Button btnCapturar;
     @FXML
     private ProgressIndicator loadingCep;
-
-    private VideoCapture camera;
+    private FrameGrabber camera;
     private ScheduledExecutorService timer;
     private boolean cameraAtiva = false;
     private Mat frameCapturado;
+    private OpenCVFrameConverter.ToMat converterParaMat;
 
     // Variáveis para reconhecimento facial
     private ReconhecimentoFacial reconhecimentoFacial;
@@ -140,11 +133,9 @@ public class CadastrarUsuarioController {
             }
         });
 
-        telefone.setTextFormatter(new TextFormatter<>(c
-                -> c.getControlNewText().matches("[0-9()\\-]*") ? c : null));
+        telefone.setTextFormatter(new TextFormatter<>(c -> c.getControlNewText().matches("[0-9()\\-]*") ? c : null));
 
-        cep.setTextFormatter(new TextFormatter<>(c
-                -> c.getControlNewText().matches("[0-9\\-]*") ? c : null));
+        cep.setTextFormatter(new TextFormatter<>(c -> c.getControlNewText().matches("[0-9\\-]*") ? c : null));
 
         // Configurar listener para buscar CEP automaticamente
         System.out.println("Configurando busca de CEP...");
@@ -152,116 +143,68 @@ public class CadastrarUsuarioController {
         System.out.println("Busca de CEP configurada!");
     }
 
-    /**
-     * Ação do botão "Tirar Foto". Inicia ou para a webcam.
-     */
     @FXML
     private void iniciarCamera(ActionEvent event) {
-        if (!openCVDisponivel) {
-            mostrarAlerta("Erro", "OpenCV não está disponível. A funcionalidade de câmera não pode ser usada.");
-            return;
-        }
+        try {
+            // Carrega o FXML da janela da câmera
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/cameraView.fxml"));
+            Parent root = loader.load();
 
-        if (!cameraAtiva) {
-            try {
-                // Inicia a câmera
-                camera = new VideoCapture(0); // 0 para a câmera padrão
+            // Pega o controller da janela da câmera
+            CameraController cameraController = loader.getController();
 
-                if (camera.isOpened()) {
-                    cameraAtiva = true;
+            // Cria uma nova janela (Stage)
+            Stage cameraStage = new Stage();
+            cameraStage.setTitle("Capturar Foto");
+            cameraStage.setScene(new Scene(root));
 
-                    // Cria um serviço para ficar pegando os frames da câmera
-                    Runnable frameGrabber = () -> {
-                        Mat frame = new Mat();
-                        if (camera.read(frame)) {
-                            Image imageToShow = matToImage(frame);
-                            Platform.runLater(() -> foto.setImage(imageToShow));
-                            frameCapturado = frame; // Guarda o último frame para a captura
-                        }
-                    };
+            // Configura para ser uma janela modal (bloqueia a janela de cadastro)
+            cameraStage.initModality(Modality.APPLICATION_MODAL);
 
-                    this.timer = Executors.newSingleThreadScheduledExecutor();
-                    this.timer.scheduleAtFixedRate(frameGrabber, 0, 33, TimeUnit.MILLISECONDS); // ~30 FPS
+            // Define uma ação para quando a janela for fechada
+            cameraStage.setOnHidden(e -> {
+                // Pega a imagem que foi capturada
+                BufferedImage imagem = cameraController.getImagemCapturada();
+                if (imagem != null) {
+                    // Guarda a imagem para salvar no banco
+                    this.imagemCapturada = imagem;
 
-                    // Atualiza a UI
-                    btnIniciarCamera.setText("Parar Câmera");
-                    btnCapturar.setVisible(true);
-                } else {
-                    mostrarAlerta("Erro", "Não foi possível abrir a câmera. Verifique se ela está conectada e não está sendo usada por outro aplicativo.");
+                    // Usa o novo método para converter a imagem
+                    Image imagePreview = converterBufferedImageParaImage(imagem);
+                    if (imagePreview != null) {
+                        foto.setImage(imagePreview);
+                    }
+
+                    mostrarAlerta("Sucesso", "Foto capturada com sucesso!");
                 }
-            } catch (Exception e) {
-                mostrarAlerta("Erro", "Erro ao inicializar a câmera: " + e.getMessage());
-                e.printStackTrace();
-            }
-        } else {
-            // Para a câmera
-            pararCamera();
+            });
+
+            // Mostra a janela e espera ela ser fechada
+            cameraStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro", "Não foi possível abrir a janela da câmera.");
         }
     }
 
     /**
-     * Ação do botão "Capturar". Tira a foto.
-     */
-    @FXML
-    private void capturarFoto(ActionEvent event) {
-        if (!openCVDisponivel) {
-            mostrarAlerta("Erro", "OpenCV não está disponível. A funcionalidade de câmera não pode ser usada.");
-            return;
-        }
-
-        if (frameCapturado != null && !frameCapturado.empty()) {
-            try {
-                // Converte o frame capturado para uma imagem e exibe
-                Image fotoCapturada = matToImage(frameCapturado);
-                foto.setImage(fotoCapturada);
-
-                // Converte Mat para BufferedImage para processamento facial
-                imagemCapturada = matToBufferedImage(frameCapturado);
-
-                // Para a câmera após a captura
-                pararCamera();
-                System.out.println("Foto capturada com sucesso!");
-
-                // Mostra mensagem de sucesso
-                mostrarAlerta("Sucesso", "Foto capturada com sucesso! Os dados faciais serão salvos junto com o cadastro do usuário.");
-
-            } catch (Exception e) {
-                mostrarAlerta("Erro", "Erro ao processar a foto: " + e.getMessage());
-                e.printStackTrace();
-            }
-        } else {
-            mostrarAlerta("Erro", "Nenhuma imagem capturada. Tente novamente.");
-        }
-    }
-
-    /**
-     * Para a execução da câmera e limpa os recursos.
-     */
-    private void pararCamera() {
-        if (this.timer != null && !this.timer.isShutdown()) {
-            try {
-                this.timer.shutdown();
-                this.timer.awaitTermination(33, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                System.err.println("Erro ao parar a captura de frames: " + e.getMessage());
-            }
-        }
-        if (camera != null && camera.isOpened()) {
-            camera.release();
-        }
-        cameraAtiva = false;
-        btnIniciarCamera.setText("Tirar Foto");
-        btnCapturar.setVisible(false);
-    }
-
-    /**
-     * Converte um objeto Mat (OpenCV) para um objeto Image (JavaFX).
+     * Converte um objeto Mat (Bytedeco) para um objeto Image (JavaFX).
      */
     private Image matToImage(Mat frame) {
         try {
-            MatOfByte buffer = new MatOfByte();
-            Imgcodecs.imencode(".png", frame, buffer);
-            return new Image(new ByteArrayInputStream(buffer.toArray()));
+            // Usa um ponteiro de bytes para armazenar a imagem codificada
+            BytePointer bytePointer = new BytePointer();
+            opencv_imgcodecs.imencode(".png", frame, bytePointer);
+
+            // Pega os bytes do ponteiro
+            byte[] bytes = new byte[(int) bytePointer.limit()];
+            bytePointer.get(bytes);
+
+            // Libera o ponteiro
+            bytePointer.close();
+
+            return new Image(new ByteArrayInputStream(bytes));
         } catch (Exception e) {
             System.err.println("Não foi possível converter o Mat para Image: " + e);
             return null;
@@ -269,19 +212,132 @@ public class CadastrarUsuarioController {
     }
 
     /**
-     * Converte um objeto Mat (OpenCV) para BufferedImage (AWT).
+     * Converte um BufferedImage (AWT) para uma Image (JavaFX) manualmente.
+     * @param bufferedImage A imagem a ser convertida.
+     * @return Uma imagem compatível com JavaFX ou null se ocorrer um erro.
      */
-    private BufferedImage matToBufferedImage(Mat frame) {
+    private Image converterBufferedImageParaImage(BufferedImage bufferedImage) {
+        if (bufferedImage == null) {
+            return null;
+        }
         try {
-            MatOfByte buffer = new MatOfByte();
-            Imgcodecs.imencode(".jpg", frame, buffer);
-            byte[] byteArray = buffer.toArray();
-            return javax.imageio.ImageIO.read(new ByteArrayInputStream(byteArray));
-        } catch (Exception e) {
-            System.err.println("Não foi possível converter o Mat para BufferedImage: " + e);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            // Escreve a imagem como um PNG em um fluxo de bytes na memória
+            ImageIO.write(bufferedImage, "png", outputStream);
+            // Cria uma Image do JavaFX a partir do fluxo de bytes
+            return new Image(new ByteArrayInputStream(outputStream.toByteArray()));
+        } catch (IOException e) {
+            e.printStackTrace();
             return null;
         }
     }
+
+// ... outras importações ...
+
+    @FXML
+    private void capturarFoto(ActionEvent event) {
+        if (frameCapturado != null && !frameCapturado.empty()) {
+            try {
+                // Converte o frame capturado para uma imagem e exibe no ImageView
+                Image fotoCapturada = matToImage(frameCapturado);
+                foto.setImage(fotoCapturada);
+
+                // Converte o Mat do Bytedeco para um BufferedImage para processamento facial
+                imagemCapturada = matToBufferedImage(frameCapturado);
+
+                // Para a câmera após a captura
+                pararCamera();
+                System.out.println("Foto capturada com sucesso!");
+
+                // Mostra mensagem de sucesso
+                mostrarAlerta("Sucesso", "Foto capturada com sucesso! Os dados faciais serão salvos junto com o cadastro.");
+
+            } catch (Exception e) {
+                mostrarAlerta("Erro", "Erro ao processar a foto: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            mostrarAlerta("Aviso", "Nenhuma imagem foi capturada pela câmera. Tente novamente.");
+        }
+    }
+
+    /**
+     * Converte um objeto Mat (Bytedeco) para BufferedImage (AWT).
+     * Necessário para o reconhecimento facial.
+     */
+    private BufferedImage matToBufferedImage(Mat frame) {
+        try {
+            // Usa o mesmo processo do matToImage, mas para o BufferedImage
+            BytePointer bytePointer = new BytePointer();
+            opencv_imgcodecs.imencode(".png", frame, bytePointer);
+            byte[] bytes = new byte[(int) bytePointer.limit()];
+            bytePointer.get(bytes);
+            bytePointer.close();
+
+            return ImageIO.read(new ByteArrayInputStream(bytes));
+        } catch (Exception e) {
+            System.err.println("Não foi possível converter o Mat para BufferedImage: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Para a execução da câmera e limpa os recursos.
+     */
+    private void pararCamera() {
+        if (timer != null && !timer.isShutdown()) {
+            try {
+                timer.shutdown();
+                timer.awaitTermination(33, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                System.err.println("Erro ao parar a captura de frames: " + e.getMessage());
+            }
+        }
+
+        if (camera != null) {
+            try {
+                camera.stop();
+                camera.release();
+            } catch (FrameGrabber.Exception e) {
+                System.err.println("Erro ao parar a câmera: " + e.getMessage());
+            }
+        }
+
+        camera = null;
+        cameraAtiva = false;
+        btnIniciarCamera.setText("Tirar Foto");
+        btnCapturar.setVisible(false);
+    }
+    /**
+     * Converte um objeto Mat (OpenCV) para um objeto Image (JavaFX).
+     */
+//    private Image matToImage(Mat frame) {
+//        try {
+//            MatOfByte buffer = new MatOfByte();
+//            Imgcodecs.imencode(".png", frame, buffer);
+//            return new Image(new ByteArrayInputStream(buffer.toArray()));
+//        } catch (Exception e) {
+//            System.err.println("Não foi possível converter o Mat para Image: " + e);
+//            return null;
+//        }
+//    }
+
+    /**
+     * Converte um objeto Mat (OpenCV) para BufferedImage (AWT).
+     */
+//    private BufferedImage matToBufferedImage(Mat frame) {
+//        try {
+//            MatOfByte buffer = new MatOfByte();
+//            Imgcodecs.imencode(".jpg", frame, buffer);
+//            byte[] byteArray = buffer.toArray();
+//            return javax.imageio.ImageIO.read(new ByteArrayInputStream(byteArray));
+//        } catch (Exception e) {
+//            System.err.println("Não foi possível converter o Mat para BufferedImage: " + e);
+//            return null;
+//        }
+//    }
+
+
 
     public static int cadastrarUsuario(
             String nome, String cpf, String senha,
@@ -580,13 +636,13 @@ public class CadastrarUsuarioController {
         }
     }
 
-    public void fecharJanela() {
-        if (cameraAtiva && openCVDisponivel) {
-            pararCamera();
-        }
-        Stage stage = (Stage) btnIniciarCamera.getScene().getWindow();
-        stage.close();
-    }
+//    public void fecharJanela() {
+//        if (cameraAtiva && openCVDisponivel) {
+//            pararCamera();
+//        }
+//        Stage stage = (Stage) btnIniciarCamera.getScene().getWindow();
+//        stage.close();
+//    }
 
     /**
      * Configura o listener para buscar CEP automaticamente quando o campo for
@@ -659,7 +715,8 @@ public class CadastrarUsuarioController {
     }
 
     private void preencherCamposEnderecoComJson(JSONObject json) {
-        // Platform.runLater não é necessário aqui porque onSucceeded já corre na thread da UI
+        // Platform.runLater não é necessário aqui porque onSucceeded já corre na thread
+        // da UI
         endereco.setText(json.optString("logradouro", ""));
         bairro.setText(json.optString("bairro", ""));
         cidade.setText(json.optString("localidade", ""));
