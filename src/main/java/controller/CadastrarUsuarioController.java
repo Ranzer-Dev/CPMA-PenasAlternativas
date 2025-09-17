@@ -16,11 +16,9 @@ import java.util.concurrent.TimeUnit;
 
 import javafx.stage.Modality;
 import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.*;
 
-import org.bytedeco.javacv.FrameGrabber;
-import org.bytedeco.javacv.OpenCVFrameConverter;
-import org.bytedeco.javacv.OpenCVFrameGrabber;
+import org.bytedeco.opencv.opencv_objdetect.CascadeClassifier;
 import org.json.JSONObject;
 import org.opencv.core.Core;
 
@@ -62,6 +60,8 @@ import util.HashUtil;
 import util.ReconhecimentoFacial;
 import util.ValidadorCPF;
 import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_core.RectVector;
+import org.bytedeco.opencv.opencv_core.Rect;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
 
 import javax.imageio.ImageIO;
