@@ -51,6 +51,14 @@ Este documento explica como usar o sistema de reconhecimento facial implementado
 - JavaFX
 - Arquivos Haar Cascade (já incluídos no projeto)
 
+### Compatibilidade Multiplataforma
+
+- ✅ **Windows** - Totalmente suportado
+- ✅ **Linux** - Totalmente suportado
+- ✅ **macOS** - Totalmente suportado
+- ✅ **Detecção automática** do sistema operacional
+- ✅ **Correção automática** de caminhos de arquivos
+
 ### Arquivos Importantes
 
 - `src/main/resources/opencv/haarcascades/haarcascade_frontalface_default.xml`
@@ -95,8 +103,19 @@ if (reconhecimento.isInicializado()) {
    - Verifique as permissões de acesso à câmera
 
 3. **Performance lenta**
+
    - A detecção facial é processada a cada 33ms (30 FPS)
    - Para melhorar a performance, você pode ajustar o intervalo no `CameraController`
+
+4. **Problemas específicos do Linux**
+
+   - Certifique-se de que as bibliotecas OpenCV estão instaladas: `sudo apt-get install libopencv-dev`
+   - Verifique as permissões da câmera: `sudo usermod -a -G video $USER`
+   - Reinicie o sistema após adicionar o usuário ao grupo video
+
+5. **Problemas específicos do Windows**
+   - Verifique se o Visual C++ Redistributable está instalado
+   - Execute como administrador se necessário
 
 ## Próximos Passos
 
