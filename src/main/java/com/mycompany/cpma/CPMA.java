@@ -5,6 +5,7 @@ import java.io.IOException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class CPMA extends Application {
@@ -12,8 +13,10 @@ public class CPMA extends Application {
     @Override
     public void start(Stage stage) {
         try {
-            // CORREÇÃO: Utiliza um caminho absoluto para o FXML, começando com "/"
-            // para indicar a raiz da pasta 'resources'.
+            Font.loadFont(getClass().getResourceAsStream("/fonts/Nunito-Regular.ttf"), 10);
+            Font.loadFont(getClass().getResourceAsStream("/fonts/Nunito-Bold.ttf"), 10);
+            Font.loadFont(getClass().getResourceAsStream("/fonts/Nunito-Italic.ttf"), 10);
+            Font.loadFont(getClass().getResourceAsStream("/fonts/Nunito-BoldItalic.ttf"), 10);
             FXMLLoader fxmlLoader = new FXMLLoader(CPMA.class.getResource("/com/mycompany/cpma/login.fxml"));
 
             Scene scene = new Scene(fxmlLoader.load());

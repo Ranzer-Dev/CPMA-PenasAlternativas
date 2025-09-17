@@ -14,6 +14,9 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import model.Administrador;
 import util.HashUtil;
@@ -31,9 +34,16 @@ public class LoginController {
     private Button botaoEntrar;
     @FXML
     private Hyperlink linkRedefinirSenha;
+    @FXML
+    private TextField campoSenhaVisivel;
+    @FXML
+    private ImageView iconeOlho;
 
     private final AdminDAO adminDAO = new AdminDAO();
     private Administrador adminAutenticado;
+    private Image iconeOlhoAberto;
+    private Image iconeOlhoFechado;
+    private boolean senhaEstaVisivel = false;
 
     @FXML
     private void initialize() {
@@ -43,6 +53,10 @@ public class LoginController {
         linkRedefinirSenha.setOnAction(this::abrirRedefinirSenha);
         campoSenha.setOnAction(this::autenticarUsuario);
         campoUsuario.setOnAction(this::autenticarUsuario);
+        iconeOlhoAberto = new Image(getClass().getResourceAsStream("/images/eye-open.png"));
+        iconeOlhoFechado = new Image(getClass().getResourceAsStream("/images/eye-closed.png"));
+        campoSenhaVisivel.textProperty().bindBidirectional(campoSenha.textProperty());
+        iconeOlho.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toggleVisibilidadeSenha);
     }
 
     @FXML
@@ -112,6 +126,19 @@ public class LoginController {
         mensagemErro.setVisible(false);
     }
 
+    private void toggleVisibilidadeSenha(MouseEvent event) {
+        senhaEstaVisivel = !senhaEstaVisivel;
+
+        if (senhaEstaVisivel) {
+            campoSenha.setVisible(false);
+            campoSenhaVisivel.setVisible(true);
+            iconeOlho.setImage(iconeOlhoAberto);
+        } else {
+            campoSenhaVisivel.setVisible(false);
+            campoSenha.setVisible(true);
+            iconeOlho.setImage(iconeOlhoFechado);
+        }
+    }
     public Administrador getAdminAutenticado() {
         return adminAutenticado;
     }

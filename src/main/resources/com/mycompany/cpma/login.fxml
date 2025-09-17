@@ -30,25 +30,25 @@
                               <!-- Logo e título principal -->
                               <VBox alignment="CENTER" spacing="10.0">
                                  <children>
-                                    <Text fill="#1d4ed8" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
-                                       <font>
-                                          <Font name="Segoe UI Bold" size="64.0" />
-                                       </font>
-                                    </Text>
+                                     <Text fill="#1d4ed8" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
+                                         <font>
+                                             <Font name="Nunito Bold" size="64.0" />
+                                         </font>
+                                     </Text>
                                     <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER" wrappingWidth="400.0">
                                        <font>
-                                          <Font name="Segoe UI" size="18.0" />
+                                          <Font name="Arial Black" size="18.0" />
                                        </font>
                                     </Text>
                                  </children>
                               </VBox>
                               
                               <!-- Descrição do sistema -->
-                              <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Sistema de gestão para controle e acompanhamento de penas alternativas" textAlignment="CENTER" wrappingWidth="450.0">
-                                 <font>
-                                    <Font name="Segoe UI" size="16.0" />
-                                 </font>
-                              </Text>
+                               <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Sistema de gestão para controle e acompanhamento de penas alternativas" textAlignment="CENTER" wrappingWidth="450.0">
+                                   <font>
+                                       <Font name="Nunito" size="16.0" />
+                                   </font>
+                               </Text>
                               
                               <!-- Logos das instituições -->
                               <HBox alignment="CENTER" spacing="30.0">
@@ -122,12 +122,26 @@
                                     </VBox>
                                     
                                     <!-- Campo Senha -->
-                                    <VBox spacing="8.0">
-                                       <children>
-                                          <Label text="Senha" styleClass="label-primary" />
-                                          <PasswordField fx:id="campoSenha" onAction='#autenticarUsuario' promptText="Digite sua senha" styleClass="input-field" />
-                                       </children>
-                                    </VBox>
+                                     <VBox spacing="8.0">
+                                         <children>
+                                             <Label text="Senha" styleClass="label-primary" />
+                                             <StackPane prefHeight="40.0">
+                                                 <children>
+                                                     <TextField fx:id="campoSenhaVisivel" onAction="#autenticarUsuario" promptText="Digite sua senha" styleClass="input-field" visible="false" />
+                                                     <PasswordField fx:id="campoSenha" onAction="#autenticarUsuario" promptText="Digite sua senha" styleClass="input-field" />
+
+                                                     <ImageView fx:id="iconeOlho" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true" styleClass="eye-icon" StackPane.alignment="CENTER_RIGHT">
+                                                         <image>
+                                                             <Image url="@../../../images/eye-closed.png" />
+                                                         </image>
+                                                         <StackPane.margin>
+                                                             <Insets right="15.0" />
+                                                         </StackPane.margin>
+                                                     </ImageView>
+                                                 </children>
+                                             </StackPane>
+                                         </children>
+                                     </VBox>
                                     
                                     <!-- Link redefinir senha -->
                                     <HBox alignment="CENTER_RIGHT" prefWidth="400.0">
