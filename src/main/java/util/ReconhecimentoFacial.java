@@ -1,5 +1,7 @@
 package util;
 
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -7,15 +9,81 @@ import java.io.IOException;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.opencv.global.opencv_imgcodecs;
+import org.bytedeco.opencv.global.opencv_imgproc;
+import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_core.Rect;
+import org.bytedeco.opencv.opencv_core.RectVector;
+import org.bytedeco.opencv.opencv_objdetect.CascadeClassifier;
+
 /**
- * Classe simplificada para reconhecimento facial Esta é uma implementação
- * básica que pode ser expandida posteriormente com bibliotecas mais avançadas
- * como OpenCV ou dlib
+ * Classe para reconhecimento facial usando OpenCV Implementa detecção de faces
+ * em tempo real
  */
 public class ReconhecimentoFacial {
+
+    private CascadeClassifier faceDetector;
+    private boolean inicializado = false;
+
+    /**
+     * Inicializa o detector de faces
+     */
+    public void inicializar() {
+        try {
+            // Carrega o classificador Haar Cascade para detecção de faces
+            String cascadePath = getClass().getResource("/opencv/haarcascades/haarcascade_frontalface_default.xml").getPath();
+
+            // Corrige o caminho para Windows
+            if (cascadePath.startsWith("/") && System.getProperty("os.name").toLowerCase().contains("windows")) {
+                cascadePath = cascadePath.substring(1);
+            }
+
+            // System.out.println("Tentando carregar cascade de: " + cascadePath);
+            faceDetector = new CascadeClassifier(cascadePath);
+
+            if (faceDetector.empty()) {
+                System.err.println("Erro ao carregar o classificador de faces - tentando arquivo alternativo");
+                // Tenta o arquivo alternativo
+                String altCascadePath = getClass().getResource("/opencv/haarcascades/haarcascade_frontalface_alt.xml").getPath();
+
+                // Corrige o caminho para Windows
+                if (altCascadePath.startsWith("/") && System.getProperty("os.name").toLowerCase().contains("windows")) {
+                    altCascadePath = altCascadePath.substring(1);
+                }
+
+                // System.out.println("Tentando arquivo alternativo: " + altCascadePath);
+                faceDetector = new CascadeClassifier(altCascadePath);
+
+                if (faceDetector.empty()) {
+                    System.err.println("Erro ao carregar ambos os classificadores de faces");
+                    inicializado = false;
+                } else {
+                    inicializado = true;
+                    System.out.println("Detector de faces inicializado com sucesso (arquivo alternativo)");
+                }
+            } else {
+                inicializado = true;
+                System.out.println("Detector de faces inicializado com sucesso");
+            }
+        } catch (Exception e) {
+            System.err.println("Erro ao inicializar detector de faces: " + e.getMessage());
+            e.printStackTrace();
+            inicializado = false;
+        }
+    }
+
+    /**
+     * Verifica se o detector foi inicializado corretamente
+     */
+    public boolean isInicializado() {
+        return inicializado;
+    }
 
     /**
      * Captura imagem da webcam usando JavaFX Retorna null se não conseguir
@@ -29,16 +97,96 @@ public class ReconhecimentoFacial {
     }
 
     /**
-     * Detecta faces em uma imagem Implementação simplificada - sempre retorna
-     * true
+     * Detecta faces em uma imagem usando OpenCV
      */
     public boolean detectarFace(BufferedImage imagem) {
-        if (imagem == null) {
+        if (imagem == null || !inicializado) {
+            System.out.println("Detecção falhou: imagem=" + (imagem != null) + ", inicializado=" + inicializado);
             return false;
         }
 
-        // Implementação básica - verifica se a imagem tem dimensões mínimas
-        return imagem.getWidth() > 50 && imagem.getHeight() > 50;
+        try (Mat matImagem = bufferedImageToMat(imagem); Mat grayImage = new Mat(); RectVector faces = new RectVector()) {
+
+            // System.out.println("Processando imagem: " + imagem.getWidth() + "x" + imagem.getHeight());
+            // Converte para escala de cinza
+            opencv_imgproc.cvtColor(matImagem, grayImage, opencv_imgproc.COLOR_BGR2GRAY);
+
+            // Detecta faces com parâmetros mais sensíveis
+            faceDetector.detectMultiScale(grayImage, faces, 1.05, 2, 0,
+                    new org.bytedeco.opencv.opencv_core.Size(20, 20),
+                    new org.bytedeco.opencv.opencv_core.Size());
+
+            int numFaces = (int) faces.size();
+            // System.out.println("Faces detectadas: " + numFaces);
+
+            return numFaces > 0;
+
+        } catch (Exception e) {
+            System.err.println("Erro ao detectar faces: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Detecta faces e retorna as coordenadas dos retângulos
+     */
+    public List<Rectangle> detectarFacesComCoordenadas(BufferedImage imagem) {
+        List<Rectangle> faces = new ArrayList<>();
+
+        if (imagem == null || !inicializado) {
+            return faces;
+        }
+
+        try (Mat matImagem = bufferedImageToMat(imagem); Mat grayImage = new Mat(); RectVector faceRects = new RectVector()) {
+
+            // Converte para escala de cinza
+            opencv_imgproc.cvtColor(matImagem, grayImage, opencv_imgproc.COLOR_BGR2GRAY);
+
+            // Detecta faces com parâmetros mais sensíveis
+            faceDetector.detectMultiScale(grayImage, faceRects, 1.05, 2, 0,
+                    new org.bytedeco.opencv.opencv_core.Size(20, 20),
+                    new org.bytedeco.opencv.opencv_core.Size());
+
+            // Converte para lista de Rectangle
+            for (long i = 0; i < faceRects.size(); i++) {
+                Rect rect = faceRects.get(i);
+                faces.add(new Rectangle(rect.x(), rect.y(), rect.width(), rect.height()));
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erro ao detectar faces com coordenadas: " + e.getMessage());
+        }
+
+        return faces;
+    }
+
+    /**
+     * Desenha retângulos ao redor das faces detectadas
+     */
+    public BufferedImage desenharRetangulosFaces(BufferedImage imagem) {
+        List<Rectangle> faces = detectarFacesComCoordenadas(imagem);
+
+        if (faces.isEmpty()) {
+            return imagem;
+        }
+
+        // Cria uma cópia da imagem para desenhar
+        BufferedImage imagemComRetangulos = new BufferedImage(
+                imagem.getWidth(), imagem.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = imagemComRetangulos.createGraphics();
+        g2d.drawImage(imagem, 0, 0, null);
+
+        // Desenha retângulos verdes ao redor das faces
+        g2d.setColor(java.awt.Color.GREEN);
+        g2d.setStroke(new java.awt.BasicStroke(3));
+
+        for (Rectangle face : faces) {
+            g2d.drawRect(face.x, face.y, face.width, face.height);
+        }
+
+        g2d.dispose();
+        return imagemComRetangulos;
     }
 
     /**
@@ -50,9 +198,8 @@ public class ReconhecimentoFacial {
             return "[]";
         }
 
-        try {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             // Converte a imagem para array de bytes
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(imagem, "jpg", baos);
             byte[] imageBytes = baos.toByteArray();
 
@@ -78,12 +225,13 @@ public class ReconhecimentoFacial {
      * Converte BufferedImage para Blob para armazenamento no banco
      */
     public Blob imagemParaBlob(BufferedImage imagem, Connection connection) throws SQLException {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             ImageIO.write(imagem, "jpg", baos);
             byte[] imageBytes = baos.toByteArray();
 
-            return connection.createBlob();
+            Blob blob = connection.createBlob();
+            blob.setBytes(1, imageBytes);
+            return blob;
 
         } catch (IOException e) {
             throw new SQLException("Erro ao converter imagem para Blob", e);
@@ -96,9 +244,9 @@ public class ReconhecimentoFacial {
     public BufferedImage blobParaImagem(Blob blob) throws SQLException {
         try {
             byte[] bytes = blob.getBytes(1, (int) blob.length());
-            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-            return ImageIO.read(bais);
-
+            try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
+                return ImageIO.read(bais);
+            }
         } catch (IOException e) {
             throw new SQLException("Erro ao converter Blob para imagem", e);
         }
@@ -195,5 +343,53 @@ public class ReconhecimentoFacial {
         }
 
         return imagem;
+    }
+
+    /**
+     * Testa a detecção facial com uma imagem simples
+     */
+    public void testarDetecao() {
+        System.out.println("=== TESTE DE DETECÇÃO FACIAL ===");
+        System.out.println("Inicializado: " + inicializado);
+
+        if (!inicializado) {
+            System.out.println("Detector não inicializado - tentando inicializar...");
+            inicializar();
+        }
+
+        if (inicializado) {
+            BufferedImage imagemTeste = criarImagemTeste();
+            boolean resultado = detectarFace(imagemTeste);
+            System.out.println("Resultado do teste: " + resultado);
+        } else {
+            System.out.println("Não foi possível inicializar o detector");
+        }
+        System.out.println("=== FIM DO TESTE ===");
+    }
+
+    /**
+     * Converte BufferedImage para Mat do OpenCV
+     */
+    private Mat bufferedImageToMat(BufferedImage bufferedImage) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            // Usa PNG para melhor qualidade
+            ImageIO.write(bufferedImage, "png", baos);
+            byte[] imageBytes = baos.toByteArray();
+
+            // System.out.println("Convertendo imagem para Mat: " + imageBytes.length + " bytes");
+            try (BytePointer bytePointer = new BytePointer(imageBytes)) {
+                Mat mat = opencv_imgcodecs.imdecode(new Mat(bytePointer), opencv_imgcodecs.IMREAD_COLOR);
+                if (mat.empty()) {
+                    System.err.println("Erro: Mat vazio após decodificação");
+                } else {
+                    // System.out.println("Mat criado com sucesso: " + mat.rows() + "x" + mat.cols());
+                }
+                return mat;
+            }
+        } catch (IOException e) {
+            System.err.println("Erro ao converter BufferedImage para Mat: " + e.getMessage());
+            e.printStackTrace();
+            return new Mat();
+        }
     }
 }
