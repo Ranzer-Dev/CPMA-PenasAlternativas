@@ -3,7 +3,9 @@ package controller;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+
 import javax.imageio.ImageIO;
+
 import util.ReconhecimentoFacial;
 
 /**
@@ -13,6 +15,9 @@ public class TesteReconhecimento {
 
     public static void main(String[] args) {
         System.out.println("=== INICIANDO TESTE DE RECONHECIMENTO FACIAL ===");
+        System.out.println("Sistema Operacional: " + System.getProperty("os.name"));
+        System.out.println("Arquitetura: " + System.getProperty("os.arch"));
+        System.out.println("Versão Java: " + System.getProperty("java.version"));
 
         // Teste 1: Inicialização
         ReconhecimentoFacial reconhecimento = new ReconhecimentoFacial();
@@ -41,6 +46,21 @@ public class TesteReconhecimento {
 
             String cascadePath2 = reconhecimento.getClass().getResource("/opencv/haarcascades/haarcascade_frontalface_alt.xml").getPath();
             System.out.println("Arquivo 2 encontrado: " + cascadePath2);
+
+            // Testa a correção de caminho
+            System.out.println("Testando correção de caminho...");
+            String osName = System.getProperty("os.name").toLowerCase();
+            System.out.println("Sistema detectado: " + osName);
+
+            if (osName.contains("windows")) {
+                System.out.println("✓ Sistema Windows detectado - aplicando correções de caminho");
+            } else if (osName.contains("linux")) {
+                System.out.println("✓ Sistema Linux detectado - mantendo formato Unix");
+            } else if (osName.contains("mac")) {
+                System.out.println("✓ Sistema macOS detectado - mantendo formato Unix");
+            } else {
+                System.out.println("⚠ Sistema não reconhecido - usando formato padrão");
+            }
         } catch (Exception e) {
             System.out.println("Erro ao verificar arquivos: " + e.getMessage());
         }

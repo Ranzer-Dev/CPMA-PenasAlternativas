@@ -39,10 +39,8 @@ public class ReconhecimentoFacial {
             // Carrega o classificador Haar Cascade para detecção de faces
             String cascadePath = getClass().getResource("/opencv/haarcascades/haarcascade_frontalface_default.xml").getPath();
 
-            // Corrige o caminho para Windows
-            if (cascadePath.startsWith("/") && System.getProperty("os.name").toLowerCase().contains("windows")) {
-                cascadePath = cascadePath.substring(1);
-            }
+            // Corrige o caminho para diferentes sistemas operacionais
+            cascadePath = corrigirCaminhoArquivo(cascadePath);
 
             // System.out.println("Tentando carregar cascade de: " + cascadePath);
             faceDetector = new CascadeClassifier(cascadePath);
@@ -52,10 +50,8 @@ public class ReconhecimentoFacial {
                 // Tenta o arquivo alternativo
                 String altCascadePath = getClass().getResource("/opencv/haarcascades/haarcascade_frontalface_alt.xml").getPath();
 
-                // Corrige o caminho para Windows
-                if (altCascadePath.startsWith("/") && System.getProperty("os.name").toLowerCase().contains("windows")) {
-                    altCascadePath = altCascadePath.substring(1);
-                }
+                // Corrige o caminho para diferentes sistemas operacionais
+                altCascadePath = corrigirCaminhoArquivo(altCascadePath);
 
                 // System.out.println("Tentando arquivo alternativo: " + altCascadePath);
                 faceDetector = new CascadeClassifier(altCascadePath);
@@ -83,6 +79,28 @@ public class ReconhecimentoFacial {
      */
     public boolean isInicializado() {
         return inicializado;
+    }
+
+    /**
+     * Corrige o caminho do arquivo para funcionar em diferentes sistemas
+     * operacionais
+     */
+    private String corrigirCaminhoArquivo(String caminho) {
+        String osName = System.getProperty("os.name").toLowerCase();
+
+        if (osName.contains("windows")) {
+            // Windows: remove a barra inicial se existir
+            if (caminho.startsWith("/")) {
+                caminho = caminho.substring(1);
+            }
+            // Converte barras para o formato Windows se necessário
+            caminho = caminho.replace("/", "\\");
+        } else if (osName.contains("linux") || osName.contains("unix") || osName.contains("mac")) {
+            // Linux/Unix/Mac: mantém o formato com barras
+            // Não precisa fazer nada especial
+        }
+
+        return caminho;
     }
 
     /**
