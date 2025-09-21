@@ -1,21 +1,23 @@
 package dao;
 
-import model.Instituicao;
-import model.Usuario;
-import database.ConnectionFactory;
-import util.SessaoUsuario;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+
+import database.ConnectionFactory;
+import model.Usuario;
+import util.SessaoUsuario;
 
 public class UsuarioDAO {
 
     public Usuario buscarPorCpf(String cpf) {
         String sql = "SELECT * FROM Usuario WHERE cpf = ?";
 
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, cpf);
             ResultSet rs = stmt.executeQuery();
@@ -47,14 +49,47 @@ public class UsuarioDAO {
         return null;
     }
 
+    public static Usuario buscarPorNome(String nome) {
+        String sql = "SELECT * FROM Usuario WHERE nome LIKE ?";
+
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + nome + "%");
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Usuario usuario = new Usuario();
+                usuario.setIdUsuario(rs.getInt("id_usuario"));
+                usuario.setNome(rs.getString("nome"));
+                usuario.setCpf(rs.getString("cpf"));
+                usuario.setSenha(rs.getString("senha"));
+                usuario.setNacionalidade(rs.getString("nacionalidade"));
+                usuario.setDataNascimento(rs.getDate("data_nascimento"));
+                usuario.setDataCadastro(rs.getDate("data_cadastro"));
+                usuario.setFoto(rs.getString("foto"));
+                usuario.setEndereco(rs.getString("endereco"));
+                usuario.setBairro(rs.getString("bairro"));
+                usuario.setCidade(rs.getString("cidade"));
+                usuario.setUf(rs.getString("uf"));
+                usuario.setObservacao(rs.getString("observacao"));
+                usuario.setTelefone(rs.getString("telefone"));
+                usuario.setCep(rs.getString("cep"));
+                usuario.setFkAdministradorIdAdmin(rs.getInt("fk_administrador_id_admin"));
+                return usuario;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public static int inserir(Usuario usuario) {
-        String sql = "INSERT INTO Usuario (nome, cpf, senha, nacionalidade, data_nascimento, data_cadastro, " +
-                "endereco, bairro, cidade, uf, observacao, foto, fk_Administrador_id_admin, telefone, cep, codigo) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Usuario (nome, cpf, senha, nacionalidade, data_nascimento, data_cadastro, "
+                + "endereco, bairro, cidade, uf, observacao, foto, fk_Administrador_id_admin, telefone, cep, codigo) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             usuario.setFkAdministradorIdAdmin(SessaoUsuario.getAdminLogado().getIdAdministrador());
 
@@ -90,11 +125,10 @@ public class UsuarioDAO {
     }
 
     public static boolean atualizar(Usuario usuario) {
-        String sql = "UPDATE Usuario SET nome = ?, cpf = ?, senha = ?, nacionalidade = ?, data_nascimento = ?, data_cadastro = ?, " +
-                "endereco = ?, bairro = ?, cidade = ?, uf = ?, observacao = ?, foto = ?, telefone = ?, cep = ? , codigo = ?  WHERE id_usuario = ?";
+        String sql = "UPDATE Usuario SET nome = ?, cpf = ?, senha = ?, nacionalidade = ?, data_nascimento = ?, data_cadastro = ?, "
+                + "endereco = ?, bairro = ?, cidade = ?, uf = ?, observacao = ?, foto = ?, telefone = ?, cep = ? , codigo = ?  WHERE id_usuario = ?";
 
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getCpf());
@@ -126,9 +160,7 @@ public class UsuarioDAO {
         List<Usuario> lista = new ArrayList<>();
         String sql = "SELECT * FROM usuario";
 
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 Usuario u = new Usuario();
@@ -157,11 +189,9 @@ public class UsuarioDAO {
         return lista;
     }
 
-
     public static boolean cpfExiste(String cpf) {
         String sql = "SELECT COUNT(*) FROM Usuario WHERE cpf = ?";
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, cpf);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -175,9 +205,7 @@ public class UsuarioDAO {
 
     public static int buscarUltimoIdInserido() {
         String sql = "SELECT MAX(id_usuario) AS ultimo_id FROM Usuario";
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
             if (rs.next()) {
                 return rs.getInt("ultimo_id");
