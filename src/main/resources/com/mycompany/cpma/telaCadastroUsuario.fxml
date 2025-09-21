@@ -59,7 +59,6 @@
                                  </image>
                               </ImageView>
                               <Button fx:id="btnIniciarCamera" mnemonicParsing="false" onAction="#iniciarCamera" prefWidth="120.0" styleClass="btn-secondary" text="Tirar Foto" />
-                               <Button fx:id="btnCapturar" mnemonicParsing="false" onAction="#capturarFoto" prefWidth="120.0" styleClass="btn-primary" text="Capturar" visible="false" />
                            </children>
                         </VBox>
                         
