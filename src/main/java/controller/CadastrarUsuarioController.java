@@ -1,7 +1,11 @@
 package controller;
 
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.Date;
@@ -10,27 +14,22 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javafx.stage.Modality;
+import javax.imageio.ImageIO;
+
 import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacv.*;
-
-import org.bytedeco.opencv.opencv_objdetect.CascadeClassifier;
+import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.bytedeco.opencv.global.opencv_imgcodecs;
+import org.bytedeco.opencv.opencv_core.Mat;
 import org.json.JSONObject;
-import org.opencv.core.Core;
-
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.videoio.VideoCapture;
 
 import dao.DadosFaciaisDAO;
 import dao.InstituicaoDAO;
 import dao.PenaDAO;
 import dao.UsuarioDAO;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -50,7 +49,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView; // Supondo que o tenha no FXML
-import javafx.stage.Stage; // Requer a biblioteca org.json no projeto
+import javafx.stage.Modality; // Requer a biblioteca org.json no projeto
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import model.DadosFaciais;
 import model.Instituicao;
@@ -59,15 +59,9 @@ import model.Usuario;
 import util.HashUtil;
 import util.ReconhecimentoFacial;
 import util.ValidadorCPF;
-import org.bytedeco.opencv.opencv_core.Mat;
-import org.bytedeco.opencv.opencv_core.RectVector;
-import org.bytedeco.opencv.opencv_core.Rect;
-import org.bytedeco.opencv.global.opencv_imgcodecs;
-
-import javax.imageio.ImageIO;
-
 
 public class CadastrarUsuarioController {
+
     @FXML
     private TextField cep;
     @FXML
@@ -141,6 +135,9 @@ public class CadastrarUsuarioController {
         System.out.println("Configurando busca de CEP...");
         configurarBuscaCEP();
         System.out.println("Busca de CEP configurada!");
+
+        // Configura shutdown hook para liberar recursos da câmera
+        // configurarShutdownHook();
     }
 
     @FXML
@@ -162,15 +159,22 @@ public class CadastrarUsuarioController {
             cameraStage.initModality(Modality.APPLICATION_MODAL);
 
             // Define uma ação para quando a janela for fechada
+            cameraStage.setOnCloseRequest(e -> {
+                System.out.println("Janela da câmera sendo fechada pelo usuário");
+            });
+
             cameraStage.setOnHidden(e -> {
-                // Pega a imagem que foi capturada
-                BufferedImage imagem = cameraController.getImagemCapturada();
-                if (imagem != null) {
+                System.out.println("Janela da câmera ocultada - processando resultado");
+
+                // Pega a imagem que foi capturada do controller
+                BufferedImage imagemCapturada = cameraController.getImagemCapturada();
+
+                if (imagemCapturada != null) {
                     // Guarda a imagem para salvar no banco
-                    this.imagemCapturada = imagem;
+                    this.imagemCapturada = imagemCapturada;
 
                     // Usa o novo método para converter a imagem
-                    Image imagePreview = converterBufferedImageParaImage(imagem);
+                    Image imagePreview = cameraController.bufferedImageToImage(imagemCapturada);
                     if (imagePreview != null) {
                         foto.setImage(imagePreview);
                     }
@@ -213,6 +217,7 @@ public class CadastrarUsuarioController {
 
     /**
      * Converte um BufferedImage (AWT) para uma Image (JavaFX) manualmente.
+     *
      * @param bufferedImage A imagem a ser convertida.
      * @return Uma imagem compatível com JavaFX ou null se ocorrer um erro.
      */
@@ -233,7 +238,6 @@ public class CadastrarUsuarioController {
     }
 
 // ... outras importações ...
-
     @FXML
     private void capturarFoto(ActionEvent event) {
         if (frameCapturado != null && !frameCapturado.empty()) {
@@ -262,8 +266,8 @@ public class CadastrarUsuarioController {
     }
 
     /**
-     * Converte um objeto Mat (Bytedeco) para BufferedImage (AWT).
-     * Necessário para o reconhecimento facial.
+     * Converte um objeto Mat (Bytedeco) para BufferedImage (AWT). Necessário
+     * para o reconhecimento facial.
      */
     private BufferedImage matToBufferedImage(Mat frame) {
         try {
@@ -308,6 +312,7 @@ public class CadastrarUsuarioController {
         btnIniciarCamera.setText("Tirar Foto");
         btnCapturar.setVisible(false);
     }
+
     /**
      * Converte um objeto Mat (OpenCV) para um objeto Image (JavaFX).
      */
@@ -321,7 +326,6 @@ public class CadastrarUsuarioController {
 //            return null;
 //        }
 //    }
-
     /**
      * Converte um objeto Mat (OpenCV) para BufferedImage (AWT).
      */
@@ -336,9 +340,6 @@ public class CadastrarUsuarioController {
 //            return null;
 //        }
 //    }
-
-
-
     public static int cadastrarUsuario(
             String nome, String cpf, String senha,
             String nacionalidade, LocalDate dataNascimento, LocalDate dataCadastro,
@@ -643,7 +644,6 @@ public class CadastrarUsuarioController {
 //        Stage stage = (Stage) btnIniciarCamera.getScene().getWindow();
 //        stage.close();
 //    }
-
     /**
      * Configura o listener para buscar CEP automaticamente quando o campo for
      * preenchido
@@ -765,5 +765,22 @@ public class CadastrarUsuarioController {
             System.err.println("Erro ao processar dados faciais: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Configura um shutdown hook para liberar recursos da câmera quando o
+     * programa for fechado
+     */
+    private void configurarShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Programa sendo encerrado - liberando recursos da câmera...");
+
+            // Para qualquer câmera que possa estar ativa
+            if (cameraAtiva) {
+                pararCamera();
+            }
+
+            System.out.println("Recursos da câmera liberados com sucesso.");
+        }));
     }
 }
