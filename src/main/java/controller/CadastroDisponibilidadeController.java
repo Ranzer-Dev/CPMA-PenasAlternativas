@@ -13,13 +13,17 @@ import java.util.function.Consumer;
 
 public class CadastroDisponibilidadeController {
 
-    @FXML private TextField campoDia, campoHoraInicio1, campoHoraFim1, campoHoraInicio2, campoHoraFim2;
-    @FXML private Button btnSalvar;
-    @FXML private Button btnCancelar;
+    @FXML
+    private TextField campoDia, campoHoraInicio1, campoHoraFim1, campoHoraInicio2, campoHoraFim2;
+    @FXML
+    private Button btnSalvar;
+    @FXML
+    private Button btnCancelar;
     private Consumer<DisponibilidadeInstituicao> callback;
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
     private int instituicaoId;
+
     public void setInstituicaoId(int id) {
         this.instituicaoId = id;
     }
@@ -57,7 +61,6 @@ public class CadastroDisponibilidadeController {
         this.callback = callback;
     }
 
-
     private LocalTime parseHora(String texto, String campo) {
         try {
             return LocalTime.parse(texto, formatter);
@@ -68,12 +71,16 @@ public class CadastroDisponibilidadeController {
     }
 
     private LocalTime parseHoraOpcional(String texto, String campo) {
-        if (texto.trim().isEmpty()) return null;
+        if (texto.trim().isEmpty()) {
+            return null;
+        }
         return parseHora(texto, campo);
     }
 
     private boolean validarCampos() {
-        if (campoDia.getText().trim().isEmpty()) return false;
+        if (campoDia.getText().trim().isEmpty()) {
+            return false;
+        }
         try {
             LocalTime.parse(campoHoraInicio1.getText(), formatter);
             LocalTime.parse(campoHoraFim1.getText(), formatter);
@@ -84,13 +91,14 @@ public class CadastroDisponibilidadeController {
         return true;
     }
 
-
     private void mostrarAlerta(String titulo, String msg) {
-        new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK) {{
-            setTitle(titulo);
-            setHeaderText(null);
-            showAndWait();
-        }};
+        new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK) {
+            {
+                setTitle(titulo);
+                setHeaderText(null);
+                showAndWait();
+            }
+        };
     }
 
     private void fecharJanela() {
