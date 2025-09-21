@@ -6,11 +6,17 @@ import java.io.ByteArrayOutputStream;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import javax.imageio.ImageIO;
+
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameGrabber;
+import org.bytedeco.opencv.global.opencv_imgcodecs;
+import org.bytedeco.opencv.opencv_core.Mat;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -19,21 +25,20 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-import javax.imageio.ImageIO;
-import org.bytedeco.opencv.global.opencv_imgcodecs;
-import org.bytedeco.opencv.opencv_core.Mat;
 import util.ReconhecimentoFacial;
 
 public class CameraController {
 
     @FXML
-    private ImageView cameraImageView;
+    private ImageView cameraView;
     @FXML
-    private Button btnCapturarFoto;
+    private Button btnIniciarCamera;
+    @FXML
+    private Button btnCapturar;
     @FXML
     private Button btnCancelar;
     @FXML
-    private Label lblStatusDetecao;
+    private Label lblStatus;
 
     private FrameGrabber camera;
     private ScheduledExecutorService timer;
@@ -42,6 +47,7 @@ public class CameraController {
     private BufferedImage imagemCapturada; // Armazena a imagem final
     private ReconhecimentoFacial reconhecimentoFacial;
     private final boolean deteccaoAtiva = true;
+    private boolean cameraAtiva = false;
 
     @FXML
     public void initialize() {
@@ -52,25 +58,48 @@ public class CameraController {
         reconhecimentoFacial = new ReconhecimentoFacial();
         reconhecimentoFacial.inicializar();
 
+        // Configura modo rigoroso para reduzir falsos positivos
+        reconhecimentoFacial.configurarModoRigoroso();
+
         // Testa a detecção (apenas para debug)
         // reconhecimentoFacial.testarDetecao();
         // Atualiza o status inicial
-        if (lblStatusDetecao != null) {
+        if (lblStatus != null) {
             if (reconhecimentoFacial.isInicializado()) {
-                lblStatusDetecao.setText("Detecção facial ativa");
-                lblStatusDetecao.setStyle("-fx-text-fill: green;");
+                lblStatus.setText("Detecção facial ativa - Clique em 'Iniciar Câmera'");
+                lblStatus.setStyle("-fx-text-fill: green;");
             } else {
-                lblStatusDetecao.setText("Detecção facial indisponível");
-                lblStatusDetecao.setStyle("-fx-text-fill: red;");
+                lblStatus.setText("Detecção facial indisponível");
+                lblStatus.setStyle("-fx-text-fill: red;");
             }
         }
 
-        iniciarCamera();
+        // Configura o listener para quando a janela for fechada
+        configurarListenerFechamentoJanela();
     }
 
-    private void iniciarCamera() {
+    @FXML
+    private void iniciarCamera(ActionEvent event) {
+        if (!cameraAtiva) {
+            iniciarCameraInterno();
+        } else {
+            pararCamera();
+        }
+    }
+
+    private void iniciarCameraInterno() {
         try {
             camera.start();
+            cameraAtiva = true;
+
+            // Mostra o botão de capturar e atualiza o status
+            btnIniciarCamera.setText("Parar Câmera");
+            btnCapturar.setVisible(true);
+            if (lblStatus != null) {
+                lblStatus.setText("Câmera ativa - Posicione-se na frente da câmera");
+                lblStatus.setStyle("-fx-text-fill: green;");
+            }
+
             Runnable frameGrabber = () -> {
                 try {
                     Frame frame = camera.grab();
@@ -91,13 +120,13 @@ public class CameraController {
                                 // Atualiza status da detecção
                                 boolean faceDetectada = reconhecimentoFacial.detectarFace(bufferedImage);
                                 Platform.runLater(() -> {
-                                    if (lblStatusDetecao != null) {
+                                    if (lblStatus != null) {
                                         if (faceDetectada) {
-                                            lblStatusDetecao.setText("Face detectada ✓");
-                                            lblStatusDetecao.setStyle("-fx-text-fill: green;");
+                                            lblStatus.setText("Face detectada ✓");
+                                            lblStatus.setStyle("-fx-text-fill: green;");
                                         } else {
-                                            lblStatusDetecao.setText("Procurando faces...");
-                                            lblStatusDetecao.setStyle("-fx-text-fill: orange;");
+                                            lblStatus.setText("Procurando faces...");
+                                            lblStatus.setStyle("-fx-text-fill: orange;");
                                         }
                                     }
                                 });
@@ -115,7 +144,7 @@ public class CameraController {
                         }
 
                         if (imageToShow != null) {
-                            Platform.runLater(() -> cameraImageView.setImage(imageToShow));
+                            Platform.runLater(() -> cameraView.setImage(imageToShow));
                         }
                     }
                 } catch (FrameGrabber.Exception e) {
@@ -136,13 +165,37 @@ public class CameraController {
     void capturarFoto(ActionEvent event) {
         if (frameCapturado != null && !frameCapturado.empty()) {
             this.imagemCapturada = matToBufferedImage(frameCapturado);
-            fecharJanela();
+
+            // Para a câmera após capturar
+            pararCamera();
+
+            // Atualiza o status
+            if (lblStatus != null) {
+                lblStatus.setText("Foto capturada com sucesso!");
+                lblStatus.setStyle("-fx-text-fill: green;");
+            }
+
+            // Fecha a janela após um pequeno delay para o usuário ver a confirmação
+            javafx.concurrent.Task<Void> delayTask = new javafx.concurrent.Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    Thread.sleep(1000); // 1 segundo de delay
+                    return null;
+                }
+
+                @Override
+                protected void succeeded() {
+                    fecharJanela();
+                }
+            };
+            new Thread(delayTask).start();
         }
     }
 
     @FXML
     void cancelar(ActionEvent event) {
         this.imagemCapturada = null; // Garante que nenhuma imagem seja retornada
+        limparRecursos(); // Limpa recursos antes de fechar
         fecharJanela();
     }
 
@@ -150,7 +203,58 @@ public class CameraController {
         return this.imagemCapturada;
     }
 
-    public void fecharJanela() {
+    public Image getImagemCapturadaAsImage() {
+        if (this.imagemCapturada != null) {
+            return bufferedImageToImage(this.imagemCapturada);
+        }
+        return null;
+    }
+
+    /**
+     * Configura o listener para quando a janela for fechada
+     */
+    private void configurarListenerFechamentoJanela() {
+        // Aguarda a cena estar disponível
+        Platform.runLater(() -> {
+            if (cameraView != null && cameraView.getScene() != null) {
+                Stage stage = (Stage) cameraView.getScene().getWindow();
+                if (stage != null) {
+                    // Listener para quando a janela for fechada
+                    stage.setOnCloseRequest(event -> {
+                        System.out.println("Janela da câmera sendo fechada - liberando recursos...");
+                        limparRecursos();
+                    });
+
+                    // Listener para quando a janela for ocultada
+                    stage.setOnHidden(event -> {
+                        System.out.println("Janela da câmera ocultada - liberando recursos...");
+                        limparRecursos();
+                    });
+                }
+            }
+        });
+    }
+
+    /**
+     * Limpa todos os recursos da câmera
+     */
+    private void limparRecursos() {
+        if (cameraAtiva) {
+            System.out.println("Liberando recursos da câmera...");
+            pararCamera();
+        }
+    }
+
+    private void pararCamera() {
+        cameraAtiva = false;
+        btnIniciarCamera.setText("Iniciar Câmera");
+        btnCapturar.setVisible(false);
+
+        if (lblStatus != null) {
+            lblStatus.setText("Câmera parada - Clique em 'Iniciar Câmera' para começar");
+            lblStatus.setStyle("-fx-text-fill: orange;");
+        }
+
         // Para o timer
         if (timer != null && !timer.isShutdown()) {
             try {
@@ -160,6 +264,7 @@ public class CameraController {
                 System.err.println("Erro ao parar a captura de frames: " + e.getMessage());
             }
         }
+
         // Para a câmera
         if (camera != null) {
             try {
@@ -169,9 +274,17 @@ public class CameraController {
                 System.err.println("Erro ao parar a câmera: " + e.getMessage());
             }
         }
+    }
+
+    public void fecharJanela() {
+        // Limpa todos os recursos antes de fechar
+        limparRecursos();
+
         // Fecha a janela
-        Stage stage = (Stage) btnCancelar.getScene().getWindow();
-        stage.close();
+        if (btnCancelar != null && btnCancelar.getScene() != null) {
+            Stage stage = (Stage) btnCancelar.getScene().getWindow();
+            stage.close();
+        }
     }
 
     // MÉTODOS AUXILIARES DE CONVERSÃO
@@ -197,7 +310,7 @@ public class CameraController {
         }
     }
 
-    private Image bufferedImageToImage(BufferedImage bufferedImage) {
+    public Image bufferedImageToImage(BufferedImage bufferedImage) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             ImageIO.write(bufferedImage, "png", baos);
             byte[] bytes = baos.toByteArray();
