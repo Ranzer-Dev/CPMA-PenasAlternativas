@@ -27,7 +27,7 @@ public class DadosFaciaisDAO {
     public boolean cadastrar(DadosFaciais dadosFaciais) {
         String sql = "INSERT INTO DadosFaciais (fk_usuario_id_usuario, imagem_rosto, descritores_faciais, data_cadastro, data_atualizacao, ativo) VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = connectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, dadosFaciais.getFkUsuarioIdUsuario());
             stmt.setBlob(2, dadosFaciais.getImagemRosto());
