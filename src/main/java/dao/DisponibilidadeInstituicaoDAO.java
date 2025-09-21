@@ -4,7 +4,6 @@ import database.ConnectionFactory;
 import model.DisponibilidadeInstituicao;
 
 import java.sql.*;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +15,7 @@ public class DisponibilidadeInstituicaoDAO {
                 (dia_semana, hora_inicio_1, hora_fim_1, hora_inicio_2, hora_fim_2, fk_instituicao_id_instituicao)
             VALUES (?, ?, ?, ?, ?, ?)
         """;
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, disp.getDiaSemana());
             stmt.setTime(2, Time.valueOf(disp.getHoraInicio1()));
@@ -47,8 +45,7 @@ public class DisponibilidadeInstituicaoDAO {
             SELECT * FROM disponibilidade_instituicao
             WHERE fk_instituicao_id_instituicao = ?
         """;
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, idInstituicao);
             ResultSet rs = stmt.executeQuery();
