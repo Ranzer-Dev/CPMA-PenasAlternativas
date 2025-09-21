@@ -1,14 +1,13 @@
 package controller;
 
-import dao.PenaDAO;
-import dao.RegistroDeTrabalhoDAO;
-import dao.InstituicaoDAO;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import model.Pena;
-import model.RegistroDeTrabalho;
 import model.Usuario;
 
 public class DetalheApenadoController {
