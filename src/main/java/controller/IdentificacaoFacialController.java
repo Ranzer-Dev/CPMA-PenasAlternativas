@@ -332,19 +332,4 @@ public class IdentificacaoFacialController {
         alert.showAndWait();
     }
 
-    /**
-     * Navega para outra tela
-     */
-    private void navegarPara(String fxml) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
-            Parent root = loader.load();
-            Stage stage = (Stage) imageView.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e) {
-            mostrarErro("Erro de Navegação", e.getMessage());
-        }
-    }
 }
