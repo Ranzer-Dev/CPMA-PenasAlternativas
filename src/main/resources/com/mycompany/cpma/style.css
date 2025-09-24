@@ -388,6 +388,135 @@
   -fx-scale-y: 1.05;
 }
 
+/* ===== ESTILOS RESPONSIVOS ===== */
+
+/* Elementos responsivos básicos */
+.responsive-input {
+  -fx-min-width: 200px;
+  -fx-max-width: 500px;
+  -fx-pref-width: 400px;
+}
+
+.responsive-button {
+  -fx-min-width: 100px;
+  -fx-max-width: 200px;
+  -fx-pref-width: 130px;
+}
+
+/* Cards responsivos */
+.responsive-card {
+  -fx-min-width: 180px;
+  -fx-max-width: 350px;
+  -fx-pref-width: 250px;
+  -fx-min-height: 120px;
+  -fx-max-height: 200px;
+  -fx-pref-height: 140px;
+}
+
+/* Botões dentro dos cards */
+.responsive-card-button {
+  -fx-min-width: 70px;
+  -fx-max-width: 100px;
+  -fx-pref-width: 80px;
+  -fx-font-size: 11px;
+}
+
+/* Ícones dos cards */
+.card-icon {
+  -fx-font-size: 24px;
+}
+
+.card-title {
+  -fx-font-size: 13px;
+  -fx-font-weight: bold;
+}
+
+/* Layout responsivo para telas pequenas */
+@media (max-width: 600px) {
+  .responsive-input {
+    -fx-max-width: 300px;
+    -fx-pref-width: 280px;
+  }
+
+  .responsive-card {
+    -fx-min-width: 150px;
+    -fx-max-width: 250px;
+    -fx-pref-width: 200px;
+  }
+
+  .responsive-card-button {
+    -fx-min-width: 60px;
+    -fx-max-width: 80px;
+    -fx-pref-width: 70px;
+    -fx-font-size: 10px;
+  }
+
+  .card-icon {
+    -fx-font-size: 20px;
+  }
+
+  .card-title {
+    -fx-font-size: 12px;
+  }
+}
+
+/* Layout responsivo para telas médias */
+@media (min-width: 601px) and (max-width: 900px) {
+  .responsive-input {
+    -fx-max-width: 450px;
+    -fx-pref-width: 400px;
+  }
+
+  .responsive-card {
+    -fx-min-width: 200px;
+    -fx-max-width: 300px;
+    -fx-pref-width: 250px;
+  }
+}
+
+/* Layout responsivo para telas grandes */
+@media (min-width: 901px) {
+  .responsive-input {
+    -fx-max-width: 500px;
+    -fx-pref-width: 400px;
+  }
+
+  .responsive-card {
+    -fx-min-width: 220px;
+    -fx-max-width: 350px;
+    -fx-pref-width: 280px;
+  }
+
+  .responsive-card-button {
+    -fx-min-width: 80px;
+    -fx-max-width: 100px;
+    -fx-pref-width: 90px;
+    -fx-font-size: 12px;
+  }
+
+  .card-icon {
+    -fx-font-size: 28px;
+  }
+
+  .card-title {
+    -fx-font-size: 14px;
+  }
+}
+
+/* Melhorias para responsividade do container principal */
+.content-card {
+  -fx-min-width: 300px;
+  -fx-max-width: 1200px;
+  -fx-pref-width: 800px;
+}
+
+/* Ajustes para o GridPane responsivo */
+.responsive-grid {
+  -fx-hgap: 15px;
+  -fx-vgap: 15px;
+  -fx-max-width: 800px;
+}
+
 /* ===== COMPATIBILIDADE COM CLASSES ANTIGAS ===== */
 .botao-login,
 .botao_login {
