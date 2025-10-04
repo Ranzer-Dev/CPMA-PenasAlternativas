@@ -21,7 +21,6 @@ import javax.imageio.ImageIO;
 
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacv.FrameGrabber;
-import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.json.JSONObject;
@@ -48,8 +47,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView; // Supondo que o tenha no FXML
-import javafx.stage.Modality; // Requer a biblioteca org.json no projeto
+import javafx.scene.image.ImageView;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import model.DadosFaciais;
@@ -96,7 +95,6 @@ public class CadastrarUsuarioController {
     private ScheduledExecutorService timer;
     private boolean cameraAtiva = false;
     private Mat frameCapturado;
-    private OpenCVFrameConverter.ToMat converterParaMat;
 
     // Variáveis para reconhecimento facial
     private ReconhecimentoFacial reconhecimentoFacial;
@@ -107,6 +105,52 @@ public class CadastrarUsuarioController {
     private boolean modoEdicao = false;
     private int idUsuarioInserido;
     private final Map<String, Integer> mapNomeParaIdInstituicao = new HashMap<>();
+
+    /**
+     * Aplica máscara no formato CPF (000.000.000-00)
+     */
+    private String aplicarMascaraCPF(String digits) {
+        if (digits == null || digits.isEmpty()) {
+            return "";
+        }
+
+        // Remove caracteres não numéricos
+        digits = digits.replaceAll("[^0-9]", "");
+
+        // Aplica a máscara conforme o tamanho
+        if (digits.length() <= 3) {
+            return digits;
+        } else if (digits.length() <= 6) {
+            return digits.substring(0, 3) + "." + digits.substring(3);
+        } else if (digits.length() <= 9) {
+            return digits.substring(0, 3) + "." + digits.substring(3, 6) + "." + digits.substring(6);
+        } else {
+            return digits.substring(0, 3) + "." + digits.substring(3, 6) + "." + digits.substring(6, 9) + "-" + digits.substring(9);
+        }
+    }
+
+    /**
+     * Aplica máscara no formato telefone ((00) 00000-0000)
+     */
+    private String aplicarMascaraTelefone(String digits) {
+        if (digits == null || digits.isEmpty()) {
+            return "";
+        }
+
+        // Remove caracteres não numéricos
+        digits = digits.replaceAll("[^0-9]", "");
+
+        // Aplica a máscara conforme o tamanho
+        if (digits.length() <= 2) {
+            return digits;
+        } else if (digits.length() <= 6) {
+            return "(" + digits.substring(0, 2) + ") " + digits.substring(2);
+        } else if (digits.length() <= 10) {
+            return "(" + digits.substring(0, 2) + ") " + digits.substring(2, 7) + "-" + digits.substring(7);
+        } else {
+            return "(" + digits.substring(0, 2) + ") " + digits.substring(2, 7) + "-" + digits.substring(7, 11);
+        }
+    }
 
     @FXML
     public void initialize() {
@@ -127,7 +171,51 @@ public class CadastrarUsuarioController {
             }
         });
 
-        telefone.setTextFormatter(new TextFormatter<>(c -> c.getControlNewText().matches("[0-9()\\-]*") ? c : null));
+        // Máscara para CPF (000.000.000-00)
+        cpf.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.length() <= 14) { // 11 dígitos + 3 pontos + 1 hífen = 14 caracteres
+                return change;
+            }
+            return null;
+        }));
+
+        // Listener para aplicar máscara do CPF automaticamente
+        cpf.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.equals(oldValue)) {
+                String digitsOnly = newValue.replaceAll("[^0-9]", "");
+                if (digitsOnly.length() <= 11) {
+                    String masked = aplicarMascaraCPF(digitsOnly);
+                    if (!masked.equals(newValue)) {
+                        cpf.setText(masked);
+                        cpf.positionCaret(masked.length());
+                    }
+                }
+            }
+        });
+
+        // Máscara para telefone ((00) 00000-0000)
+        telefone.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.length() <= 15) { // 11 dígitos + 4 caracteres especiais = 15 caracteres
+                return change;
+            }
+            return null;
+        }));
+
+        // Listener para aplicar máscara do telefone automaticamente
+        telefone.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.equals(oldValue)) {
+                String digitsOnly = newValue.replaceAll("[^0-9]", "");
+                if (digitsOnly.length() <= 11) {
+                    String masked = aplicarMascaraTelefone(digitsOnly);
+                    if (!masked.equals(newValue)) {
+                        telefone.setText(masked);
+                        telefone.positionCaret(masked.length());
+                    }
+                }
+            }
+        });
 
         cep.setTextFormatter(new TextFormatter<>(c -> c.getControlNewText().matches("[0-9\\-]*") ? c : null));
 
@@ -142,18 +230,26 @@ public class CadastrarUsuarioController {
 
     @FXML
     private void iniciarCamera(ActionEvent event) {
+        System.out.println("=== INICIANDO CÂMERA ===");
+        System.out.println("Evento recebido: " + event);
+        System.out.println("Botão clicado: " + (event.getSource() != null ? event.getSource().getClass().getSimpleName() : "NULL"));
+
         try {
+            System.out.println("Carregando FXML da câmera...");
             // Carrega o FXML da janela da câmera
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/cameraView.fxml"));
             Parent root = loader.load();
+            System.out.println("FXML carregado com sucesso!");
 
             // Pega o controller da janela da câmera
             CameraController cameraController = loader.getController();
+            System.out.println("Controller da câmera obtido: " + (cameraController != null ? "OK" : "NULL"));
 
             // Cria uma nova janela (Stage)
             Stage cameraStage = new Stage();
             cameraStage.setTitle("Capturar Foto");
             cameraStage.setScene(new Scene(root));
+            System.out.println("Stage da câmera criado!");
 
             // Configura para ser uma janela modal (bloqueia a janela de cadastro)
             cameraStage.initModality(Modality.APPLICATION_MODAL);
@@ -164,31 +260,63 @@ public class CadastrarUsuarioController {
             });
 
             cameraStage.setOnHidden(e -> {
+                System.out.println("=== PROCESSANDO RESULTADO DA CÂMERA ===");
                 System.out.println("Janela da câmera ocultada - processando resultado");
 
                 // Pega a imagem que foi capturada do controller
                 BufferedImage imagemCapturada = cameraController.getImagemCapturada();
+                System.out.println("Imagem capturada: " + (imagemCapturada != null ? "OK" : "NULL"));
 
                 if (imagemCapturada != null) {
+                    System.out.println("Dimensões da imagem: " + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight());
+
                     // Guarda a imagem para salvar no banco
                     this.imagemCapturada = imagemCapturada;
+                    System.out.println("Imagem armazenada para salvamento no banco");
 
-                    // Usa o novo método para converter a imagem
-                    Image imagePreview = cameraController.bufferedImageToImage(imagemCapturada);
+                    // Converte BufferedImage para Image do JavaFX
+                    System.out.println("Convertendo BufferedImage para Image do JavaFX...");
+                    Image imagePreview = converterBufferedImageParaImage(imagemCapturada);
+                    System.out.println("Conversão: " + (imagePreview != null ? "OK" : "FALHOU"));
+
                     if (imagePreview != null) {
+                        // Define a imagem no ImageView
                         foto.setImage(imagePreview);
+                        System.out.println("Imagem definida no ImageView");
+
+                        // Ajusta o tamanho da imagem para caber no ImageView
+                        foto.setFitWidth(120);
+                        foto.setFitHeight(120);
+                        foto.setPreserveRatio(true);
+                        foto.setSmooth(true);
+                        System.out.println("Propriedades do ImageView ajustadas");
+
+                        System.out.println("✅ Foto exibida com sucesso no ImageView");
+                    } else {
+                        System.err.println("❌ Erro ao converter imagem para exibição");
+                        mostrarAlerta("Erro", "Erro ao processar a imagem capturada para exibição.");
                     }
 
-                    mostrarAlerta("Sucesso", "Foto capturada com sucesso!");
+                    mostrarAlerta("Sucesso", "Foto capturada com sucesso! A foto será salva quando você cadastrar o usuário.");
+                } else {
+                    System.out.println("❌ Nenhuma imagem foi capturada");
+                    mostrarAlerta("Aviso", "Nenhuma foto foi capturada. Tente novamente.");
                 }
             });
 
             // Mostra a janela e espera ela ser fechada
+            System.out.println("Mostrando janela da câmera...");
             cameraStage.showAndWait();
+            System.out.println("Janela da câmera fechada!");
 
         } catch (IOException e) {
+            System.err.println("❌ ERRO ao abrir janela da câmera: " + e.getMessage());
             e.printStackTrace();
-            mostrarAlerta("Erro", "Não foi possível abrir a janela da câmera.");
+            mostrarAlerta("Erro", "Não foi possível abrir a janela da câmera: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("❌ ERRO inesperado: " + e.getMessage());
+            e.printStackTrace();
+            mostrarAlerta("Erro", "Erro inesperado: " + e.getMessage());
         }
     }
 
@@ -236,8 +364,8 @@ public class CadastrarUsuarioController {
             return null;
         }
     }
-
 // ... outras importações ...
+
     @FXML
     private void capturarFoto(ActionEvent event) {
         if (frameCapturado != null && !frameCapturado.empty()) {
@@ -313,33 +441,6 @@ public class CadastrarUsuarioController {
         btnCapturar.setVisible(false);
     }
 
-    /**
-     * Converte um objeto Mat (OpenCV) para um objeto Image (JavaFX).
-     */
-//    private Image matToImage(Mat frame) {
-//        try {
-//            MatOfByte buffer = new MatOfByte();
-//            Imgcodecs.imencode(".png", frame, buffer);
-//            return new Image(new ByteArrayInputStream(buffer.toArray()));
-//        } catch (Exception e) {
-//            System.err.println("Não foi possível converter o Mat para Image: " + e);
-//            return null;
-//        }
-//    }
-    /**
-     * Converte um objeto Mat (OpenCV) para BufferedImage (AWT).
-     */
-//    private BufferedImage matToBufferedImage(Mat frame) {
-//        try {
-//            MatOfByte buffer = new MatOfByte();
-//            Imgcodecs.imencode(".jpg", frame, buffer);
-//            byte[] byteArray = buffer.toArray();
-//            return javax.imageio.ImageIO.read(new ByteArrayInputStream(byteArray));
-//        } catch (Exception e) {
-//            System.err.println("Não foi possível converter o Mat para BufferedImage: " + e);
-//            return null;
-//        }
-//    }
     public static int cadastrarUsuario(
             String nome, String cpf, String senha,
             String nacionalidade, LocalDate dataNascimento, LocalDate dataCadastro,
@@ -498,6 +599,10 @@ public class CadastrarUsuarioController {
             boolean sucesso = UsuarioDAO.atualizar(usuarioEditando);
 
             if (sucesso) {
+                // Se uma nova foto foi capturada, salva ela
+                if (imagemCapturada != null) {
+                    salvarDadosFaciais(usuarioEditando.getIdUsuario());
+                }
                 mostrarAlerta("Sucesso", "Usuário atualizado com sucesso!");
             } else {
                 mostrarAlerta("Erro", "Falha ao atualizar usuário.");
@@ -546,6 +651,9 @@ public class CadastrarUsuarioController {
         uf.setText(u.getUf());
         observacao.setText(u.getObservacao());
         telefone.setText(u.getTelefone());
+
+        // Carrega a foto do usuário se existir
+        carregarFotoDoArquivo(u.getIdUsuario());
     }
 
     private LocalDate convertToLocalDate(java.util.Date d) {
@@ -575,12 +683,6 @@ public class CadastrarUsuarioController {
         a.setTitle(titulo);
         a.setHeaderText(null);
         a.showAndWait();
-    }
-
-    private void marcarErro(Control c) {
-        if (!c.getStyleClass().contains("erro-campo")) {
-            c.getStyleClass().add("erro-campo");
-        }
     }
 
     private void limparErro(Control c) {
@@ -637,13 +739,6 @@ public class CadastrarUsuarioController {
         }
     }
 
-//    public void fecharJanela() {
-//        if (cameraAtiva && openCVDisponivel) {
-//            pararCamera();
-//        }
-//        Stage stage = (Stage) btnIniciarCamera.getScene().getWindow();
-//        stage.close();
-//    }
     /**
      * Configura o listener para buscar CEP automaticamente quando o campo for
      * preenchido
@@ -738,49 +833,153 @@ public class CadastrarUsuarioController {
     }
 
     /**
-     * Salva os dados faciais do usuário no banco de dados
+     * Salva os dados faciais do usuário no banco de dados e a foto em arquivo
      */
     private void salvarDadosFaciais(int idUsuario) {
         try {
-            // Extrai descritores faciais da imagem capturada
-            String descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagemCapturada);
+            // Salva a foto em arquivo primeiro
+            String caminhoFoto = salvarFotoEmArquivo(idUsuario);
 
-            if (descritores != null && !descritores.isEmpty()) {
-                // Cria objeto DadosFaciais
-                DadosFaciais dadosFaciais = new DadosFaciais();
-                dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
-                dadosFaciais.setDescritoresFaciais(descritores);
+            if (caminhoFoto != null) {
+                System.out.println("Foto salva em: " + caminhoFoto);
 
-                // Salva no banco
-                if (dadosFaciaisDAO.cadastrar(dadosFaciais)) {
-                    System.out.println("Dados faciais salvos com sucesso para o usuário ID: " + idUsuario);
+                // Extrai descritores faciais da imagem capturada
+                String descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagemCapturada);
+
+                if (descritores != null && !descritores.isEmpty()) {
+                    // Cria objeto DadosFaciais com caminho da foto
+                    DadosFaciais dadosFaciais = new DadosFaciais();
+                    dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
+                    dadosFaciais.setImagemRosto(null); // Não salva mais no banco
+                    dadosFaciais.setDescritoresFaciais(descritores);
+                    dadosFaciais.setDataCadastro(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setAtivo(true);
+
+                    // Salva no banco (apenas descritores, não a imagem)
+                    if (dadosFaciaisDAO.cadastrar(dadosFaciais)) {
+                        System.out.println("Dados faciais salvos com sucesso para o usuário ID: " + idUsuario);
+                        mostrarAlerta("Sucesso", "Foto e dados faciais salvos com sucesso!");
+                    } else {
+                        System.err.println("Erro ao salvar dados faciais para o usuário ID: " + idUsuario);
+                        mostrarAlerta("Erro", "Erro ao salvar dados faciais no banco de dados.");
+                    }
                 } else {
-                    System.err.println("Erro ao salvar dados faciais para o usuário ID: " + idUsuario);
+                    System.err.println("Não foi possível extrair descritores faciais da imagem");
+                    mostrarAlerta("Aviso", "Não foi possível extrair descritores faciais da imagem. A foto foi salva em arquivo.");
+
+                    // Salva apenas os metadados mesmo sem descritores
+                    DadosFaciais dadosFaciais = new DadosFaciais();
+                    dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
+                    dadosFaciais.setImagemRosto(null); // Não salva mais no banco
+                    dadosFaciais.setDescritoresFaciais(""); // String vazia para descritores
+                    dadosFaciais.setDataCadastro(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setAtivo(true);
+
+                    if (dadosFaciaisDAO.cadastrar(dadosFaciais)) {
+                        System.out.println("Metadados salvos sem descritores faciais para o usuário ID: " + idUsuario);
+                        mostrarAlerta("Sucesso", "Foto salva com sucesso!");
+                    }
                 }
             } else {
-                System.err.println("Não foi possível extrair descritores faciais da imagem");
+                System.err.println("Erro ao salvar foto em arquivo");
+                mostrarAlerta("Erro", "Erro ao salvar a foto em arquivo.");
             }
 
         } catch (Exception e) {
             System.err.println("Erro ao processar dados faciais: " + e.getMessage());
             e.printStackTrace();
+            mostrarAlerta("Erro", "Erro ao processar dados faciais: " + e.getMessage());
         }
     }
 
     /**
-     * Configura um shutdown hook para liberar recursos da câmera quando o
-     * programa for fechado
+     * Salva a foto em arquivo na pasta fotos-apenados
      */
-    private void configurarShutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Programa sendo encerrado - liberando recursos da câmera...");
-
-            // Para qualquer câmera que possa estar ativa
-            if (cameraAtiva) {
-                pararCamera();
+    private String salvarFotoEmArquivo(int idUsuario) {
+        try {
+            if (imagemCapturada == null) {
+                System.err.println("Nenhuma imagem capturada para salvar");
+                return null;
             }
 
-            System.out.println("Recursos da câmera liberados com sucesso.");
-        }));
+            // Cria o diretório se não existir
+            java.io.File diretorioFotos = new java.io.File("fotos-apenados");
+            if (!diretorioFotos.exists()) {
+                diretorioFotos.mkdirs();
+                System.out.println("Diretório fotos-apenados criado");
+            }
+
+            // Gera nome do arquivo: usuario_ID_timestamp.jpg
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            String nomeArquivo = "usuario_" + idUsuario + "_" + timestamp + ".jpg";
+            java.io.File arquivoFoto = new java.io.File(diretorioFotos, nomeArquivo);
+
+            // Salva a imagem
+            boolean salvo = ImageIO.write(imagemCapturada, "jpg", arquivoFoto);
+
+            if (salvo) {
+                String caminhoCompleto = arquivoFoto.getAbsolutePath();
+                System.out.println("Foto salva com sucesso: " + caminhoCompleto);
+                return caminhoCompleto;
+            } else {
+                System.err.println("Erro ao salvar a imagem");
+                return null;
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erro ao salvar foto em arquivo: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Carrega uma foto de arquivo para exibição
+     */
+    private void carregarFotoDoArquivo(int idUsuario) {
+        try {
+            // Busca arquivos que começam com "usuario_ID_"
+            java.io.File diretorioFotos = new java.io.File("fotos-apenados");
+            if (!diretorioFotos.exists()) {
+                System.out.println("Diretório fotos-apenados não existe");
+                return;
+            }
+
+            java.io.File[] arquivos = diretorioFotos.listFiles((dir, name)
+                    -> name.startsWith("usuario_" + idUsuario + "_") && name.endsWith(".jpg"));
+
+            if (arquivos != null && arquivos.length > 0) {
+                // Pega o arquivo mais recente (último da lista ordenada)
+                java.util.Arrays.sort(arquivos, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+                java.io.File arquivoFoto = arquivos[0];
+
+                // Carrega a imagem
+                BufferedImage imagemCarregada = ImageIO.read(arquivoFoto);
+                if (imagemCarregada != null) {
+                    // Converte e exibe
+                    Image imagePreview = converterBufferedImageParaImage(imagemCarregada);
+                    if (imagePreview != null) {
+                        foto.setImage(imagePreview);
+                        foto.setFitWidth(120);
+                        foto.setFitHeight(120);
+                        foto.setPreserveRatio(true);
+                        foto.setSmooth(true);
+
+                        // Armazena para possível atualização
+                        this.imagemCapturada = imagemCarregada;
+
+                        System.out.println("Foto carregada: " + arquivoFoto.getName());
+                    }
+                }
+            } else {
+                System.out.println("Nenhuma foto encontrada para o usuário ID: " + idUsuario);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar foto do arquivo: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

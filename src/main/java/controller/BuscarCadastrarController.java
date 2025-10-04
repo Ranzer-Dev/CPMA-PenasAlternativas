@@ -53,7 +53,7 @@ public class BuscarCadastrarController {
             if (u != null) {
                 try {
                     FXMLLoader loader = new FXMLLoader(getClass()
-                            .getResource("/com.mycompany.cpma/detalheApenadoView.fxml"));
+                            .getResource("/com/mycompany/cpma/detalheApenadoView.fxml"));
                     Parent root = loader.load();
 
                     DetalheApenadoController det = loader.getController();

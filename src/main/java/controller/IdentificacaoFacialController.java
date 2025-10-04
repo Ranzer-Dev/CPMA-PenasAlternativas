@@ -72,25 +72,46 @@ public class IdentificacaoFacialController {
     /**
      * Captura imagem da webcam
      */
-    private void capturarImagem() {
-        try {
-            imagemAtual = reconhecimentoFacial.capturarImagem();
+// Em controller/IdentificacaoFacialController.java
 
-            if (imagemAtual != null) {
-                exibirImagem(imagemAtual);
-                lblStatus.setText("Imagem capturada com sucesso!");
+private void capturarImagem() {
+    try {
+        // Carrega a view da câmera
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/cameraView.fxml"));
+        Parent root = loader.load();
+
+        // Obtém o controller da câmera
+        CameraController cameraController = loader.getController();
+
+        // Cria uma nova janela para a câmera
+        Stage cameraStage = new Stage();
+        cameraStage.setTitle("Capturar Foto");
+        cameraStage.setScene(new Scene(root));
+
+        // Define o que acontece quando a janela da câmera for fechada
+        cameraStage.setOnHidden(e -> {
+            // Pega a imagem capturada do CameraController
+            BufferedImage imagemCapturada = cameraController.getImagemCapturada();
+            if (imagemCapturada != null) {
+                this.imagemAtual = imagemCapturada;
+                exibirImagem(this.imagemAtual); // Usa o método que você já tem para mostrar a imagem
+                lblStatus.setText("Imagem capturada! Pronto para identificar ou cadastrar.");
+                lblStatus.setStyle("-fx-text-fill: green;");
                 btnIdentificar.setDisable(false);
                 btnCadastrar.setDisable(false);
             } else {
-                lblStatus.setText("Erro ao capturar imagem. Verifique se a webcam está conectada.");
-                btnIdentificar.setDisable(true);
-                btnCadastrar.setDisable(true);
+                lblStatus.setText("Captura cancelada.");
+                lblStatus.setStyle("-fx-text-fill: orange;");
             }
+        });
 
-        } catch (Exception e) {
-            mostrarErro("Erro ao capturar imagem", e.getMessage());
-        }
+        cameraStage.showAndWait(); // Mostra a janela da câmera e espera ela ser fechada
+
+    } catch (IOException e) {
+        mostrarErro("Erro ao abrir a câmera", "Não foi possível carregar a interface da câmera.");
+        e.printStackTrace();
     }
+}
 
     /**
      * Carrega imagem de arquivo
