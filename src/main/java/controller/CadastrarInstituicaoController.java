@@ -1,24 +1,41 @@
 package controller;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONObject;
+
 import dao.DisponibilidadeInstituicaoDAO;
 import dao.InstituicaoDAO;
 import dao.TipoInstituicaoDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Control;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import model.DisponibilidadeInstituicao;
 import model.Instituicao;
 import model.TipoInstituicao;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class CadastrarInstituicaoController {
 
@@ -37,6 +54,10 @@ public class CadastrarInstituicaoController {
     @FXML
     private Button btnAdicionarHorario, btnRemoverHorario;
     @FXML
+    private Button btnBuscarCep;
+    @FXML
+    private Label lblStatusCep;
+    @FXML
     private TableColumn<DisponibilidadeInstituicao, Void> colAcao;
 
     private boolean modoEdicao = false;
@@ -48,6 +69,7 @@ public class CadastrarInstituicaoController {
     public void initialize() {
         limitarUF();
         configurarListenersRemocaoErro();
+        configurarBuscaCEP();
         carregarTipos();
         configurarTabelaDisponibilidades();
 
@@ -405,6 +427,112 @@ public class CadastrarInstituicaoController {
                 uf.setText(nv.substring(0, 2));
             }
         });
+    }
+
+    /**
+     * Configura a busca de CEP
+     */
+    private void configurarBuscaCEP() {
+        // Listener para busca automática quando o CEP perde o foco
+        cep.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) { // Quando perde o foco
+                String cepLimpo = cep.getText().replaceAll("\\D", "");
+                if (cepLimpo.length() == 8) {
+                    buscarCEPComTask(cepLimpo);
+                }
+            }
+        });
+
+        // Botão de busca manual
+        btnBuscarCep.setOnAction(e -> {
+            String cepLimpo = cep.getText().replaceAll("\\D", "");
+            if (cepLimpo.length() == 8) {
+                buscarCEPComTask(cepLimpo);
+            } else {
+                lblStatusCep.setText("CEP deve ter 8 dígitos");
+                lblStatusCep.setStyle("-fx-text-fill: #ef4444;");
+            }
+        });
+
+        // Formatação do CEP
+        cep.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.isEmpty()) {
+                String cepLimpo = newVal.replaceAll("\\D", "");
+                if (cepLimpo.length() <= 8) {
+                    if (cepLimpo.length() > 5) {
+                        cep.setText(cepLimpo.substring(0, 5) + "-" + cepLimpo.substring(5));
+                    } else {
+                        cep.setText(cepLimpo);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Busca informações do CEP na API ViaCEP
+     */
+    private void buscarCEPComTask(String cep) {
+        lblStatusCep.setText("Buscando CEP...");
+        lblStatusCep.setStyle("-fx-text-fill: #06b6d4;");
+        btnBuscarCep.setDisable(true);
+
+        Task<JSONObject> task = new Task<>() {
+            @Override
+            protected JSONObject call() throws Exception {
+                URL url = new URL("https://viacep.com.br/ws/" + cep + "/json/");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+
+                if (conn.getResponseCode() != 200) {
+                    throw new RuntimeException("Falha : HTTP error code : " + conn.getResponseCode());
+                }
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line);
+                }
+                br.close();
+
+                return new JSONObject(sb.toString());
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            JSONObject json = task.getValue();
+            if (json.has("erro")) {
+                lblStatusCep.setText("CEP não encontrado");
+                lblStatusCep.setStyle("-fx-text-fill: #ef4444;");
+            } else {
+                preencherCamposEndereco(json);
+                lblStatusCep.setText("CEP encontrado com sucesso!");
+                lblStatusCep.setStyle("-fx-text-fill: #10b981;");
+            }
+            btnBuscarCep.setDisable(false);
+        });
+
+        task.setOnFailed(e -> {
+            lblStatusCep.setText("Erro ao buscar CEP");
+            lblStatusCep.setStyle("-fx-text-fill: #ef4444;");
+            btnBuscarCep.setDisable(false);
+            mostrarAlerta("Erro de Rede", "Não foi possível conectar à API do ViaCEP.");
+        });
+
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    /**
+     * Preenche os campos de endereço com os dados do CEP
+     */
+    private void preencherCamposEndereco(JSONObject json) {
+        endereco.setText(json.optString("logradouro", ""));
+        bairro.setText(json.optString("bairro", ""));
+        cidade.setText(json.optString("localidade", ""));
+        uf.setText(json.optString("uf", ""));
     }
 
     private void mostrarAlerta(String titulo, String msg) {
