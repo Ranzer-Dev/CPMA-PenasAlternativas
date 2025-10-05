@@ -53,11 +53,7 @@
                         <!-- Container da foto -->
                         <VBox alignment="CENTER" spacing="10.0">
                            <children>
-                              <ImageView fx:id="foto" fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" styleClass="image-view-container">
-                                 <image>
-                                    <Image url="@../../../images/camera.png" />
-                                 </image>
-                              </ImageView>
+                               <ImageView fx:id="foto" fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" styleClass="image-view-container" />
                               <Button fx:id="btnIniciarCamera" mnemonicParsing="false" onAction="#iniciarCamera" prefWidth="120.0" styleClass="btn-secondary" text="Tirar Foto" />
                            </children>
                         </VBox>

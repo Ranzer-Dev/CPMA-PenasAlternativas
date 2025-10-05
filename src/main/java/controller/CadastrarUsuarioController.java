@@ -1,5 +1,7 @@
 package controller;
 
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -48,6 +50,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.application.Platform;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -265,7 +268,7 @@ public class CadastrarUsuarioController {
 
                 // Pega a imagem que foi capturada do controller
                 BufferedImage imagemCapturada = cameraController.getImagemCapturada();
-                System.out.println("Imagem capturada: " + (imagemCapturada != null ? "OK" : "NULL"));
+                System.out.println("Imagem capturada do controller: " + (imagemCapturada != null ? "OK" : "NULL"));
 
                 if (imagemCapturada != null) {
                     System.out.println("Dimensões da imagem: " + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight());
@@ -274,27 +277,52 @@ public class CadastrarUsuarioController {
                     this.imagemCapturada = imagemCapturada;
                     System.out.println("Imagem armazenada para salvamento no banco");
 
-                    // Converte BufferedImage para Image do JavaFX
-                    System.out.println("Convertendo BufferedImage para Image do JavaFX...");
-                    Image imagePreview = converterBufferedImageParaImage(imagemCapturada);
-                    System.out.println("Conversão: " + (imagePreview != null ? "OK" : "FALHOU"));
-
-                    if (imagePreview != null) {
-                        // Define a imagem no ImageView
-                        foto.setImage(imagePreview);
-                        System.out.println("Imagem definida no ImageView");
-
-                        // Ajusta o tamanho da imagem para caber no ImageView
-                        foto.setFitWidth(120);
-                        foto.setFitHeight(120);
-                        foto.setPreserveRatio(true);
-                        foto.setSmooth(true);
-                        System.out.println("Propriedades do ImageView ajustadas");
-
-                        System.out.println("✅ Foto exibida com sucesso no ImageView");
-                    } else {
-                        System.err.println("❌ Erro ao converter imagem para exibição");
-                        mostrarAlerta("Erro", "Erro ao processar a imagem capturada para exibição.");
+                    // TESTE: Tenta criar uma imagem simples para verificar se o problema é na conversão
+                    try {
+                        // Cria uma imagem de teste simples (quadrado azul)
+                        BufferedImage testeImagem = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+                        Graphics2D g2d = testeImagem.createGraphics();
+                        g2d.setColor(java.awt.Color.BLUE);
+                        g2d.fillRect(0, 0, 100, 100);
+                        g2d.dispose();
+                        
+                        System.out.println("Criando imagem de teste...");
+                        Image imagemTeste = converterBufferedImageParaImage(testeImagem);
+                        
+                        if (foto != null && imagemTeste != null) {
+                            foto.setImage(imagemTeste);
+                            System.out.println("✅ Imagem de teste (quadrado azul) definida no ImageView!");
+                            
+                            // Aguarda 2 segundos e então define a imagem real
+                            javafx.concurrent.Task<Void> delayTask = new javafx.concurrent.Task<Void>() {
+                                @Override
+                                protected Void call() throws Exception {
+                                    Thread.sleep(2000);
+                                    return null;
+                                }
+                                
+                                @Override
+                                protected void succeeded() {
+                                    Platform.runLater(() -> {
+                                        System.out.println("Agora definindo a imagem real...");
+                                        Image imagePreview = converterBufferedImageParaImage(imagemCapturada);
+                                        if (imagePreview != null) {
+                                            foto.setImage(imagePreview);
+                                            foto.setFitWidth(120);
+                                            foto.setFitHeight(120);
+                                            foto.setPreserveRatio(true);
+                                            foto.setSmooth(true);
+                                            foto.setCache(true);
+                                            System.out.println("✅ Foto real definida no ImageView!");
+                                        }
+                                    });
+                                }
+                            };
+                            new Thread(delayTask).start();
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("Erro no teste: " + ex.getMessage());
+                        ex.printStackTrace();
                     }
 
                     mostrarAlerta("Sucesso", "Foto capturada com sucesso! A foto será salva quando você cadastrar o usuário.");
@@ -351,18 +379,66 @@ public class CadastrarUsuarioController {
      */
     private Image converterBufferedImageParaImage(BufferedImage bufferedImage) {
         if (bufferedImage == null) {
+            System.err.println("❌ BufferedImage é NULL na conversão");
             return null;
         }
         try {
+            System.out.println("Convertendo BufferedImage de " + bufferedImage.getWidth() + "x" + bufferedImage.getHeight());
+            
+            // Melhora a qualidade da imagem antes da conversão
+            BufferedImage imageToConvert = melhorarQualidadeImagem(bufferedImage);
+            if (imageToConvert == null) {
+                System.err.println("❌ Falha ao melhorar qualidade da imagem");
+                return null;
+            }
+            
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             // Escreve a imagem como um PNG em um fluxo de bytes na memória
-            ImageIO.write(bufferedImage, "png", outputStream);
+            boolean written = ImageIO.write(imageToConvert, "png", outputStream);
+            if (!written) {
+                System.err.println("❌ Falha ao escrever imagem para stream");
+                return null;
+            }
+            
+            byte[] bytes = outputStream.toByteArray();
+            System.out.println("Bytes da imagem: " + bytes.length);
+            
             // Cria uma Image do JavaFX a partir do fluxo de bytes
-            return new Image(new ByteArrayInputStream(outputStream.toByteArray()));
+            Image result = new Image(new ByteArrayInputStream(bytes));
+            System.out.println("Image do JavaFX criada: " + (result != null ? "OK" : "FALHOU"));
+            return result;
         } catch (IOException e) {
+            System.err.println("❌ Erro na conversão: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
+    }
+    
+    /**
+     * Melhora a qualidade da imagem para exibição
+     */
+    private BufferedImage melhorarQualidadeImagem(BufferedImage original) {
+        if (original == null) {
+            return null;
+        }
+        
+        // Cria uma nova imagem com melhor qualidade
+        BufferedImage improved = new BufferedImage(
+            original.getWidth(), 
+            original.getHeight(), 
+            BufferedImage.TYPE_INT_RGB
+        );
+        
+        // Desenha a imagem original na nova com melhor qualidade
+        Graphics2D g2d = improved.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        g2d.drawImage(original, 0, 0, null);
+        g2d.dispose();
+        
+        return improved;
     }
 // ... outras importações ...
 
