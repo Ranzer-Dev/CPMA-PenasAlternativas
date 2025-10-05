@@ -18,10 +18,13 @@
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.control.ScrollPane?>
 
 <StackPane prefHeight="900.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CadastrarUsuarioController">
    <children>
-      <AnchorPane prefHeight="900.0" prefWidth="900.0" styleClass="main-container">
+      <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="main-container">
+         <content>
+            <AnchorPane prefHeight="900.0" prefWidth="900.0">
          <children>
             <!-- Container principal com card -->
             <VBox alignment="CENTER" spacing="50.0" layoutX="50.0" layoutY="20.0" prefHeight="660.0" prefWidth="800.0" styleClass="content-card">
@@ -186,8 +189,8 @@
                            <children>
                               <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
                                  <children>
-                                    <Label text="Data de Cadastro" styleClass="label-primary" />
-                                    <DatePicker fx:id="dataCadastro" styleClass="combo-box" />
+                                    <Label text="Criado Em" styleClass="label-primary" />
+                                    <TextField fx:id="criadoEm" promptText="Data atual do sistema" styleClass="input-field" editable="false" />
                                  </children>
                               </VBox>
                               <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
@@ -227,6 +230,8 @@
                </padding>
             </VBox>
          </children>
-      </AnchorPane>
+            </AnchorPane>
+         </content>
+      </ScrollPane>
    </children>
 </StackPane>

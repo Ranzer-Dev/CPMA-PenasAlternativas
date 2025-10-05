@@ -4,13 +4,16 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import javafx.scene.control.ScrollPane?>
 
 <StackPane xmlns="http://javafx.com/javafx/23.0.1"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="controller.CadastroRegistroDeTrabalhoController">
 
     <children>
-        <AnchorPane styleClass="main-container">
+        <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="main-container">
+            <content>
+                <AnchorPane styleClass="main-container">
             <children>
                 <!-- Container principal com card -->
                 <VBox alignment="CENTER" styleClass="content-card" AnchorPane.topAnchor="20.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0">
@@ -185,6 +188,8 @@
                     </padding>
                 </VBox>
             </children>
-        </AnchorPane>
+                </AnchorPane>
+            </content>
+        </ScrollPane>
     </children>
 </StackPane>

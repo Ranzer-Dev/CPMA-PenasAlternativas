@@ -42,7 +42,7 @@ public class DetalheApenadoController {
         txtCidade.setText(usuario.getCidade());
         txtUf.setText(usuario.getUf());
         txtNac.setText(usuario.getNacionalidade());
-        txtDataCad.setText(String.valueOf(usuario.getDataCadastro()));
+        txtDataCad.setText(String.valueOf(usuario.getCriadoEm()));
         txtFone.setText(usuario.getTelefone());
         // foto? -> use ImageView.setImage()
     }

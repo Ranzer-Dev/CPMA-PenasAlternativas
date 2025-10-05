@@ -13,6 +13,7 @@ public class RegistroDeTrabalho {
     private Time horarioVolta;
     private Time horarioSaida;
     private int fkPenaId;
+    private Date criadoEm;
 
     public int getIdRegistro() { return idRegistro; }
     public void setIdRegistro(int idRegistro) { this.idRegistro = idRegistro; }
@@ -40,5 +41,8 @@ public class RegistroDeTrabalho {
 
     public int getFkPenaId() { return fkPenaId; }
     public void setFkPenaId(int fkPenaId) { this.fkPenaId = fkPenaId; }
+
+    public Date getCriadoEm() { return criadoEm; }
+    public void setCriadoEm(Date criadoEm) { this.criadoEm = criadoEm; }
 
 }
