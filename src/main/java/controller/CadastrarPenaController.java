@@ -1,19 +1,27 @@
 package controller;
 
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.List;
+
 import dao.InstituicaoDAO;
 import dao.PenaDAO;
 import dao.UsuarioDAO;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import model.Instituicao;
 import model.Pena;
 import model.Usuario;
-
-import java.sql.Date;
-import java.time.LocalDate;
-import java.util.List;
 
 public class CadastrarPenaController {
 
@@ -144,6 +152,7 @@ public class CadastrarPenaController {
         if (sucesso) {
             alert("Pena cadastrada com sucesso!");
             limparCampos();
+            fecharJanela();
         } else {
             alert("Falha ao cadastrar pena.");
         }
@@ -312,5 +321,10 @@ public class CadastrarPenaController {
         new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK) {{
             setTitle("Aviso"); setHeaderText(null); showAndWait();
         }};
+    }
+
+    private void fecharJanela() {
+        Stage stage = (Stage) btnCadastrarPena.getScene().getWindow();
+        stage.close();
     }
 }

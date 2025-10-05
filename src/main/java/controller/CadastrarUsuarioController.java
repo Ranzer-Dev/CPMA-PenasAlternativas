@@ -607,6 +607,9 @@ public class CadastrarUsuarioController {
             }
 
             mostrarAlerta("Sucesso", "Usuário cadastrado com sucesso!");
+            
+            // Fechar a janela após inserir os dados com sucesso
+            fecharJanela();
 
         } catch (IllegalArgumentException e) {
             mostrarAlerta("Erro", e.getMessage());
@@ -759,6 +762,11 @@ public class CadastrarUsuarioController {
         a.setTitle(titulo);
         a.setHeaderText(null);
         a.showAndWait();
+    }
+
+    private void fecharJanela() {
+        Stage stage = (Stage) btnCadastrar.getScene().getWindow();
+        stage.close();
     }
 
     private void limparErro(Control c) {

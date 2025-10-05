@@ -1,22 +1,29 @@
 package controller;
 
+import java.sql.Date;
+import java.sql.Time;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 import dao.InstituicaoDAO;
 import dao.PenaDAO;
 import dao.RegistroDeTrabalhoDAO;
 import dao.UsuarioDAO;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 import model.Instituicao;
 import model.Pena;
 import model.RegistroDeTrabalho;
 import model.Usuario;
-
-import java.sql.Date;
-import java.sql.Time;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 public class CadastroRegistroDeTrabalhoController {
 
@@ -113,6 +120,9 @@ public class CadastroRegistroDeTrabalhoController {
 
             boolean ok = new RegistroDeTrabalhoDAO().inserir(registro);
             alert(ok ? "Registro gravado!" : "Falha ao gravar.");
+            if (ok) {
+                fecharJanela();
+            }
         } catch (Exception ex) {
             alert("Erro: " + ex.getMessage());
         }
@@ -165,5 +175,10 @@ public class CadastroRegistroDeTrabalhoController {
 
     private void alert(String msg) {
         new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK).showAndWait();
+    }
+
+    private void fecharJanela() {
+        Stage stage = (Stage) btnCadastrar.getScene().getWindow();
+        stage.close();
     }
 }
