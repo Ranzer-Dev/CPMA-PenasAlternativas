@@ -10,7 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <javafx.version>17.0.6</javafx.version>
+        <javafx.version>23.0.1</javafx.version>
     </properties>
 
     <dependencies>
@@ -71,6 +71,11 @@
                             <noManPages>true</noManPages>
                             <stripDebug>true</stripDebug>
                             <noHeaderFiles>true</noHeaderFiles>
+                            <options>
+                                <option>--enable-native-access=javafx.graphics</option>
+                                <option>--add-exports=javafx.graphics/com.sun.glass.utils=ALL-UNNAMED</option>
+                                <option>--add-exports=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED</option>
+                            </options>
                         </configuration>
                     </execution>
                 </executions>
