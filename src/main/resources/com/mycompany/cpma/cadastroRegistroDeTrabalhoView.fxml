@@ -8,7 +8,8 @@
 
 <StackPane xmlns="http://javafx.com/javafx/23.0.1"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="controller.CadastroRegistroDeTrabalhoController">
+           fx:controller="controller.CadastroRegistroDeTrabalhoController"
+           prefHeight="800.0" prefWidth="900.0">
 
     <children>
         <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="main-container">
