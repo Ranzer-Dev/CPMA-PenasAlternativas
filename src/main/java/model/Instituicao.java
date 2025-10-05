@@ -13,6 +13,7 @@ public class Instituicao {
     private String telefone;
     private String telefone2;
     private int tipo;
+    private java.util.Date criadoEm;
 
     public int getIdInstituicao() { return idInstituicao; }
     public void setIdInstituicao(int idInstituicao) { this.idInstituicao = idInstituicao; }
@@ -49,6 +50,9 @@ public class Instituicao {
 
     public int getTipo() { return tipo; }
     public void setTipo(int tipo) { this.tipo = tipo; }
+
+    public java.util.Date getCriadoEm() { return criadoEm; }
+    public void setCriadoEm(java.util.Date criadoEm) { this.criadoEm = criadoEm; }
 
     @Override
     public String toString() { return nome; }

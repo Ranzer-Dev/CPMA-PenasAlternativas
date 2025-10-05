@@ -30,7 +30,7 @@ public class UsuarioDAO {
                 usuario.setSenha(rs.getString("senha"));
                 usuario.setNacionalidade(rs.getString("nacionalidade"));
                 usuario.setDataNascimento(rs.getDate("data_nascimento"));
-                usuario.setDataCadastro(rs.getDate("data_cadastro"));
+                usuario.setCriadoEm(rs.getDate("criado_em"));
                 usuario.setFoto(rs.getString("foto"));
                 usuario.setEndereco(rs.getString("endereco"));
                 usuario.setBairro(rs.getString("bairro"));
@@ -65,7 +65,7 @@ public class UsuarioDAO {
                 usuario.setSenha(rs.getString("senha"));
                 usuario.setNacionalidade(rs.getString("nacionalidade"));
                 usuario.setDataNascimento(rs.getDate("data_nascimento"));
-                usuario.setDataCadastro(rs.getDate("data_cadastro"));
+                usuario.setCriadoEm(rs.getDate("criado_em"));
                 usuario.setFoto(rs.getString("foto"));
                 usuario.setEndereco(rs.getString("endereco"));
                 usuario.setBairro(rs.getString("bairro"));
@@ -85,9 +85,9 @@ public class UsuarioDAO {
     }
 
     public static int inserir(Usuario usuario) {
-        String sql = "INSERT INTO Usuario (nome, cpf, senha, nacionalidade, data_nascimento, data_cadastro, "
+        String sql = "INSERT INTO Usuario (nome, cpf, senha, nacionalidade, data_nascimento, "
                 + "endereco, bairro, cidade, uf, observacao, foto, fk_Administrador_id_admin, telefone, cep, codigo) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -98,17 +98,16 @@ public class UsuarioDAO {
             stmt.setString(3, usuario.getSenha());
             stmt.setString(4, usuario.getNacionalidade());
             stmt.setDate(5, new java.sql.Date(usuario.getDataNascimento().getTime()));
-            stmt.setDate(6, new java.sql.Date(usuario.getDataCadastro().getTime()));
-            stmt.setString(7, usuario.getEndereco());
-            stmt.setString(8, usuario.getBairro());
-            stmt.setString(9, usuario.getCidade());
-            stmt.setString(10, usuario.getUf());
-            stmt.setString(11, usuario.getObservacao());
-            stmt.setString(12, usuario.getFoto());
-            stmt.setInt(13, usuario.getFkAdministradorIdAdmin());
-            stmt.setString(14, usuario.getTelefone());
-            stmt.setString(15, usuario.getCep());
-            stmt.setString(16, usuario.getCodigo());
+            stmt.setString(6, usuario.getEndereco());
+            stmt.setString(7, usuario.getBairro());
+            stmt.setString(8, usuario.getCidade());
+            stmt.setString(9, usuario.getUf());
+            stmt.setString(10, usuario.getObservacao());
+            stmt.setString(11, usuario.getFoto());
+            stmt.setInt(12, usuario.getFkAdministradorIdAdmin());
+            stmt.setString(13, usuario.getTelefone());
+            stmt.setString(14, usuario.getCep());
+            stmt.setString(15, usuario.getCodigo());
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
@@ -125,7 +124,7 @@ public class UsuarioDAO {
     }
 
     public static boolean atualizar(Usuario usuario) {
-        String sql = "UPDATE Usuario SET nome = ?, cpf = ?, senha = ?, nacionalidade = ?, data_nascimento = ?, data_cadastro = ?, "
+        String sql = "UPDATE Usuario SET nome = ?, cpf = ?, senha = ?, nacionalidade = ?, data_nascimento = ?, "
                 + "endereco = ?, bairro = ?, cidade = ?, uf = ?, observacao = ?, foto = ?, telefone = ?, cep = ? , codigo = ?  WHERE id_usuario = ?";
 
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -135,7 +134,6 @@ public class UsuarioDAO {
             stmt.setString(3, usuario.getSenha());
             stmt.setString(4, usuario.getNacionalidade());
             stmt.setDate(5, new java.sql.Date(usuario.getDataNascimento().getTime()));
-            stmt.setDate(6, new java.sql.Date(usuario.getDataCadastro().getTime()));
             stmt.setString(7, usuario.getEndereco());
             stmt.setString(8, usuario.getBairro());
             stmt.setString(9, usuario.getCidade());
@@ -174,7 +172,7 @@ public class UsuarioDAO {
                 u.setCidade(rs.getString("cidade"));
                 u.setUf(rs.getString("uf"));
                 u.setNacionalidade(rs.getString("nacionalidade"));
-                u.setDataCadastro(rs.getDate("data_cadastro"));
+                u.setCriadoEm(rs.getDate("data_cadastro"));
                 u.setFoto(rs.getString("foto"));
                 u.setSenha(rs.getString("senha"));
                 u.setObservacao(rs.getString("observacao"));

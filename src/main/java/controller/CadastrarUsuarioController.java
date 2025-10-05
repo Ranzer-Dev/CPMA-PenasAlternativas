@@ -75,7 +75,9 @@ public class CadastrarUsuarioController {
     @FXML
     private ComboBox<Usuario> comboUsuarios;
     @FXML
-    private DatePicker dataNascimento, dataCadastro;
+    private DatePicker dataNascimento;
+    @FXML
+    private TextField criadoEm;
     @FXML
     private TextField nome, cpf, senha, nacionalidade;
     @FXML
@@ -165,6 +167,8 @@ public class CadastrarUsuarioController {
 
         limitarUF();
         configurarListenersRemocaoErro();
+        configurarDataAtual();
+        configurarFormatoBrasileiro();
 
         btnCadastrar.setOnAction(event -> {
             if (modoEdicao) {
@@ -519,7 +523,7 @@ public class CadastrarUsuarioController {
 
     public static int cadastrarUsuario(
             String nome, String cpf, String senha,
-            String nacionalidade, LocalDate dataNascimento, LocalDate dataCadastro,
+            String nacionalidade, LocalDate dataNascimento,
             String endereco, String bairro, String cidade, String uf,
             String observacao, String telefone, String cep, String codigo) {
 
@@ -575,7 +579,7 @@ public class CadastrarUsuarioController {
         usuario.setSenha(HashUtil.gerarHash(senha.trim()));
         usuario.setNacionalidade(nacionalidade.trim());
         usuario.setDataNascimento(Date.valueOf(dataNascimento));
-        usuario.setDataCadastro(Date.valueOf(dataCadastro));
+        usuario.setCriadoEm(new Date(System.currentTimeMillis()));
         usuario.setEndereco(endereco.trim());
         usuario.setBairro(bairro.trim());
         usuario.setCidade(cidade.trim());
@@ -597,7 +601,7 @@ public class CadastrarUsuarioController {
 
             idUsuarioInserido = cadastrarUsuario(
                     nome.getText(), cpf.getText(), senha.getText(), nacionalidade.getText(),
-                    dataNascimento.getValue(), dataCadastro.getValue(), endereco.getText(),
+                    dataNascimento.getValue(), endereco.getText(),
                     bairro.getText(), cidade.getText(), uf.getText(), observacao.getText(),
                     telefone.getText().trim(), cep.getText(), codigo.getText());
 
@@ -667,7 +671,8 @@ public class CadastrarUsuarioController {
 
             usuarioEditando.setNacionalidade(nacionalidade.getText());
             usuarioEditando.setDataNascimento(Date.valueOf(dataNascimento.getValue()));
-            usuarioEditando.setDataCadastro(Date.valueOf(dataCadastro.getValue()));
+            // criadoEm não é editável, mantém o valor original
+            // usuarioEditando.setCriadoEm(Date.valueOf(criadoEm.getValue()));
             usuarioEditando.setEndereco(endereco.getText());
             usuarioEditando.setBairro(bairro.getText());
             usuarioEditando.setCidade(cidade.getText());
@@ -723,7 +728,8 @@ public class CadastrarUsuarioController {
         senha.setText("");
         nacionalidade.setText(u.getNacionalidade());
         dataNascimento.setValue(convertToLocalDate(u.getDataNascimento()));
-        dataCadastro.setValue(convertToLocalDate(u.getDataCadastro()));
+        criadoEm.setText(u.getCriadoEm() != null ? 
+            new java.text.SimpleDateFormat("dd/MM/yyyy").format(u.getCriadoEm()) : "");
         endereco.setText(u.getEndereco());
         bairro.setText(u.getBairro());
         cidade.setText(u.getCidade());
@@ -767,6 +773,39 @@ public class CadastrarUsuarioController {
     private void fecharJanela() {
         Stage stage = (Stage) btnCadastrar.getScene().getWindow();
         stage.close();
+    }
+
+    private void configurarDataAtual() {
+        // Configurar data atual no campo criadoEm
+        java.time.LocalDate hoje = java.time.LocalDate.now();
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        criadoEm.setText(hoje.format(formatter));
+    }
+
+    private void configurarFormatoBrasileiro() {
+        // Configurar formato brasileiro para DatePicker
+        dataNascimento.setConverter(new javafx.util.StringConverter<java.time.LocalDate>() {
+            private final java.time.format.DateTimeFormatter dateFormatter = 
+                java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            @Override
+            public String toString(java.time.LocalDate date) {
+                if (date != null) {
+                    return dateFormatter.format(date);
+                } else {
+                    return "";
+                }
+            }
+
+            @Override
+            public java.time.LocalDate fromString(String string) {
+                if (string != null && !string.isEmpty()) {
+                    return java.time.LocalDate.parse(string, dateFormatter);
+                } else {
+                    return null;
+                }
+            }
+        });
     }
 
     private void limparErro(Control c) {
@@ -936,7 +975,7 @@ public class CadastrarUsuarioController {
                     dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
                     dadosFaciais.setImagemRosto(null); // Não salva mais no banco
                     dadosFaciais.setDescritoresFaciais(descritores);
-                    dadosFaciais.setDataCadastro(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setCriadoEm(new java.sql.Date(System.currentTimeMillis()));
                     dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
                     dadosFaciais.setAtivo(true);
 
@@ -957,7 +996,7 @@ public class CadastrarUsuarioController {
                     dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
                     dadosFaciais.setImagemRosto(null); // Não salva mais no banco
                     dadosFaciais.setDescritoresFaciais(""); // String vazia para descritores
-                    dadosFaciais.setDataCadastro(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setCriadoEm(new java.sql.Date(System.currentTimeMillis()));
                     dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
                     dadosFaciais.setAtivo(true);
 

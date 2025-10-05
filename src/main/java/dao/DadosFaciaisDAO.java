@@ -32,7 +32,7 @@ public class DadosFaciaisDAO {
             stmt.setInt(1, dadosFaciais.getFkUsuarioIdUsuario());
             stmt.setBlob(2, dadosFaciais.getImagemRosto());
             stmt.setString(3, dadosFaciais.getDescritoresFaciais());
-            stmt.setDate(4, dadosFaciais.getDataCadastro());
+            stmt.setDate(4, dadosFaciais.getCriadoEm());
             stmt.setDate(5, dadosFaciais.getDataAtualizacao());
             stmt.setBoolean(6, dadosFaciais.isAtivo());
 
@@ -174,7 +174,7 @@ public class DadosFaciaisDAO {
         dadosFaciais.setFkUsuarioIdUsuario(rs.getInt("fk_usuario_id_usuario"));
         dadosFaciais.setImagemRosto(rs.getBlob("imagem_rosto"));
         dadosFaciais.setDescritoresFaciais(rs.getString("descritores_faciais"));
-        dadosFaciais.setDataCadastro(rs.getDate("data_cadastro"));
+        dadosFaciais.setCriadoEm(rs.getDate("data_cadastro"));
         dadosFaciais.setDataAtualizacao(rs.getDate("data_atualizacao"));
         dadosFaciais.setAtivo(rs.getBoolean("ativo"));
         return dadosFaciais;
@@ -196,7 +196,7 @@ public class DadosFaciaisDAO {
         usuario.setCep(rs.getString("cep"));
         usuario.setTelefone(rs.getString("telefone"));
         usuario.setNacionalidade(rs.getString("nacionalidade"));
-        usuario.setDataCadastro(rs.getDate("data_cadastro"));
+        usuario.setCriadoEm(rs.getDate("data_cadastro"));
         usuario.setFoto(rs.getString("foto"));
         usuario.setObservacao(rs.getString("observacao"));
         return usuario;
