@@ -545,3 +545,151 @@
   -fx-border-width: 2px;
   -fx-border-radius: 8px;
 }
+
+/* Estilos específicos para cadastro de penas */
+.section-container {
+  -fx-background-color: #f8fafc;
+  -fx-background-radius: 12px;
+  -fx-border-color: #e2e8f0;
+  -fx-border-radius: 12px;
+  -fx-border-width: 1px;
+  -fx-padding: 20px;
+}
+
+.schedule-header {
+  -fx-background-color: #3b82f6;
+  -fx-background-radius: 8px;
+  -fx-padding: 10px;
+}
+
+.schedule-header .label {
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+  -fx-font-size: 14px;
+}
+
+.schedule-row {
+  -fx-background-color: white;
+  -fx-background-radius: 6px;
+  -fx-border-color: #e2e8f0;
+  -fx-border-radius: 6px;
+  -fx-border-width: 1px;
+  -fx-padding: 8px;
+}
+
+.schedule-row:hover {
+  -fx-background-color: #f1f5f9;
+  -fx-border-color: #3b82f6;
+}
+
+.date-picker {
+  -fx-background-color: white;
+  -fx-border-color: #d1d5db;
+  -fx-border-radius: 8px;
+  -fx-border-width: 1px;
+  -fx-padding: 8px 12px;
+  -fx-font-size: 14px;
+}
+
+.date-picker:hover {
+  -fx-border-color: #3b82f6;
+}
+
+.date-picker:focused {
+  -fx-border-color: #3b82f6;
+  -fx-border-width: 2px;
+}
+
+/* Estilos específicos para cadastro de instituição */
+.table-view {
+  -fx-background-color: white;
+  -fx-border-color: #e2e8f0;
+  -fx-border-radius: 8px;
+  -fx-border-width: 1px;
+}
+
+.table-view .column-header {
+  -fx-background-color: #f8fafc;
+  -fx-border-color: #e2e8f0;
+  -fx-text-fill: #374151;
+  -fx-font-weight: bold;
+  -fx-font-size: 14px;
+}
+
+.table-view .table-cell {
+  -fx-border-color: #e2e8f0;
+  -fx-padding: 8px;
+  -fx-font-size: 13px;
+}
+
+.table-view .table-row-cell:selected {
+  -fx-background-color: #dbeafe;
+  -fx-text-fill: #1e40af;
+}
+
+.table-view .table-row-cell:hover {
+  -fx-background-color: #f1f5f9;
+}
+
+.btn-success {
+  -fx-background-color: #10b981;
+  -fx-text-fill: white;
+  -fx-border-radius: 8px;
+  -fx-background-radius: 8px;
+  -fx-font-weight: bold;
+  -fx-font-size: 14px;
+  -fx-padding: 10px 20px;
+}
+
+.btn-success:hover {
+  -fx-background-color: #059669;
+  -fx-effect: dropshadow(gaussian, rgba(16, 185, 129, 0.4), 6, 0, 0, 3);
+}
+
+.btn-danger {
+  -fx-background-color: #ef4444;
+  -fx-text-fill: white;
+  -fx-border-radius: 8px;
+  -fx-background-radius: 8px;
+  -fx-font-weight: bold;
+  -fx-font-size: 14px;
+  -fx-padding: 10px 20px;
+}
+
+.btn-danger:hover {
+  -fx-background-color: #dc2626;
+  -fx-effect: dropshadow(gaussian, rgba(239, 68, 68, 0.4), 6, 0, 0, 3);
+}
+
+.btn-info {
+  -fx-background-color: #06b6d4;
+  -fx-text-fill: white;
+  -fx-border-radius: 8px;
+  -fx-background-radius: 8px;
+  -fx-font-weight: bold;
+  -fx-font-size: 14px;
+  -fx-padding: 10px 20px;
+}
+
+.btn-info:hover {
+  -fx-background-color: #0891b2;
+  -fx-effect: dropshadow(gaussian, rgba(6, 182, 212, 0.4), 6, 0, 0, 3);
+}
+
+.label-info {
+  -fx-text-fill: #06b6d4;
+  -fx-font-size: 12px;
+  -fx-font-style: italic;
+}
+
+.label-success {
+  -fx-text-fill: #10b981;
+  -fx-font-size: 12px;
+  -fx-font-weight: bold;
+}
+
+.label-error {
+  -fx-text-fill: #ef4444;
+  -fx-font-size: 12px;
+  -fx-font-weight: bold;
+}
