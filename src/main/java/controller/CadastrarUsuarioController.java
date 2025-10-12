@@ -95,7 +95,11 @@ public class CadastrarUsuarioController {
     @FXML
     private Button btnCapturar;
     @FXML
+    private Button btnBuscarCep;
+    @FXML
     private ProgressIndicator loadingCep;
+    @FXML
+    private javafx.scene.control.Label lblStatusCep;
     private FrameGrabber camera;
     private ScheduledExecutorService timer;
     private boolean cameraAtiva = false;
@@ -867,21 +871,45 @@ public class CadastrarUsuarioController {
      * preenchido
      */
     private void configurarBuscaCEP() {
+        // Listener para busca automática quando o CEP perde o foco
         cep.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            // Se o campo PERDEU o foco (!newVal) e tem um CEP válido...
-            if (!newVal) {
+            if (!newVal) { // Quando perde o foco
                 String cepLimpo = cep.getText().replaceAll("\\D", "");
                 if (cepLimpo.length() == 8) {
                     buscarCEPComTask(cepLimpo);
                 }
             }
         });
+
+        // Botão de busca manual
+        btnBuscarCep.setOnAction(e -> {
+            String cepLimpo = cep.getText().replaceAll("\\D", "");
+            if (cepLimpo.length() == 8) {
+                buscarCEPComTask(cepLimpo);
+            } else {
+                lblStatusCep.setText("CEP deve ter 8 dígitos");
+                lblStatusCep.setStyle("-fx-text-fill: #ef4444;");
+            }
+        });
+
+        // Formatação do CEP usando TextFormatter
+        cep.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.matches("\\d{0,5}-?\\d{0,3}")) {
+                return change;
+            }
+            return null;
+        }));    
     }
 
     /**
      * Busca informações do CEP na API ViaCEP
      */
     private void buscarCEPComTask(String cep) {
+        lblStatusCep.setText("Buscando CEP...");
+        lblStatusCep.setStyle("-fx-text-fill: #06b6d4;");
+        btnBuscarCep.setDisable(true);
+
         // Cria uma Task para a operação de rede
         Task<JSONObject> task = new Task<>() {
             @Override
@@ -913,15 +941,22 @@ public class CadastrarUsuarioController {
         task.setOnSucceeded(e -> {
             JSONObject enderecoJson = task.getValue();
             if (enderecoJson.has("erro")) {
-                mostrarAlerta("CEP não encontrado", "O CEP informado não foi encontrado.");
+                lblStatusCep.setText("CEP não encontrado");
+                lblStatusCep.setStyle("-fx-text-fill: #ef4444;");
             } else {
                 preencherCamposEnderecoComJson(enderecoJson);
+                lblStatusCep.setText("CEP encontrado com sucesso!");
+                lblStatusCep.setStyle("-fx-text-fill: #10b981;");
             }
+            btnBuscarCep.setDisable(false);
             setCarregando(false); // Esconde o indicador de "a carregar"
         });
 
         // O que fazer SE a task falhar
         task.setOnFailed(e -> {
+            lblStatusCep.setText("Erro ao buscar CEP");
+            lblStatusCep.setStyle("-fx-text-fill: #ef4444;");
+            btnBuscarCep.setDisable(false);
             mostrarAlerta("Erro de Rede", "Não foi possível conectar à API do ViaCEP.");
             setCarregando(false);
             task.getException().printStackTrace(); // Para depuração
