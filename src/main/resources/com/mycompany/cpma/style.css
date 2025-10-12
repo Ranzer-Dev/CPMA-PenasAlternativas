@@ -693,3 +693,46 @@
   -fx-font-size: 12px;
   -fx-font-weight: bold;
 }
+
+/* ===== RESPONSIVIDADE ===== */
+.responsive-grid {
+  -fx-hgap: 15px;
+  -fx-vgap: 15px;
+  -fx-max-width: Infinity;
+}
+
+.responsive-field {
+  -fx-max-width: Infinity;
+  -fx-min-width: 120px;
+}
+
+.responsive-button {
+  -fx-min-width: 120px;
+  -fx-pref-width: 120px;
+  -fx-max-width: 150px;
+}
+
+/* Labels responsivos */
+.label-secondary {
+  -fx-text-fill: #475569;
+  -fx-font-family: "Segoe UI", "Roboto", sans-serif;
+  -fx-font-size: 13px;
+  -fx-font-weight: 500;
+}
+
+/* Estilos para disponibilidade responsiva */
+.disponibilidade-container {
+  -fx-max-width: 600px;
+  -fx-min-width: 400px;
+  -fx-pref-width: 500px;
+}
+
+.disponibilidade-form {
+  -fx-max-width: 500px;
+  -fx-min-width: 300px;
+}
+
+.disponibilidade-field {
+  -fx-max-width: Infinity;
+  -fx-min-width: 120px;
+}

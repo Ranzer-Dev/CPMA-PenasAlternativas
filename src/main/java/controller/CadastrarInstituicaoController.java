@@ -30,6 +30,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -86,7 +87,52 @@ public class CadastrarInstituicaoController {
             }
         });
 
+            // Máscara para telefone ((00) 00000-0000)
+            telefone.setTextFormatter(new TextFormatter<>(change -> {
+                String newText = change.getControlNewText();
+                if (newText.length() <= 15) { // 11 dígitos + 4 caracteres especiais = 15 caracteres
+                    return change;
+                }
+                return null;
+            }));
+    
+            // Listener para aplicar máscara do telefone automaticamente
+            telefone.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (!newValue.equals(oldValue)) {
+                    String digitsOnly = newValue.replaceAll("[^0-9]", "");
+                    if (digitsOnly.length() <= 11) {
+                        String masked = aplicarMascaraTelefone(digitsOnly);
+                        if (!masked.equals(newValue)) {
+                            telefone.setText(masked);
+                            telefone.positionCaret(masked.length());
+                        }
+                    }
+                }
+            });
+
         comboInstituicoes.setVisible(false);
+    }
+        /**
+     * Aplica máscara no formato telefone ((00) 00000-0000)
+     */
+    private String aplicarMascaraTelefone(String digits) {
+        if (digits == null || digits.isEmpty()) {
+            return "";
+        }
+
+        // Remove caracteres não numéricos
+        digits = digits.replaceAll("[^0-9]", "");
+
+        // Aplica a máscara conforme o tamanho
+        if (digits.length() <= 2) {
+            return digits;
+        } else if (digits.length() <= 6) {
+            return "(" + digits.substring(0, 2) + ") " + digits.substring(2);
+        } else if (digits.length() <= 10) {
+            return "(" + digits.substring(0, 2) + ") " + digits.substring(2, 7) + "-" + digits.substring(7);
+        } else {
+            return "(" + digits.substring(0, 2) + ") " + digits.substring(2, 7) + "-" + digits.substring(7, 11);
+        }
     }
 
     public void ativarModoEdicao() {
@@ -454,19 +500,14 @@ public class CadastrarInstituicaoController {
             }
         });
 
-        // Formatação do CEP
-        cep.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && !newVal.isEmpty()) {
-                String cepLimpo = newVal.replaceAll("\\D", "");
-                if (cepLimpo.length() <= 8) {
-                    if (cepLimpo.length() > 5) {
-                        cep.setText(cepLimpo.substring(0, 5) + "-" + cepLimpo.substring(5));
-                    } else {
-                        cep.setText(cepLimpo);
-                    }
-                }
+        // Formatação do CEP usando TextFormatter
+        cep.setTextFormatter(new javafx.scene.control.TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.matches("\\d{0,5}-?\\d{0,3}")) {
+                return change;
             }
-        });
+            return null;
+        }));
     }
 
     /**
