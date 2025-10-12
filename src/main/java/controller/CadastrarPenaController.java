@@ -1,25 +1,38 @@
 package controller;
 
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+
 import dao.InstituicaoDAO;
 import dao.PenaDAO;
 import dao.UsuarioDAO;
+import utils.FormatacaoUtils;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import model.Instituicao;
 import model.Pena;
 import model.Usuario;
-
-import java.sql.Date;
-import java.time.LocalDate;
-import java.util.List;
 
 public class CadastrarPenaController {
 
     @FXML private ComboBox<Usuario> usuario;
     @FXML private ComboBox<Instituicao> instituicao;
     @FXML private ComboBox<Pena> comboPenas;
+    @FXML private VBox vboxComboPenas;
     @FXML private TextField tipoPena, tempoPena, horasSemanais, horasTotais;
     @FXML private DatePicker dataInicio, dataTermino;
     @FXML private TextArea descricao, atividadesAcordadas;
@@ -40,6 +53,8 @@ public class CadastrarPenaController {
     private void initialize() {
         carregarUsuarios();
         carregarInstituicoes();
+        configurarFormatacaoData();
+        configurarFormatacaoHoras();
 
         btnCadastrarPena.setOnAction(e -> {
             if (modoEdicao) salvarAlteracoes();
@@ -55,11 +70,7 @@ public class CadastrarPenaController {
 
     public void ativarModoEdicao() {
         modoEdicao = true;
-        usuario.setLayoutX(28);
-        usuario.setPrefWidth(260);
-        comboPenas.setLayoutX(309);
-        comboPenas.setPrefWidth(269);
-        comboPenas.setVisible(true);
+        vboxComboPenas.setVisible(true);
         btnCadastrarPena.setText("Salvar alterações");
 
         usuario.setOnAction(e -> carregarPenasDoUsuario());
@@ -144,6 +155,7 @@ public class CadastrarPenaController {
         if (sucesso) {
             alert("Pena cadastrada com sucesso!");
             limparCampos();
+            fecharJanela();
         } else {
             alert("Falha ao cadastrar pena.");
         }
@@ -308,9 +320,83 @@ public class CadastrarPenaController {
         descricao.clear(); atividadesAcordadas.clear();
     }
 
+    /**
+     * Configura a formatação de data em formato brasileiro (dd/MM/yyyy)
+     */
+    private void configurarFormatacaoData() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        
+        // Configuração para dataInicio
+        dataInicio.setConverter(new StringConverter<LocalDate>() {
+            @Override
+            public String toString(LocalDate date) {
+                if (date != null) {
+                    return formatter.format(date);
+                } else {
+                    return "";
+                }
+            }
+
+            @Override
+            public LocalDate fromString(String string) {
+                if (string != null && !string.isEmpty()) {
+                    return LocalDate.parse(string, formatter);
+                } else {
+                    return null;
+                }
+            }
+        });
+
+        // Configuração para dataTermino
+        dataTermino.setConverter(new StringConverter<LocalDate>() {
+            @Override
+            public String toString(LocalDate date) {
+                if (date != null) {
+                    return formatter.format(date);
+                } else {
+                    return "";
+                }
+            }
+
+            @Override
+            public LocalDate fromString(String string) {
+                if (string != null && !string.isEmpty()) {
+                    return LocalDate.parse(string, formatter);
+                } else {
+                    return null;
+                }
+            }
+        });
+    }
+
+    /**
+     * Configura a formatação de campos de hora usando FormatacaoUtils
+     */
+    private void configurarFormatacaoHoras() {
+        // Array com todos os campos de hora
+        TextField[] camposHora = {
+            inicioSeg, saidaSeg, inicioSeg2, saidaSeg2,
+            inicioTer, saidaTer, inicioTer2, saidaTer2,
+            inicioQua, saidaQua, inicioQua2, saidaQua2,
+            inicioQui, saidaQui, inicioQui2, saidaQui2,
+            inicioSex, saidaSex, inicioSex2, saidaSex2,
+            inicioSab, saidaSab, inicioSab2, saidaSab2
+        };
+
+        // Aplica formatação usando a classe utilitária para cada campo de hora
+        for (TextField campo : camposHora) {
+            FormatacaoUtils.aplicarFormatacaoHora(campo);
+        }
+    }
+
     private void alert(String msg) {
         new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK) {{
             setTitle("Aviso"); setHeaderText(null); showAndWait();
         }};
+    }
+
+    private void fecharJanela() {
+        Stage stage = (Stage) btnCadastrarPena.getScene().getWindow();
+        stage.close();
     }
 }

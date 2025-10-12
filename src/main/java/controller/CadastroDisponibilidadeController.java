@@ -1,25 +1,34 @@
 package controller;
 
-import dao.DisponibilidadeInstituicaoDAO;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.stage.Stage;
-import model.DisponibilidadeInstituicao;
-
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.function.Consumer;
 
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+import model.DisponibilidadeInstituicao;
+import utils.FormatacaoUtils;
+
 public class CadastroDisponibilidadeController {
 
-    @FXML private TextField campoDia, campoHoraInicio1, campoHoraFim1, campoHoraInicio2, campoHoraFim2;
-    @FXML private Button btnSalvar;
-    @FXML private Button btnCancelar;
+    @FXML
+    private TextField campoDia;
+    @FXML
+    private TextField campoHoraInicio1, campoHoraFim1, campoHoraInicio2, campoHoraFim2;
+    @FXML
+    private Button btnSalvar;
+    @FXML
+    private Button btnCancelar;
     private Consumer<DisponibilidadeInstituicao> callback;
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
     private int instituicaoId;
+
     public void setInstituicaoId(int id) {
         this.instituicaoId = id;
     }
@@ -28,6 +37,18 @@ public class CadastroDisponibilidadeController {
     public void initialize() {
         btnSalvar.setOnAction(e -> salvar());
         btnCancelar.setOnAction(e -> fecharJanela());
+        configurarFormatacaoHoras();
+    }
+    
+    /**
+     * Configura a formatação de campos de hora usando FormatacaoUtils
+     */
+    private void configurarFormatacaoHoras() {
+        // Aplica formatação automática usando a classe utilitária
+        FormatacaoUtils.aplicarFormatacaoHora(campoHoraInicio1);
+        FormatacaoUtils.aplicarFormatacaoHora(campoHoraFim1);
+        FormatacaoUtils.aplicarFormatacaoHora(campoHoraInicio2);
+        FormatacaoUtils.aplicarFormatacaoHora(campoHoraFim2);
     }
 
     private void salvar() {
@@ -38,12 +59,12 @@ public class CadastroDisponibilidadeController {
 
         DisponibilidadeInstituicao disponibilidade = new DisponibilidadeInstituicao();
         disponibilidade.setDiaSemana(campoDia.getText().trim());
-        disponibilidade.setHoraInicio1(LocalTime.parse(campoHoraInicio1.getText(), formatter));
-        disponibilidade.setHoraFim1(LocalTime.parse(campoHoraFim1.getText(), formatter));
+        disponibilidade.setHoraInicio1(FormatacaoUtils.getHoraValue(campoHoraInicio1));
+        disponibilidade.setHoraFim1(FormatacaoUtils.getHoraValue(campoHoraFim1));
 
-        if (!campoHoraInicio2.getText().isEmpty() && !campoHoraFim2.getText().isEmpty()) {
-            disponibilidade.setHoraInicio2(LocalTime.parse(campoHoraInicio2.getText(), formatter));
-            disponibilidade.setHoraFim2(LocalTime.parse(campoHoraFim2.getText(), formatter));
+        if (!campoHoraInicio2.getText().trim().isEmpty() && !campoHoraFim2.getText().trim().isEmpty()) {
+            disponibilidade.setHoraInicio2(FormatacaoUtils.getHoraValue(campoHoraInicio2));
+            disponibilidade.setHoraFim2(FormatacaoUtils.getHoraValue(campoHoraFim2));
         }
 
         if (callback != null) {
@@ -57,7 +78,6 @@ public class CadastroDisponibilidadeController {
         this.callback = callback;
     }
 
-
     private LocalTime parseHora(String texto, String campo) {
         try {
             return LocalTime.parse(texto, formatter);
@@ -68,17 +88,22 @@ public class CadastroDisponibilidadeController {
     }
 
     private LocalTime parseHoraOpcional(String texto, String campo) {
-        if (texto.trim().isEmpty()) return null;
+        if (texto.trim().isEmpty()) {
+            return null;
+        }
         return parseHora(texto, campo);
     }
 
     private boolean validarCampos() {
-        if (campoDia.getText().trim().isEmpty()) return false;
-        try {
-            LocalTime.parse(campoHoraInicio1.getText(), formatter);
-            LocalTime.parse(campoHoraFim1.getText(), formatter);
-        } catch (DateTimeParseException e) {
-            mostrarAlerta("Formato inválido", "Hora Início 1 e Hora Fim 1 devem estar no formato HH:mm");
+        if (campoDia.getText().trim().isEmpty()) {
+            return false;
+        }
+        if (campoHoraInicio1.getText().trim().isEmpty()) {
+            mostrarAlerta("Erro", "Hora de início é obrigatória!");
+            return false;
+        }
+        if (campoHoraFim1.getText().trim().isEmpty()) {
+            mostrarAlerta("Erro", "Hora de fim é obrigatória!");
             return false;
         }
         return true;
@@ -86,11 +111,13 @@ public class CadastroDisponibilidadeController {
 
 
     private void mostrarAlerta(String titulo, String msg) {
-        new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK) {{
-            setTitle(titulo);
-            setHeaderText(null);
-            showAndWait();
-        }};
+        new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK) {
+            {
+                setTitle(titulo);
+                setHeaderText(null);
+                showAndWait();
+            }
+        };
     }
 
     private void fecharJanela() {

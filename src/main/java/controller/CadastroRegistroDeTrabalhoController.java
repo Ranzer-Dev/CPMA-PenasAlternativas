@@ -1,22 +1,31 @@
 package controller;
 
-import dao.InstituicaoDAO;
-import dao.PenaDAO;
-import dao.RegistroDeTrabalhoDAO;
-import dao.UsuarioDAO;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import model.Instituicao;
-import model.Pena;
-import model.RegistroDeTrabalho;
-import model.Usuario;
-
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import dao.InstituicaoDAO;
+import dao.PenaDAO;
+import dao.RegistroDeTrabalhoDAO;
+import dao.UsuarioDAO;
+import utils.FormatacaoUtils;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+import javafx.util.StringConverter;
+import model.Instituicao;
+import model.Pena;
+import model.RegistroDeTrabalho;
+import model.Usuario;
 
 public class CadastroRegistroDeTrabalhoController {
 
@@ -41,6 +50,9 @@ public class CadastroRegistroDeTrabalhoController {
         btnCadastrar.setOnAction(e -> cadastrar());
         comboPena.setDisable(true);
 
+        // Configura formatação de data brasileira
+        configurarFormatacaoData();
+
         comboUsuario.setOnAction(e -> {
             Usuario u = comboUsuario.getValue();
             if (u != null) {
@@ -60,10 +72,11 @@ public class CadastroRegistroDeTrabalhoController {
         horarioVolta.textProperty().addListener((obs, o, n) -> calcularHoras());
         horarioSaida.textProperty().addListener((obs, o, n) -> calcularHoras());
 
-        aplicarMascaraHora(horarioInicio);
-        aplicarMascaraHora(horarioAlmoco);
-        aplicarMascaraHora(horarioVolta);
-        aplicarMascaraHora(horarioSaida);
+        // Aplica formatação avançada de hora usando FormatacaoUtils
+        FormatacaoUtils.aplicarFormatacaoHora(horarioInicio);
+        FormatacaoUtils.aplicarFormatacaoHora(horarioAlmoco);
+        FormatacaoUtils.aplicarFormatacaoHora(horarioVolta);
+        FormatacaoUtils.aplicarFormatacaoHora(horarioSaida);
     }
 
     private void carregarInstituicoes() {
@@ -73,6 +86,23 @@ public class CadastroRegistroDeTrabalhoController {
 
     private void carregarUsuarios() {
         comboUsuario.setItems(FXCollections.observableArrayList(UsuarioDAO.buscarTodosUsuarios()));
+        
+        // Configura o converter para mostrar "CPF - Nome"
+        comboUsuario.setConverter(new StringConverter<Usuario>() {
+            @Override
+            public String toString(Usuario usuario) {
+                if (usuario == null) {
+                    return "";
+                }
+                return usuario.getCpf() + " - " + usuario.getNome();
+            }
+
+            @Override
+            public Usuario fromString(String string) {
+                // Não usado para ComboBox de objetos
+                return null;
+            }
+        });
     }
 
     private void carregarPenasDoUsuario(int idUsuario) {
@@ -91,10 +121,10 @@ public class CadastroRegistroDeTrabalhoController {
             }
 
             double horas = Double.parseDouble(horasCumpridas.getText().trim().replace(",", "."));
-            LocalTime ini = converterHora(horarioInicio);
-            LocalTime alm = converterHora(horarioAlmoco);
-            LocalTime vol = converterHora(horarioVolta);
-            LocalTime sai = converterHora(horarioSaida);
+            LocalTime ini = FormatacaoUtils.getHoraValue(horarioInicio);
+            LocalTime alm = FormatacaoUtils.getHoraValue(horarioAlmoco);
+            LocalTime vol = FormatacaoUtils.getHoraValue(horarioVolta);
+            LocalTime sai = FormatacaoUtils.getHoraValue(horarioSaida);
 
             if (horas <= 0) {
                 alert("Horas cumpridas inválidas.");
@@ -113,51 +143,58 @@ public class CadastroRegistroDeTrabalhoController {
 
             boolean ok = new RegistroDeTrabalhoDAO().inserir(registro);
             alert(ok ? "Registro gravado!" : "Falha ao gravar.");
+            if (ok) {
+                fecharJanela();
+            }
         } catch (Exception ex) {
             alert("Erro: " + ex.getMessage());
         }
     }
 
-    private LocalTime converterHora(TextField campo) {
-        String dig = campo.getText().replaceAll("[^0-9]", "");
-        if (dig.length() < 4) throw new IllegalArgumentException("Hora incompleta: " + campo.getText());
-        if (dig.length() > 4) dig = dig.substring(0, 4);
-        String h = dig.substring(0, 2) + ":" + dig.substring(2, 4);
-        return LocalTime.parse(h, fmt);
-    }
-
-    private void aplicarMascaraHora(TextField campo) {
-        campo.textProperty().addListener((obs, oldValue, newValue) -> {
-            String valor = newValue.replaceAll("[^0-9]", "");
-            if (valor.length() > 4) valor = valor.substring(0, 4);
-
-            StringBuilder f = new StringBuilder();
-            for (int i = 0; i < valor.length(); i++) {
-                f.append(valor.charAt(i));
-                if (i == 1 && valor.length() > 2) f.append(":");
+    /**
+     * Configura formatação de data brasileira (dd/MM/yyyy)
+     */
+    private void configurarFormatacaoData() {
+        dataTrabalho.setConverter(new javafx.util.StringConverter<java.time.LocalDate>() {
+            private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            
+            @Override
+            public String toString(java.time.LocalDate date) {
+                if (date != null) {
+                    return dateFormatter.format(date);
+                } else {
+                    return "";
+                }
             }
 
-            int caret = campo.getCaretPosition();
-            javafx.application.Platform.runLater(() -> {
-                campo.setText(f.toString());
-                campo.positionCaret(Math.min(caret, campo.getText().length()));
-            });
+            @Override
+            public java.time.LocalDate fromString(String string) {
+                if (string != null && !string.trim().isEmpty()) {
+                    return java.time.LocalDate.parse(string, dateFormatter);
+                } else {
+                    return null;
+                }
+            }
         });
     }
 
     private void calcularHoras() {
         try {
-            LocalTime ini = converterHora(horarioInicio);
-            LocalTime alm = converterHora(horarioAlmoco);
-            LocalTime vol = converterHora(horarioVolta);
-            LocalTime sai = converterHora(horarioSaida);
+            LocalTime ini = FormatacaoUtils.getHoraValue(horarioInicio);
+            LocalTime alm = FormatacaoUtils.getHoraValue(horarioAlmoco);
+            LocalTime vol = FormatacaoUtils.getHoraValue(horarioVolta);
+            LocalTime sai = FormatacaoUtils.getHoraValue(horarioSaida);
 
-            long manha = java.time.Duration.between(ini, alm).toMinutes();
-            long tarde = java.time.Duration.between(vol, sai).toMinutes();
-            long total = manha + tarde;
-            if (total < 0) total = 0;
+            if (ini != null && alm != null && vol != null && sai != null) {
+                long manha = java.time.Duration.between(ini, alm).toMinutes();
+                long tarde = java.time.Duration.between(vol, sai).toMinutes();
+                long total = manha + tarde;
+                if (total < 0) total = 0;
 
-            horasCumpridas.setText(String.format("%.2f", total / 60.0));
+                horasCumpridas.setText(String.format("%.2f", total / 60.0));
+            } else {
+                horasCumpridas.setText("0.00");
+            }
         } catch (Exception e) {
             horasCumpridas.setText("0.00");
         }
@@ -165,5 +202,10 @@ public class CadastroRegistroDeTrabalhoController {
 
     private void alert(String msg) {
         new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK).showAndWait();
+    }
+
+    private void fecharJanela() {
+        Stage stage = (Stage) btnCadastrar.getScene().getWindow();
+        stage.close();
     }
 }

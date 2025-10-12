@@ -15,6 +15,7 @@ public class Pena {
     private double horasTotais;
     private int fkUsuarioIdUsuario;
     private int fkInstituicaoIdInstituicao;
+    private Date criadoEm;
 
     public int getIdPena() {
         return idPena;
@@ -110,6 +111,14 @@ public class Pena {
 
     public void setFkInstituicaoIdInstituicao(int fkInstituicaoIdInstituicao) {
         this.fkInstituicaoIdInstituicao = fkInstituicaoIdInstituicao;
+    }
+
+    public Date getCriadoEm() {
+        return criadoEm;
+    }
+
+    public void setCriadoEm(Date criadoEm) {
+        this.criadoEm = criadoEm;
     }
 
     @Override

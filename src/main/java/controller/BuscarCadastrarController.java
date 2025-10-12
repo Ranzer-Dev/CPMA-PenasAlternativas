@@ -11,7 +11,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Usuario;
 
@@ -22,38 +21,39 @@ public class BuscarCadastrarController {
     @FXML
     private Button botaoSair;
     @FXML
-    private Button btnEditarAdmin;
-    @FXML
     private Button btnEditarInst;
     @FXML
     private Button btnEditarPena;
     @FXML
     private Button btnEditarPonto;
     @FXML
-    private Button btnEditarAcordo;
-    @FXML
     private TextField campoBuscarNomeCpf;
     @FXML
-    private Button botaoBuscar, botaoCadastrar, botaoEditar;
+    private Button botaoBuscar;
     @FXML
-    private Button btnInst, btnPena, btnPonto, btnAcordo, btnAdmin, btnUsuario;
-    @FXML
-    private VBox painelCadastro, painelEditar;
+    private Button btnInst, btnPena, btnPonto, btnUsuario;
 
     @FXML
     private void initialize() {
 
         botaoBuscar.setOnAction(e -> {
-            painelCadastro.setVisible(true);
-            painelEditar.setVisible(false);
-
             String termo = campoBuscarNomeCpf.getText().trim();
+
+            if (termo.isEmpty()) {
+                alerta("Aviso", "Por favor, digite um nome ou CPF para buscar.");
+                return;
+            }
+
+            // Mostrar feedback visual
+            botaoBuscar.setText("🔍 Buscando...");
+            botaoBuscar.setDisable(true);
+
             Usuario u = buscarUsuario(termo);
 
             if (u != null) {
                 try {
                     FXMLLoader loader = new FXMLLoader(getClass()
-                            .getResource("/com.mycompany.cpma/detalheApenadoView.fxml"));
+                            .getResource("/com/mycompany/cpma/detalheApenadoView.fxml"));
                     Parent root = loader.load();
 
                     DetalheApenadoController det = loader.getController();
@@ -68,12 +68,14 @@ public class BuscarCadastrarController {
                     alerta("Erro", "Não foi possível abrir a tela de detalhes.");
                 }
             } else {
-                alerta("Aviso", "Usuário não encontrado.");
+                alerta("Aviso", "Usuário não encontrado. Verifique o nome ou CPF digitado.");
             }
+
+            // Restaurar botão
+            botaoBuscar.setText("🔍 Buscar");
+            botaoBuscar.setDisable(false);
         });
 
-        botaoCadastrar.setOnAction(e -> mostrarPainelCadastro());
-        botaoEditar.setOnAction(e -> mostrarPainelEditar());
         botaoSair.setOnAction(e -> voltarParaLogin());
 
         btnUsuario.setOnAction(e
@@ -88,17 +90,8 @@ public class BuscarCadastrarController {
         btnPonto.setOnAction(e
                 -> abrir("/com/mycompany/cpma/cadastroRegistroDeTrabalhoView.fxml", "Cadastro de Ponto"));
 
-        btnAcordo.setOnAction(e
-                -> abrir("/com/mycompany/cpma/cadastroAcordoDeTrabalhoView.fxml", "Cadastro de Acordo"));
-
-        btnAdmin.setOnAction(e
-                -> abrir("/resources/view/cadastroAdministradorView.fxml", "Cadastro de Administrador"));
-
         btnEditarUsuario.setOnAction(e
                 -> abrir("/com/mycompany/cpma/telaCadastroUsuario.fxml", "Editar Usuário", true));
-
-        btnEditarAdmin.setOnAction(e
-                -> abrir("/resources/view/cadastroAdministradorView.fxml", "Editar Administrador", true));
 
         btnEditarInst.setOnAction(e
                 -> abrir("/com/mycompany/cpma/cadastroInstituicaoView.fxml", "Editar Instituição", true));
@@ -108,9 +101,6 @@ public class BuscarCadastrarController {
 
         btnEditarPonto.setOnAction(e
                 -> abrir("/com/mycompany/cpma/cadastroRegistroDeTrabalhoView.fxml", "Editar Ponto", true));
-
-        btnEditarAcordo.setOnAction(e
-                -> abrir("/com/mycompany/cpma/cadastroAcordoDeTrabalhoView.fxml", "Editar Acordo", true));
 
     }
 
@@ -138,6 +128,11 @@ public class BuscarCadastrarController {
                 c.ativarModoEdicao();
             }
 
+            if (modoEdicao && fxml.contains("cadastroRegistroDeTrabalhoView")) {
+                // CadastroRegistroDeTrabalhoController c = loader.getController();
+                // c.ativarModoEdicao();
+            }
+
             Stage st = new Stage();
             st.setTitle(titulo);
             st.setScene(new Scene(root));
@@ -159,17 +154,18 @@ public class BuscarCadastrarController {
         if (termo == null || termo.isEmpty()) {
             return null;
         }
-        return new UsuarioDAO().buscarPorCpf(termo);
-    }
 
-    private void mostrarPainelCadastro() {
-        painelCadastro.setVisible(true);
-        painelEditar.setVisible(false);
-    }
+        UsuarioDAO dao = new UsuarioDAO();
 
-    private void mostrarPainelEditar() {
-        painelCadastro.setVisible(false);
-        painelEditar.setVisible(true);
+        // Primeiro tenta buscar por CPF
+        Usuario usuario = dao.buscarPorCpf(termo);
+
+        // Se não encontrou por CPF, tenta buscar por nome
+        if (usuario == null) {
+            usuario = UsuarioDAO.buscarPorNome(termo);
+        }
+
+        return usuario;
     }
 
     private void voltarParaLogin() {

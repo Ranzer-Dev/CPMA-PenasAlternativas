@@ -31,6 +31,11 @@ public class ReconhecimentoFacial {
     private CascadeClassifier faceDetector;
     private boolean inicializado = false;
 
+    private double scaleFactor = 1.1;
+    private int minNeighbors = 4;
+    private int minSize = 30;
+    private int maxSize = 400;
+
     /**
      * Inicializa o detector de faces
      */
@@ -42,18 +47,14 @@ public class ReconhecimentoFacial {
             // Corrige o caminho para diferentes sistemas operacionais
             cascadePath = corrigirCaminhoArquivo(cascadePath);
 
-            // System.out.println("Tentando carregar cascade de: " + cascadePath);
             faceDetector = new CascadeClassifier(cascadePath);
 
             if (faceDetector.empty()) {
                 System.err.println("Erro ao carregar o classificador de faces - tentando arquivo alternativo");
-                // Tenta o arquivo alternativo
                 String altCascadePath = getClass().getResource("/opencv/haarcascades/haarcascade_frontalface_alt.xml").getPath();
 
-                // Corrige o caminho para diferentes sistemas operacionais
                 altCascadePath = corrigirCaminhoArquivo(altCascadePath);
 
-                // System.out.println("Tentando arquivo alternativo: " + altCascadePath);
                 faceDetector = new CascadeClassifier(altCascadePath);
 
                 if (faceDetector.empty()) {
@@ -82,6 +83,36 @@ public class ReconhecimentoFacial {
     }
 
     /**
+     * Configura parâmetros mais rigorosos para reduzir falsos positivos
+     */
+    public void configurarModoRigoroso() {
+        this.scaleFactor = 1.2;  // Mais conservador
+        this.minNeighbors = 6;   // Mais confirmações necessárias
+        this.minSize = 40;       // Faces maiores
+        this.maxSize = 300;      // Limite menor
+    }
+
+    /**
+     * Configura parâmetros mais sensíveis para detectar mais faces
+     */
+    public void configurarModoSensivel() {
+        this.scaleFactor = 1.2; // Muito mais sensível
+        this.minNeighbors = 4;   // Mínimo de confirmações
+        this.minSize = 20;        // Faces muito pequenas
+        this.maxSize = 700;     // Limite muito maior
+    }
+
+    /**
+     * Restaura parâmetros padrão balanceados
+     */
+    public void configurarModoPadrao() {
+        this.scaleFactor = 1.1;
+        this.minNeighbors = 4;
+        this.minSize = 30;
+        this.maxSize = 400;
+    }
+
+    /**
      * Corrige o caminho do arquivo para funcionar em diferentes sistemas
      * operacionais
      */
@@ -89,15 +120,12 @@ public class ReconhecimentoFacial {
         String osName = System.getProperty("os.name").toLowerCase();
 
         if (osName.contains("windows")) {
-            // Windows: remove a barra inicial se existir
             if (caminho.startsWith("/")) {
                 caminho = caminho.substring(1);
             }
-            // Converte barras para o formato Windows se necessário
             caminho = caminho.replace("/", "\\");
         } else if (osName.contains("linux") || osName.contains("unix") || osName.contains("mac")) {
-            // Linux/Unix/Mac: mantém o formato com barras
-            // Não precisa fazer nada especial
+
         }
 
         return caminho;
@@ -115,35 +143,93 @@ public class ReconhecimentoFacial {
     }
 
     /**
-     * Detecta faces em uma imagem usando OpenCV
+     * Detecta faces em uma imagem usando OpenCV com parâmetros otimizados
      */
     public boolean detectarFace(BufferedImage imagem) {
         if (imagem == null || !inicializado) {
-            System.out.println("Detecção falhou: imagem=" + (imagem != null) + ", inicializado=" + inicializado);
             return false;
         }
 
         try (Mat matImagem = bufferedImageToMat(imagem); Mat grayImage = new Mat(); RectVector faces = new RectVector()) {
 
-            // System.out.println("Processando imagem: " + imagem.getWidth() + "x" + imagem.getHeight());
-            // Converte para escala de cinza
             opencv_imgproc.cvtColor(matImagem, grayImage, opencv_imgproc.COLOR_BGR2GRAY);
 
-            // Detecta faces com parâmetros mais sensíveis
-            faceDetector.detectMultiScale(grayImage, faces, 1.05, 2, 0,
-                    new org.bytedeco.opencv.opencv_core.Size(20, 20),
-                    new org.bytedeco.opencv.opencv_core.Size());
+            opencv_imgproc.equalizeHist(grayImage, grayImage);
+
+            faceDetector.detectMultiScale(grayImage, faces, scaleFactor, minNeighbors, 0,
+                    new org.bytedeco.opencv.opencv_core.Size(minSize, minSize),
+                    new org.bytedeco.opencv.opencv_core.Size(maxSize, maxSize));
 
             int numFaces = (int) faces.size();
-            // System.out.println("Faces detectadas: " + numFaces);
 
-            return numFaces > 0;
+            // Filtra faces por qualidade e proporção
+            if (numFaces > 0) {
+                return validarFaces(faces, imagem.getWidth(), imagem.getHeight());
+            }
+
+            return false;
 
         } catch (Exception e) {
             System.err.println("Erro ao detectar faces: " + e.getMessage());
-            e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * Valida as faces detectadas para filtrar falsos positivos
+     */
+    private boolean validarFaces(RectVector faces, int imageWidth, int imageHeight) {
+        int validFaces = 0;
+
+        for (long i = 0; i < faces.size(); i++) {
+            Rect face = faces.get(i);
+
+            // Verifica se a face está em uma posição razoável na imagem
+            if (validarPosicaoFace(face, imageWidth, imageHeight)
+                    && validarProporcaoFace(face)
+                    && validarTamanhoFace(face, imageWidth, imageHeight)) {
+                validFaces++;
+            }
+        }
+
+        // Só considera válido se encontrar pelo menos uma face bem posicionada
+        return validFaces > 0;
+    }
+
+    /**
+     * Valida se a face está em uma posição razoável na imagem
+     */
+    private boolean validarPosicaoFace(Rect face, int imageWidth, int imageHeight) {
+        // A face não deve estar muito próxima das bordas (exceto topo)
+        // Muito tolerante para macOS
+        int margin = Math.min(imageWidth, imageHeight) / 100; // 1% da menor dimensão
+
+        return face.x() >= margin
+                && face.y() >= 0
+                && // Permite faces no topo da imagem
+                (face.x() + face.width()) <= (imageWidth - margin)
+                && (face.y() + face.height()) <= (imageHeight - margin);
+    }
+
+    /**
+     * Valida se a proporção da face é razoável (aproximadamente quadrada)
+     */
+    private boolean validarProporcaoFace(Rect face) {
+        double aspectRatio = (double) face.width() / face.height();
+        // Faces humanas têm proporção entre 0.7 e 1.4
+        return aspectRatio >= 0.7 && aspectRatio <= 1.4;
+    }
+
+    /**
+     * Valida se o tamanho da face é razoável em relação à imagem
+     */
+    private boolean validarTamanhoFace(Rect face, int imageWidth, int imageHeight) {
+        double faceArea = face.width() * face.height();
+        double imageArea = imageWidth * imageHeight;
+        double faceRatio = faceArea / imageArea;
+
+        // A face deve ocupar entre 0.1% e 80% da área da imagem (muito tolerante para macOS)
+        return faceRatio >= 0.001 && faceRatio <= 0.8;
     }
 
     /**
@@ -161,15 +247,25 @@ public class ReconhecimentoFacial {
             // Converte para escala de cinza
             opencv_imgproc.cvtColor(matImagem, grayImage, opencv_imgproc.COLOR_BGR2GRAY);
 
-            // Detecta faces com parâmetros mais sensíveis
-            faceDetector.detectMultiScale(grayImage, faceRects, 1.05, 2, 0,
-                    new org.bytedeco.opencv.opencv_core.Size(20, 20),
-                    new org.bytedeco.opencv.opencv_core.Size());
+            // Aplica equalização de histograma para melhorar o contraste
+            opencv_imgproc.equalizeHist(grayImage, grayImage);
 
-            // Converte para lista de Rectangle
+            // Usa os parâmetros configuráveis
+            faceDetector.detectMultiScale(grayImage, faceRects, scaleFactor, minNeighbors, 0,
+                    new org.bytedeco.opencv.opencv_core.Size(minSize, minSize),
+                    new org.bytedeco.opencv.opencv_core.Size(maxSize, maxSize));
+
+            // Filtra apenas as faces válidas
             for (long i = 0; i < faceRects.size(); i++) {
                 Rect rect = faceRects.get(i);
-                faces.add(new Rectangle(rect.x(), rect.y(), rect.width(), rect.height()));
+
+                // Aplica as mesmas validações
+                if (validarPosicaoFace(rect, imagem.getWidth(), imagem.getHeight())
+                        && validarProporcaoFace(rect)
+                        && validarTamanhoFace(rect, imagem.getWidth(), imagem.getHeight())) {
+
+                    faces.add(new Rectangle(rect.x(), rect.y(), rect.width(), rect.height()));
+                }
             }
 
         } catch (Exception e) {
@@ -180,14 +276,11 @@ public class ReconhecimentoFacial {
     }
 
     /**
-     * Desenha retângulos ao redor das faces detectadas
+     * Desenha retângulos ao redor das faces detectadas com informações de
+     * qualidade (versão otimizada para performance)
      */
     public BufferedImage desenharRetangulosFaces(BufferedImage imagem) {
         List<Rectangle> faces = detectarFacesComCoordenadas(imagem);
-
-        if (faces.isEmpty()) {
-            return imagem;
-        }
 
         // Cria uma cópia da imagem para desenhar
         BufferedImage imagemComRetangulos = new BufferedImage(
@@ -195,12 +288,60 @@ public class ReconhecimentoFacial {
         Graphics2D g2d = imagemComRetangulos.createGraphics();
         g2d.drawImage(imagem, 0, 0, null);
 
-        // Desenha retângulos verdes ao redor das faces
-        g2d.setColor(java.awt.Color.GREEN);
-        g2d.setStroke(new java.awt.BasicStroke(3));
+        if (faces.isEmpty()) {
+            // Desenha mensagem quando nenhuma face válida é detectada (só se necessário)
+            g2d.setColor(java.awt.Color.RED);
+            g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 14)); // Fonte menor
+            g2d.drawString("Procurando...", 10, 25);
+        } else {
+            // Desenha retângulos verdes ao redor das faces válidas
+            g2d.setColor(java.awt.Color.GREEN);
+            g2d.setStroke(new java.awt.BasicStroke(2)); // Linha mais fina
 
-        for (Rectangle face : faces) {
-            g2d.drawRect(face.x, face.y, face.width, face.height);
+            for (int i = 0; i < faces.size(); i++) {
+                Rectangle face = faces.get(i);
+                g2d.drawRect(face.x, face.y, face.width, face.height);
+            }
+
+            // Desenha informações sobre a detecção (simplificado)
+            g2d.setColor(java.awt.Color.WHITE);
+            g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 12));
+            g2d.drawString("✓ Face detectada", 10, 20);
+        }
+
+        g2d.dispose();
+        return imagemComRetangulos;
+    }
+
+    /**
+     * Desenha retângulos baseado nas coordenadas reais das faces detectadas (para evitar piscar)
+     */
+    public BufferedImage desenharRetangulosComCoordenadas(BufferedImage imagem, List<Rectangle> faces, boolean faceDetectada) {
+        // Cria uma cópia da imagem para desenhar
+        BufferedImage imagemComRetangulos = new BufferedImage(
+                imagem.getWidth(), imagem.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = imagemComRetangulos.createGraphics();
+        g2d.drawImage(imagem, 0, 0, null);
+
+        if (faceDetectada && !faces.isEmpty()) {
+            // Desenha retângulos verdes nas posições reais das faces
+            g2d.setColor(java.awt.Color.GREEN);
+            g2d.setStroke(new java.awt.BasicStroke(2));
+
+            for (int i = 0; i < faces.size(); i++) {
+                Rectangle face = faces.get(i);
+                g2d.drawRect(face.x, face.y, face.width, face.height);
+            }
+
+            // Desenha informações sobre a detecção
+            g2d.setColor(java.awt.Color.WHITE);
+            g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 12));
+            g2d.drawString("✓ Face detectada", 10, 20);
+        } else {
+            // Desenha mensagem quando procurando
+            g2d.setColor(java.awt.Color.RED);
+            g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 14));
+            g2d.drawString("Procurando...", 10, 25);
         }
 
         g2d.dispose();
