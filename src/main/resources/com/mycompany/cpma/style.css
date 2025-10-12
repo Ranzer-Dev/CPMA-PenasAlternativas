@@ -631,6 +631,114 @@
   -fx-background-color: #f1f5f9;
 }
 
+/* ===== TABELA RESPONSIVA ===== */
+.responsive-table {
+  -fx-background-color: #ffffff;
+  -fx-border-color: #e2e8f0;
+  -fx-border-radius: 12px;
+  -fx-background-radius: 12px;
+  -fx-border-width: 2px;
+  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);
+  -fx-table-cell-border-color: transparent;
+}
+
+/* Scrollbar personalizada para a tabela */
+.responsive-table .scroll-bar:vertical {
+  -fx-background-color: #f1f5f9;
+  -fx-border-color: #e2e8f0;
+  -fx-background-radius: 6px;
+  -fx-border-radius: 6px;
+}
+
+.responsive-table .scroll-bar:vertical .thumb {
+  -fx-background-color: #cbd5e1;
+  -fx-background-radius: 6px;
+}
+
+.responsive-table .scroll-bar:vertical .thumb:hover {
+  -fx-background-color: #94a3b8;
+}
+
+.responsive-table .scroll-bar:vertical .increment-button,
+.responsive-table .scroll-bar:vertical .decrement-button {
+  -fx-background-color: transparent;
+  -fx-padding: 0;
+}
+
+.responsive-table .scroll-bar:vertical .increment-arrow,
+.responsive-table .scroll-bar:vertical .decrement-arrow {
+  -fx-background-color: #64748b;
+  -fx-shape: "M 0 0 L 4 8 L 8 0 Z";
+}
+
+.responsive-table .column-header {
+  -fx-background-color: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+  -fx-text-fill: #1e293b;
+  -fx-font-family: "Segoe UI", "Roboto", sans-serif;
+  -fx-font-size: 13px;
+  -fx-font-weight: 700;
+  -fx-border-color: #cbd5e1;
+  -fx-padding: 12px 8px;
+  -fx-alignment: center;
+}
+
+.responsive-table .table-cell {
+  -fx-text-fill: #374151;
+  -fx-font-family: "Segoe UI", "Roboto", sans-serif;
+  -fx-font-size: 14px;
+  -fx-font-weight: 500;
+  -fx-border-color: #e5e7eb;
+  -fx-padding: 10px 8px;
+  -fx-alignment: center;
+  -fx-background-color: #ffffff;
+}
+
+.responsive-table .table-row-cell {
+  -fx-background-color: #ffffff;
+  -fx-border-color: #f3f4f6;
+  -fx-border-width: 0 0 1px 0;
+}
+
+.responsive-table .table-row-cell:selected {
+  -fx-background-color: linear-gradient(to right, #dbeafe, #bfdbfe);
+  -fx-text-fill: #1e40af;
+  -fx-border-color: #3b82f6;
+}
+
+.responsive-table .table-row-cell:hover {
+  -fx-background-color: #f8fafc;
+  -fx-border-color: #e2e8f0;
+}
+
+.responsive-table .table-row-cell:odd {
+  -fx-background-color: #fafbfc;
+}
+
+.responsive-table .table-row-cell:odd:hover {
+  -fx-background-color: #f1f5f9;
+}
+
+.responsive-table .table-row-cell:odd:selected {
+  -fx-background-color: linear-gradient(to right, #dbeafe, #bfdbfe);
+}
+
+/* Botão de ação na tabela */
+.responsive-table .table-cell Button {
+  -fx-background-color: #ef4444;
+  -fx-text-fill: white;
+  -fx-border-radius: 6px;
+  -fx-background-radius: 6px;
+  -fx-font-size: 12px;
+  -fx-font-weight: bold;
+  -fx-padding: 4px 8px;
+  -fx-cursor: hand;
+}
+
+.responsive-table .table-cell Button:hover {
+  -fx-background-color: #dc2626;
+  -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.3), 4, 0, 0, 2);
+}
+
 .btn-success {
   -fx-background-color: #10b981;
   -fx-text-fill: white;

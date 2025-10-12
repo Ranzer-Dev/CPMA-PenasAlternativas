@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,6 +75,8 @@ public class CadastrarInstituicaoController {
         configurarBuscaCEP();
         carregarTipos();
         configurarTabelaDisponibilidades();
+        // Configura altura inicial da tabela
+        ajustarAlturaTabela();
 
         btnAdicionarHorario.setOnAction(e -> abrirCadastroDisponibilidadeTemp());
         btnRemoverHorario.setOnAction(e -> removerHorarioSelecionado());
@@ -194,25 +198,46 @@ public class CadastrarInstituicaoController {
     }
 
     private void configurarTabelaDisponibilidades() {
+        // Configuração das colunas com formatação melhorada
         colDia.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getDiaSemana()));
+        colDia.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText("📅 " + item);
+                    setStyle("-fx-font-weight: bold; -fx-text-fill: #1e40af;");
+                }
+            }
+        });
+        
         colInicio1.setCellValueFactory(d -> new SimpleStringProperty(
-                d.getValue().getHoraInicio1() != null ? d.getValue().getHoraInicio1().toString() : ""));
+                d.getValue().getHoraInicio1() != null ? formatarHora(d.getValue().getHoraInicio1()) : ""));
         colFim1.setCellValueFactory(d -> new SimpleStringProperty(
-                d.getValue().getHoraFim1() != null ? d.getValue().getHoraFim1().toString() : ""));
+                d.getValue().getHoraFim1() != null ? formatarHora(d.getValue().getHoraFim1()) : ""));
         colInicio2.setCellValueFactory(d -> new SimpleStringProperty(
-                d.getValue().getHoraInicio2() != null ? d.getValue().getHoraInicio2().toString() : ""));
+                d.getValue().getHoraInicio2() != null ? formatarHora(d.getValue().getHoraInicio2()) : ""));
         colFim2.setCellValueFactory(d -> new SimpleStringProperty(
-                d.getValue().getHoraFim2() != null ? d.getValue().getHoraFim2().toString() : ""));
+                d.getValue().getHoraFim2() != null ? formatarHora(d.getValue().getHoraFim2()) : ""));
+        
+        // Configuração das colunas de hora
+        configurarColunaHora(colInicio1);
+        configurarColunaHora(colFim1);
+        configurarColunaHora(colInicio2);
+        configurarColunaHora(colFim2);
+        
+        // Coluna de ação com botão melhorado
         colAcao.setCellFactory(tc -> new TableCell<>() {
-            private final Button btn = new Button("🗑");
+            private final Button btn = new Button("🗑️");
 
             {
-                btn.setStyle("-fx-background-color: transparent; -fx-font-size: 14; -fx-cursor: hand;");
+                btn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-padding: 4px 8px;");
                 btn.setOnAction(e -> {
                     DisponibilidadeInstituicao item = getTableView().getItems().get(getIndex());
                     novasDisponibilidades.remove(item);
-                    tabelaHorarios.getItems().setAll(novasDisponibilidades);
-                    tabelaHorarios.refresh();
+                    atualizarTabela();
                 });
             }
 
@@ -227,16 +252,100 @@ public class CadastrarInstituicaoController {
             }
         });
 
+        // Configuração da tabela
         tabelaHorarios.setItems(FXCollections.observableArrayList(novasDisponibilidades));
+        tabelaHorarios.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
+        // Auto-redimensionamento das colunas
+        tabelaHorarios.widthProperty().addListener((obs, oldWidth, newWidth) -> {
+            double tableWidth = newWidth.doubleValue();
+            colDia.setPrefWidth(tableWidth * 0.25);
+            colInicio1.setPrefWidth(tableWidth * 0.15);
+            colFim1.setPrefWidth(tableWidth * 0.15);
+            colInicio2.setPrefWidth(tableWidth * 0.15);
+            colFim2.setPrefWidth(tableWidth * 0.15);
+            colAcao.setPrefWidth(tableWidth * 0.15);
+        });
 
         tabelaHorarios.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2 && !tabelaHorarios.getSelectionModel().isEmpty()) {
                 novasDisponibilidades.remove(tabelaHorarios.getSelectionModel().getSelectedItem());
-                tabelaHorarios.refresh();
+                atualizarTabela();
             }
         });
 
-        tabelaHorarios.setPlaceholder(new Label("Clique no botão abaixo para adicionar horários."));
+        tabelaHorarios.setPlaceholder(new Label("📅 Clique no botão abaixo para adicionar horários de funcionamento."));
+    }
+    
+    /**
+     * Configura uma coluna de hora com formatação especial
+     */
+    private void configurarColunaHora(TableColumn<DisponibilidadeInstituicao, String> coluna) {
+        coluna.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null || item.isEmpty()) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText("🕐 " + item);
+                    setStyle("-fx-font-weight: 500; -fx-text-fill: #059669;");
+                }
+            }
+        });
+    }
+    
+    /**
+     * Formata LocalTime para string HH:mm
+     */
+    private String formatarHora(LocalTime hora) {
+        if (hora == null) {
+            return "";
+        }
+        return hora.format(DateTimeFormatter.ofPattern("HH:mm"));
+    }
+    
+    /**
+     * Atualiza a tabela de horários e ajusta a altura automaticamente
+     */
+    private void atualizarTabela() {
+        tabelaHorarios.getItems().clear();
+        tabelaHorarios.getItems().addAll(novasDisponibilidades);
+        tabelaHorarios.refresh();
+        
+        // Ajusta a altura da tabela baseada no número de itens
+        ajustarAlturaTabela();
+    }
+    
+    /**
+     * Ajusta a altura da tabela dinamicamente baseada no número de itens
+     */
+    private void ajustarAlturaTabela() {
+        int numItens = novasDisponibilidades.size();
+        
+        if (numItens == 0) {
+            // Altura mínima quando não há dados
+            tabelaHorarios.setPrefHeight(150.0);
+        } else {
+            // Calcula altura baseada no número de itens
+            // Cabeçalho (40px) + cada linha (35px) + bordas (10px)
+            double alturaCalculada = 40 + (numItens * 35) + 10;
+            
+            // Define limites mínimos e máximos
+            double alturaMinima = 150.0;
+            double alturaMaxima = 400.0;
+            
+            // Aplica os limites
+            double alturaFinal = Math.max(alturaMinima, Math.min(alturaCalculada, alturaMaxima));
+            
+            tabelaHorarios.setPrefHeight(alturaFinal);
+            
+            // Se exceder a altura máxima, habilita scroll
+            if (alturaCalculada > alturaMaxima) {
+                tabelaHorarios.setPrefHeight(alturaMaxima);
+            }
+        }
     }
 
     private void abrirCadastroTipoInstituicao() {
@@ -361,6 +470,8 @@ public class CadastrarInstituicaoController {
             if (tamanhoDepois > tamanhoAntes) {
                 tabelaHorarios.getItems().setAll(novasDisponibilidades);
                 tabelaHorarios.refresh();
+                // Ajusta a altura da tabela automaticamente
+                ajustarAlturaTabela();
             }
 
         } catch (IOException e) {
@@ -374,6 +485,8 @@ public class CadastrarInstituicaoController {
             novasDisponibilidades.remove(selecionado);
             tabelaHorarios.getItems().setAll(novasDisponibilidades);
             tabelaHorarios.refresh();
+            // Ajusta a altura da tabela automaticamente
+            ajustarAlturaTabela();
         } else {
             mostrarAlerta("Atenção", "Selecione um horário para remover.");
         }
