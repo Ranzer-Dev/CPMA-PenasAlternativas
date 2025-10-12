@@ -89,7 +89,7 @@
                                                         <Font name="Segoe UI" size="28.0" />
                                                     </font>
                                                 </Text>
-                                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Usuários" textAlignment="CENTER" styleClass="card-title">
+                                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Apenados" textAlignment="CENTER" styleClass="card-title">
                                                     <font>
                                                         <Font name="Segoe UI Bold" size="14.0" />
                                                     </font>
