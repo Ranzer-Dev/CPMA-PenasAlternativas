@@ -62,7 +62,7 @@
                                     <children>
                                         <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
                                             <children>
-                                                <Label text="Usuário" styleClass="label-primary" />
+                                                <Label text="Apenado" styleClass="label-primary" />
                                                 <ComboBox fx:id="comboUsuario" styleClass="combo-box responsive-input" />
                                             </children>
                                         </VBox>

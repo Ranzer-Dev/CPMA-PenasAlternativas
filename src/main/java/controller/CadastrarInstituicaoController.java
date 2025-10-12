@@ -411,6 +411,14 @@ public class CadastrarInstituicaoController {
         boolean ok;
         if (modoEdicao) {
             ok = InstituicaoDAO.atualizar(inst);
+            if (ok) {
+                // Remove horários antigos e adiciona os novos
+                DisponibilidadeInstituicaoDAO.removerPorInstituicaoId(inst.getIdInstituicao());
+                for (DisponibilidadeInstituicao d : novasDisponibilidades) {
+                    d.setFkInstituicaoId(inst.getIdInstituicao());
+                    DisponibilidadeInstituicaoDAO.inserir(d);
+                }
+            }
         } else {
             int novoId = InstituicaoDAO.inserirEPegarID(inst);
             ok = novoId != -1;
@@ -447,8 +455,20 @@ public class CadastrarInstituicaoController {
 
         comboTipo.getSelectionModel().select(TipoInstituicaoDAO.buscarPorId(inst.getTipo()));
 
+        // Carrega os horários existentes
         List<DisponibilidadeInstituicao> disps = DisponibilidadeInstituicaoDAO.buscarPorInstituicaoId(inst.getIdInstituicao());
-        tabelaHorarios.setItems(FXCollections.observableArrayList(disps));
+        
+        // Limpa e recarrega a lista de disponibilidades
+        novasDisponibilidades.clear();
+        novasDisponibilidades.addAll(disps);
+        
+        // Atualiza a tabela
+        tabelaHorarios.getItems().clear();
+        tabelaHorarios.getItems().addAll(novasDisponibilidades);
+        tabelaHorarios.refresh();
+        
+        // Ajusta a altura da tabela
+        ajustarAlturaTabela();
     }
 
     private void abrirCadastroDisponibilidadeTemp() {

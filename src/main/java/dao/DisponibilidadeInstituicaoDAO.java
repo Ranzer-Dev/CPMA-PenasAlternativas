@@ -71,4 +71,17 @@ public class DisponibilidadeInstituicaoDAO {
         }
         return lista;
     }
+
+    public static boolean removerPorInstituicaoId(int idInstituicao) {
+        String sql = "DELETE FROM disponibilidade_instituicao WHERE fk_instituicao_id_instituicao = ?";
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInstituicao);
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
