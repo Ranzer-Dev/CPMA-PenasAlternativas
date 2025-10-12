@@ -15,7 +15,7 @@ public class Usuario {
     private String uf;
     private String telefone;
     private String nacionalidade;
-    private Date dataCadastro;
+    private Date criadoEm;
     private String foto;
     private String senha;
     private String observacao;
@@ -93,11 +93,11 @@ public class Usuario {
         this.nacionalidade = nacionalidade;
     }
 
-    public Date getDataCadastro() {
-        return dataCadastro;
+    public Date getCriadoEm() {
+        return criadoEm;
     }
-    public void setDataCadastro(Date dataCadastro) {
-        this.dataCadastro = dataCadastro;
+    public void setCriadoEm(Date criadoEm) {
+        this.criadoEm = criadoEm;
     }
 
     public String getFoto() {

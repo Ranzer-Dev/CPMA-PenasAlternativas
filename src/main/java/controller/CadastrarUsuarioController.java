@@ -1,7 +1,13 @@
 package controller;
 
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.Date;
@@ -10,27 +16,21 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javafx.stage.Modality;
+import javax.imageio.ImageIO;
+
 import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacv.*;
-
-import org.bytedeco.opencv.opencv_objdetect.CascadeClassifier;
+import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.opencv.global.opencv_imgcodecs;
+import org.bytedeco.opencv.opencv_core.Mat;
 import org.json.JSONObject;
-import org.opencv.core.Core;
-
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.videoio.VideoCapture;
 
 import dao.DadosFaciaisDAO;
 import dao.InstituicaoDAO;
 import dao.PenaDAO;
 import dao.UsuarioDAO;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -49,8 +49,10 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView; // Supondo que o tenha no FXML
-import javafx.stage.Stage; // Requer a biblioteca org.json no projeto
+import javafx.scene.image.ImageView;
+import javafx.application.Platform;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import model.DadosFaciais;
 import model.Instituicao;
@@ -59,15 +61,9 @@ import model.Usuario;
 import util.HashUtil;
 import util.ReconhecimentoFacial;
 import util.ValidadorCPF;
-import org.bytedeco.opencv.opencv_core.Mat;
-import org.bytedeco.opencv.opencv_core.RectVector;
-import org.bytedeco.opencv.opencv_core.Rect;
-import org.bytedeco.opencv.global.opencv_imgcodecs;
-
-import javax.imageio.ImageIO;
-
 
 public class CadastrarUsuarioController {
+
     @FXML
     private TextField cep;
     @FXML
@@ -79,7 +75,9 @@ public class CadastrarUsuarioController {
     @FXML
     private ComboBox<Usuario> comboUsuarios;
     @FXML
-    private DatePicker dataNascimento, dataCadastro;
+    private DatePicker dataNascimento;
+    @FXML
+    private TextField criadoEm;
     @FXML
     private TextField nome, cpf, senha, nacionalidade;
     @FXML
@@ -97,12 +95,15 @@ public class CadastrarUsuarioController {
     @FXML
     private Button btnCapturar;
     @FXML
+    private Button btnBuscarCep;
+    @FXML
     private ProgressIndicator loadingCep;
+    @FXML
+    private javafx.scene.control.Label lblStatusCep;
     private FrameGrabber camera;
     private ScheduledExecutorService timer;
     private boolean cameraAtiva = false;
     private Mat frameCapturado;
-    private OpenCVFrameConverter.ToMat converterParaMat;
 
     // Variáveis para reconhecimento facial
     private ReconhecimentoFacial reconhecimentoFacial;
@@ -114,6 +115,52 @@ public class CadastrarUsuarioController {
     private int idUsuarioInserido;
     private final Map<String, Integer> mapNomeParaIdInstituicao = new HashMap<>();
 
+    /**
+     * Aplica máscara no formato CPF (000.000.000-00)
+     */
+    private String aplicarMascaraCPF(String digits) {
+        if (digits == null || digits.isEmpty()) {
+            return "";
+        }
+
+        // Remove caracteres não numéricos
+        digits = digits.replaceAll("[^0-9]", "");
+
+        // Aplica a máscara conforme o tamanho
+        if (digits.length() <= 3) {
+            return digits;
+        } else if (digits.length() <= 6) {
+            return digits.substring(0, 3) + "." + digits.substring(3);
+        } else if (digits.length() <= 9) {
+            return digits.substring(0, 3) + "." + digits.substring(3, 6) + "." + digits.substring(6);
+        } else {
+            return digits.substring(0, 3) + "." + digits.substring(3, 6) + "." + digits.substring(6, 9) + "-" + digits.substring(9);
+        }
+    }
+
+    /**
+     * Aplica máscara no formato telefone ((00) 00000-0000)
+     */
+    private String aplicarMascaraTelefone(String digits) {
+        if (digits == null || digits.isEmpty()) {
+            return "";
+        }
+
+        // Remove caracteres não numéricos
+        digits = digits.replaceAll("[^0-9]", "");
+
+        // Aplica a máscara conforme o tamanho
+        if (digits.length() <= 2) {
+            return digits;
+        } else if (digits.length() <= 6) {
+            return "(" + digits.substring(0, 2) + ") " + digits.substring(2);
+        } else if (digits.length() <= 10) {
+            return "(" + digits.substring(0, 2) + ") " + digits.substring(2, 7) + "-" + digits.substring(7);
+        } else {
+            return "(" + digits.substring(0, 2) + ") " + digits.substring(2, 7) + "-" + digits.substring(7, 11);
+        }
+    }
+
     @FXML
     public void initialize() {
         System.out.println("Inicializando CadastrarUsuarioController...");
@@ -124,6 +171,8 @@ public class CadastrarUsuarioController {
 
         limitarUF();
         configurarListenersRemocaoErro();
+        configurarDataAtual();
+        configurarFormatoBrasileiro();
 
         btnCadastrar.setOnAction(event -> {
             if (modoEdicao) {
@@ -133,7 +182,51 @@ public class CadastrarUsuarioController {
             }
         });
 
-        telefone.setTextFormatter(new TextFormatter<>(c -> c.getControlNewText().matches("[0-9()\\-]*") ? c : null));
+        // Máscara para CPF (000.000.000-00)
+        cpf.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.length() <= 14) { // 11 dígitos + 3 pontos + 1 hífen = 14 caracteres
+                return change;
+            }
+            return null;
+        }));
+
+        // Listener para aplicar máscara do CPF automaticamente
+        cpf.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.equals(oldValue)) {
+                String digitsOnly = newValue.replaceAll("[^0-9]", "");
+                if (digitsOnly.length() <= 11) {
+                    String masked = aplicarMascaraCPF(digitsOnly);
+                    if (!masked.equals(newValue)) {
+                        cpf.setText(masked);
+                        cpf.positionCaret(masked.length());
+                    }
+                }
+            }
+        });
+
+        // Máscara para telefone ((00) 00000-0000)
+        telefone.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.length() <= 15) { // 11 dígitos + 4 caracteres especiais = 15 caracteres
+                return change;
+            }
+            return null;
+        }));
+
+        // Listener para aplicar máscara do telefone automaticamente
+        telefone.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.equals(oldValue)) {
+                String digitsOnly = newValue.replaceAll("[^0-9]", "");
+                if (digitsOnly.length() <= 11) {
+                    String masked = aplicarMascaraTelefone(digitsOnly);
+                    if (!masked.equals(newValue)) {
+                        telefone.setText(masked);
+                        telefone.positionCaret(masked.length());
+                    }
+                }
+            }
+        });
 
         cep.setTextFormatter(new TextFormatter<>(c -> c.getControlNewText().matches("[0-9\\-]*") ? c : null));
 
@@ -141,50 +234,125 @@ public class CadastrarUsuarioController {
         System.out.println("Configurando busca de CEP...");
         configurarBuscaCEP();
         System.out.println("Busca de CEP configurada!");
+
+        // Configura shutdown hook para liberar recursos da câmera
+        // configurarShutdownHook();
     }
 
     @FXML
     private void iniciarCamera(ActionEvent event) {
+        System.out.println("=== INICIANDO CÂMERA ===");
+        System.out.println("Evento recebido: " + event);
+        System.out.println("Botão clicado: " + (event.getSource() != null ? event.getSource().getClass().getSimpleName() : "NULL"));
+
         try {
+            System.out.println("Carregando FXML da câmera...");
             // Carrega o FXML da janela da câmera
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/cameraView.fxml"));
             Parent root = loader.load();
+            System.out.println("FXML carregado com sucesso!");
 
             // Pega o controller da janela da câmera
             CameraController cameraController = loader.getController();
+            System.out.println("Controller da câmera obtido: " + (cameraController != null ? "OK" : "NULL"));
 
             // Cria uma nova janela (Stage)
             Stage cameraStage = new Stage();
             cameraStage.setTitle("Capturar Foto");
             cameraStage.setScene(new Scene(root));
+            System.out.println("Stage da câmera criado!");
 
             // Configura para ser uma janela modal (bloqueia a janela de cadastro)
             cameraStage.initModality(Modality.APPLICATION_MODAL);
 
             // Define uma ação para quando a janela for fechada
-            cameraStage.setOnHidden(e -> {
-                // Pega a imagem que foi capturada
-                BufferedImage imagem = cameraController.getImagemCapturada();
-                if (imagem != null) {
-                    // Guarda a imagem para salvar no banco
-                    this.imagemCapturada = imagem;
+            cameraStage.setOnCloseRequest(e -> {
+                System.out.println("Janela da câmera sendo fechada pelo usuário");
+            });
 
-                    // Usa o novo método para converter a imagem
-                    Image imagePreview = converterBufferedImageParaImage(imagem);
-                    if (imagePreview != null) {
-                        foto.setImage(imagePreview);
+            cameraStage.setOnHidden(e -> {
+                System.out.println("=== PROCESSANDO RESULTADO DA CÂMERA ===");
+                System.out.println("Janela da câmera ocultada - processando resultado");
+
+                // Pega a imagem que foi capturada do controller
+                BufferedImage imagemCapturada = cameraController.getImagemCapturada();
+                System.out.println("Imagem capturada do controller: " + (imagemCapturada != null ? "OK" : "NULL"));
+
+                if (imagemCapturada != null) {
+                    System.out.println("Dimensões da imagem: " + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight());
+
+                    // Guarda a imagem para salvar no banco
+                    this.imagemCapturada = imagemCapturada;
+                    System.out.println("Imagem armazenada para salvamento no banco");
+
+                    // TESTE: Tenta criar uma imagem simples para verificar se o problema é na conversão
+                    try {
+                        // Cria uma imagem de teste simples (quadrado azul)
+                        BufferedImage testeImagem = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+                        Graphics2D g2d = testeImagem.createGraphics();
+                        g2d.setColor(java.awt.Color.BLUE);
+                        g2d.fillRect(0, 0, 100, 100);
+                        g2d.dispose();
+                        
+                        System.out.println("Criando imagem de teste...");
+                        Image imagemTeste = converterBufferedImageParaImage(testeImagem);
+                        
+                        if (foto != null && imagemTeste != null) {
+                            foto.setImage(imagemTeste);
+                            System.out.println("✅ Imagem de teste (quadrado azul) definida no ImageView!");
+                            
+                            // Aguarda 2 segundos e então define a imagem real
+                            javafx.concurrent.Task<Void> delayTask = new javafx.concurrent.Task<Void>() {
+                                @Override
+                                protected Void call() throws Exception {
+                                    Thread.sleep(2000);
+                                    return null;
+                                }
+                                
+                                @Override
+                                protected void succeeded() {
+                                    Platform.runLater(() -> {
+                                        System.out.println("Agora definindo a imagem real...");
+                                        Image imagePreview = converterBufferedImageParaImage(imagemCapturada);
+                                        if (imagePreview != null) {
+                                            foto.setImage(imagePreview);
+                                            foto.setFitWidth(120);
+                                            foto.setFitHeight(120);
+                                            foto.setPreserveRatio(true);
+                                            foto.setSmooth(true);
+                                            foto.setCache(true);
+                                            System.out.println("✅ Foto real definida no ImageView!");
+                                        }
+                                    });
+                                }
+                            };
+                            new Thread(delayTask).start();
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("Erro no teste: " + ex.getMessage());
+                        ex.printStackTrace();
                     }
 
-                    mostrarAlerta("Sucesso", "Foto capturada com sucesso!");
+                    mostrarAlerta("Sucesso", "Foto capturada com sucesso! A foto será salva quando você cadastrar o usuário.");
+                } else {
+                    System.out.println("❌ Nenhuma imagem foi capturada");
+                    mostrarAlerta("Aviso", "Nenhuma foto foi capturada. Tente novamente.");
                 }
             });
 
             // Mostra a janela e espera ela ser fechada
+            System.out.println("Mostrando janela da câmera...");
             cameraStage.showAndWait();
+            System.out.println("Janela da câmera fechada!");
 
         } catch (IOException e) {
+            System.err.println("❌ ERRO ao abrir janela da câmera: " + e.getMessage());
             e.printStackTrace();
-            mostrarAlerta("Erro", "Não foi possível abrir a janela da câmera.");
+            mostrarAlerta("Erro", "Não foi possível abrir a janela da câmera: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("❌ ERRO inesperado: " + e.getMessage());
+            e.printStackTrace();
+            mostrarAlerta("Erro", "Erro inesperado: " + e.getMessage());
         }
     }
 
@@ -213,25 +381,73 @@ public class CadastrarUsuarioController {
 
     /**
      * Converte um BufferedImage (AWT) para uma Image (JavaFX) manualmente.
+     *
      * @param bufferedImage A imagem a ser convertida.
      * @return Uma imagem compatível com JavaFX ou null se ocorrer um erro.
      */
     private Image converterBufferedImageParaImage(BufferedImage bufferedImage) {
         if (bufferedImage == null) {
+            System.err.println("❌ BufferedImage é NULL na conversão");
             return null;
         }
         try {
+            System.out.println("Convertendo BufferedImage de " + bufferedImage.getWidth() + "x" + bufferedImage.getHeight());
+            
+            // Melhora a qualidade da imagem antes da conversão
+            BufferedImage imageToConvert = melhorarQualidadeImagem(bufferedImage);
+            if (imageToConvert == null) {
+                System.err.println("❌ Falha ao melhorar qualidade da imagem");
+                return null;
+            }
+            
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             // Escreve a imagem como um PNG em um fluxo de bytes na memória
-            ImageIO.write(bufferedImage, "png", outputStream);
+            boolean written = ImageIO.write(imageToConvert, "png", outputStream);
+            if (!written) {
+                System.err.println("❌ Falha ao escrever imagem para stream");
+                return null;
+            }
+            
+            byte[] bytes = outputStream.toByteArray();
+            System.out.println("Bytes da imagem: " + bytes.length);
+            
             // Cria uma Image do JavaFX a partir do fluxo de bytes
-            return new Image(new ByteArrayInputStream(outputStream.toByteArray()));
+            Image result = new Image(new ByteArrayInputStream(bytes));
+            System.out.println("Image do JavaFX criada: " + (result != null ? "OK" : "FALHOU"));
+            return result;
         } catch (IOException e) {
+            System.err.println("❌ Erro na conversão: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
     }
-
+    
+    /**
+     * Melhora a qualidade da imagem para exibição
+     */
+    private BufferedImage melhorarQualidadeImagem(BufferedImage original) {
+        if (original == null) {
+            return null;
+        }
+        
+        // Cria uma nova imagem com melhor qualidade
+        BufferedImage improved = new BufferedImage(
+            original.getWidth(), 
+            original.getHeight(), 
+            BufferedImage.TYPE_INT_RGB
+        );
+        
+        // Desenha a imagem original na nova com melhor qualidade
+        Graphics2D g2d = improved.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        g2d.drawImage(original, 0, 0, null);
+        g2d.dispose();
+        
+        return improved;
+    }
 // ... outras importações ...
 
     @FXML
@@ -262,8 +478,8 @@ public class CadastrarUsuarioController {
     }
 
     /**
-     * Converte um objeto Mat (Bytedeco) para BufferedImage (AWT).
-     * Necessário para o reconhecimento facial.
+     * Converte um objeto Mat (Bytedeco) para BufferedImage (AWT). Necessário
+     * para o reconhecimento facial.
      */
     private BufferedImage matToBufferedImage(Mat frame) {
         try {
@@ -308,40 +524,10 @@ public class CadastrarUsuarioController {
         btnIniciarCamera.setText("Tirar Foto");
         btnCapturar.setVisible(false);
     }
-    /**
-     * Converte um objeto Mat (OpenCV) para um objeto Image (JavaFX).
-     */
-//    private Image matToImage(Mat frame) {
-//        try {
-//            MatOfByte buffer = new MatOfByte();
-//            Imgcodecs.imencode(".png", frame, buffer);
-//            return new Image(new ByteArrayInputStream(buffer.toArray()));
-//        } catch (Exception e) {
-//            System.err.println("Não foi possível converter o Mat para Image: " + e);
-//            return null;
-//        }
-//    }
-
-    /**
-     * Converte um objeto Mat (OpenCV) para BufferedImage (AWT).
-     */
-//    private BufferedImage matToBufferedImage(Mat frame) {
-//        try {
-//            MatOfByte buffer = new MatOfByte();
-//            Imgcodecs.imencode(".jpg", frame, buffer);
-//            byte[] byteArray = buffer.toArray();
-//            return javax.imageio.ImageIO.read(new ByteArrayInputStream(byteArray));
-//        } catch (Exception e) {
-//            System.err.println("Não foi possível converter o Mat para BufferedImage: " + e);
-//            return null;
-//        }
-//    }
-
-
 
     public static int cadastrarUsuario(
             String nome, String cpf, String senha,
-            String nacionalidade, LocalDate dataNascimento, LocalDate dataCadastro,
+            String nacionalidade, LocalDate dataNascimento,
             String endereco, String bairro, String cidade, String uf,
             String observacao, String telefone, String cep, String codigo) {
 
@@ -397,7 +583,7 @@ public class CadastrarUsuarioController {
         usuario.setSenha(HashUtil.gerarHash(senha.trim()));
         usuario.setNacionalidade(nacionalidade.trim());
         usuario.setDataNascimento(Date.valueOf(dataNascimento));
-        usuario.setDataCadastro(Date.valueOf(dataCadastro));
+        usuario.setCriadoEm(new Date(System.currentTimeMillis()));
         usuario.setEndereco(endereco.trim());
         usuario.setBairro(bairro.trim());
         usuario.setCidade(cidade.trim());
@@ -419,7 +605,7 @@ public class CadastrarUsuarioController {
 
             idUsuarioInserido = cadastrarUsuario(
                     nome.getText(), cpf.getText(), senha.getText(), nacionalidade.getText(),
-                    dataNascimento.getValue(), dataCadastro.getValue(), endereco.getText(),
+                    dataNascimento.getValue(), endereco.getText(),
                     bairro.getText(), cidade.getText(), uf.getText(), observacao.getText(),
                     telefone.getText().trim(), cep.getText(), codigo.getText());
 
@@ -429,6 +615,9 @@ public class CadastrarUsuarioController {
             }
 
             mostrarAlerta("Sucesso", "Usuário cadastrado com sucesso!");
+            
+            // Fechar a janela após inserir os dados com sucesso
+            fecharJanela();
 
         } catch (IllegalArgumentException e) {
             mostrarAlerta("Erro", e.getMessage());
@@ -486,7 +675,8 @@ public class CadastrarUsuarioController {
 
             usuarioEditando.setNacionalidade(nacionalidade.getText());
             usuarioEditando.setDataNascimento(Date.valueOf(dataNascimento.getValue()));
-            usuarioEditando.setDataCadastro(Date.valueOf(dataCadastro.getValue()));
+            // criadoEm não é editável, mantém o valor original
+            // usuarioEditando.setCriadoEm(Date.valueOf(criadoEm.getValue()));
             usuarioEditando.setEndereco(endereco.getText());
             usuarioEditando.setBairro(bairro.getText());
             usuarioEditando.setCidade(cidade.getText());
@@ -497,6 +687,10 @@ public class CadastrarUsuarioController {
             boolean sucesso = UsuarioDAO.atualizar(usuarioEditando);
 
             if (sucesso) {
+                // Se uma nova foto foi capturada, salva ela
+                if (imagemCapturada != null) {
+                    salvarDadosFaciais(usuarioEditando.getIdUsuario());
+                }
                 mostrarAlerta("Sucesso", "Usuário atualizado com sucesso!");
             } else {
                 mostrarAlerta("Erro", "Falha ao atualizar usuário.");
@@ -538,13 +732,17 @@ public class CadastrarUsuarioController {
         senha.setText("");
         nacionalidade.setText(u.getNacionalidade());
         dataNascimento.setValue(convertToLocalDate(u.getDataNascimento()));
-        dataCadastro.setValue(convertToLocalDate(u.getDataCadastro()));
+        criadoEm.setText(u.getCriadoEm() != null ? 
+            new java.text.SimpleDateFormat("dd/MM/yyyy").format(u.getCriadoEm()) : "");
         endereco.setText(u.getEndereco());
         bairro.setText(u.getBairro());
         cidade.setText(u.getCidade());
         uf.setText(u.getUf());
         observacao.setText(u.getObservacao());
         telefone.setText(u.getTelefone());
+
+        // Carrega a foto do usuário se existir
+        carregarFotoDoArquivo(u.getIdUsuario());
     }
 
     private LocalDate convertToLocalDate(java.util.Date d) {
@@ -576,10 +774,42 @@ public class CadastrarUsuarioController {
         a.showAndWait();
     }
 
-    private void marcarErro(Control c) {
-        if (!c.getStyleClass().contains("erro-campo")) {
-            c.getStyleClass().add("erro-campo");
-        }
+    private void fecharJanela() {
+        Stage stage = (Stage) btnCadastrar.getScene().getWindow();
+        stage.close();
+    }
+
+    private void configurarDataAtual() {
+        // Configurar data atual no campo criadoEm
+        java.time.LocalDate hoje = java.time.LocalDate.now();
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        criadoEm.setText(hoje.format(formatter));
+    }
+
+    private void configurarFormatoBrasileiro() {
+        // Configurar formato brasileiro para DatePicker
+        dataNascimento.setConverter(new javafx.util.StringConverter<java.time.LocalDate>() {
+            private final java.time.format.DateTimeFormatter dateFormatter = 
+                java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            @Override
+            public String toString(java.time.LocalDate date) {
+                if (date != null) {
+                    return dateFormatter.format(date);
+                } else {
+                    return "";
+                }
+            }
+
+            @Override
+            public java.time.LocalDate fromString(String string) {
+                if (string != null && !string.isEmpty()) {
+                    return java.time.LocalDate.parse(string, dateFormatter);
+                } else {
+                    return null;
+                }
+            }
+        });
     }
 
     private void limparErro(Control c) {
@@ -636,34 +866,50 @@ public class CadastrarUsuarioController {
         }
     }
 
-//    public void fecharJanela() {
-//        if (cameraAtiva && openCVDisponivel) {
-//            pararCamera();
-//        }
-//        Stage stage = (Stage) btnIniciarCamera.getScene().getWindow();
-//        stage.close();
-//    }
-
     /**
      * Configura o listener para buscar CEP automaticamente quando o campo for
      * preenchido
      */
     private void configurarBuscaCEP() {
+        // Listener para busca automática quando o CEP perde o foco
         cep.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            // Se o campo PERDEU o foco (!newVal) e tem um CEP válido...
-            if (!newVal) {
+            if (!newVal) { // Quando perde o foco
                 String cepLimpo = cep.getText().replaceAll("\\D", "");
                 if (cepLimpo.length() == 8) {
                     buscarCEPComTask(cepLimpo);
                 }
             }
         });
+
+        // Botão de busca manual
+        btnBuscarCep.setOnAction(e -> {
+            String cepLimpo = cep.getText().replaceAll("\\D", "");
+            if (cepLimpo.length() == 8) {
+                buscarCEPComTask(cepLimpo);
+            } else {
+                lblStatusCep.setText("CEP deve ter 8 dígitos");
+                lblStatusCep.setStyle("-fx-text-fill: #ef4444;");
+            }
+        });
+
+        // Formatação do CEP usando TextFormatter
+        cep.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.matches("\\d{0,5}-?\\d{0,3}")) {
+                return change;
+            }
+            return null;
+        }));    
     }
 
     /**
      * Busca informações do CEP na API ViaCEP
      */
     private void buscarCEPComTask(String cep) {
+        lblStatusCep.setText("Buscando CEP...");
+        lblStatusCep.setStyle("-fx-text-fill: #06b6d4;");
+        btnBuscarCep.setDisable(true);
+
         // Cria uma Task para a operação de rede
         Task<JSONObject> task = new Task<>() {
             @Override
@@ -695,15 +941,22 @@ public class CadastrarUsuarioController {
         task.setOnSucceeded(e -> {
             JSONObject enderecoJson = task.getValue();
             if (enderecoJson.has("erro")) {
-                mostrarAlerta("CEP não encontrado", "O CEP informado não foi encontrado.");
+                lblStatusCep.setText("CEP não encontrado");
+                lblStatusCep.setStyle("-fx-text-fill: #ef4444;");
             } else {
                 preencherCamposEnderecoComJson(enderecoJson);
+                lblStatusCep.setText("CEP encontrado com sucesso!");
+                lblStatusCep.setStyle("-fx-text-fill: #10b981;");
             }
+            btnBuscarCep.setDisable(false);
             setCarregando(false); // Esconde o indicador de "a carregar"
         });
 
         // O que fazer SE a task falhar
         task.setOnFailed(e -> {
+            lblStatusCep.setText("Erro ao buscar CEP");
+            lblStatusCep.setStyle("-fx-text-fill: #ef4444;");
+            btnBuscarCep.setDisable(false);
             mostrarAlerta("Erro de Rede", "Não foi possível conectar à API do ViaCEP.");
             setCarregando(false);
             task.getException().printStackTrace(); // Para depuração
@@ -738,31 +991,152 @@ public class CadastrarUsuarioController {
     }
 
     /**
-     * Salva os dados faciais do usuário no banco de dados
+     * Salva os dados faciais do usuário no banco de dados e a foto em arquivo
      */
     private void salvarDadosFaciais(int idUsuario) {
         try {
-            // Extrai descritores faciais da imagem capturada
-            String descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagemCapturada);
+            // Salva a foto em arquivo primeiro
+            String caminhoFoto = salvarFotoEmArquivo(idUsuario);
 
-            if (descritores != null && !descritores.isEmpty()) {
-                // Cria objeto DadosFaciais
-                DadosFaciais dadosFaciais = new DadosFaciais();
-                dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
-                dadosFaciais.setDescritoresFaciais(descritores);
+            if (caminhoFoto != null) {
+                System.out.println("Foto salva em: " + caminhoFoto);
 
-                // Salva no banco
-                if (dadosFaciaisDAO.cadastrar(dadosFaciais)) {
-                    System.out.println("Dados faciais salvos com sucesso para o usuário ID: " + idUsuario);
+                // Extrai descritores faciais da imagem capturada
+                String descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagemCapturada);
+
+                if (descritores != null && !descritores.isEmpty()) {
+                    // Cria objeto DadosFaciais com caminho da foto
+                    DadosFaciais dadosFaciais = new DadosFaciais();
+                    dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
+                    dadosFaciais.setImagemRosto(null); // Não salva mais no banco
+                    dadosFaciais.setDescritoresFaciais(descritores);
+                    dadosFaciais.setCriadoEm(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setAtivo(true);
+
+                    // Salva no banco (apenas descritores, não a imagem)
+                    if (dadosFaciaisDAO.cadastrar(dadosFaciais)) {
+                        System.out.println("Dados faciais salvos com sucesso para o usuário ID: " + idUsuario);
+                        mostrarAlerta("Sucesso", "Foto e dados faciais salvos com sucesso!");
+                    } else {
+                        System.err.println("Erro ao salvar dados faciais para o usuário ID: " + idUsuario);
+                        mostrarAlerta("Erro", "Erro ao salvar dados faciais no banco de dados.");
+                    }
                 } else {
-                    System.err.println("Erro ao salvar dados faciais para o usuário ID: " + idUsuario);
+                    System.err.println("Não foi possível extrair descritores faciais da imagem");
+                    mostrarAlerta("Aviso", "Não foi possível extrair descritores faciais da imagem. A foto foi salva em arquivo.");
+
+                    // Salva apenas os metadados mesmo sem descritores
+                    DadosFaciais dadosFaciais = new DadosFaciais();
+                    dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
+                    dadosFaciais.setImagemRosto(null); // Não salva mais no banco
+                    dadosFaciais.setDescritoresFaciais(""); // String vazia para descritores
+                    dadosFaciais.setCriadoEm(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setAtivo(true);
+
+                    if (dadosFaciaisDAO.cadastrar(dadosFaciais)) {
+                        System.out.println("Metadados salvos sem descritores faciais para o usuário ID: " + idUsuario);
+                        mostrarAlerta("Sucesso", "Foto salva com sucesso!");
+                    }
                 }
             } else {
-                System.err.println("Não foi possível extrair descritores faciais da imagem");
+                System.err.println("Erro ao salvar foto em arquivo");
+                mostrarAlerta("Erro", "Erro ao salvar a foto em arquivo.");
             }
 
         } catch (Exception e) {
             System.err.println("Erro ao processar dados faciais: " + e.getMessage());
+            e.printStackTrace();
+            mostrarAlerta("Erro", "Erro ao processar dados faciais: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Salva a foto em arquivo na pasta fotos-apenados
+     */
+    private String salvarFotoEmArquivo(int idUsuario) {
+        try {
+            if (imagemCapturada == null) {
+                System.err.println("Nenhuma imagem capturada para salvar");
+                return null;
+            }
+
+            // Cria o diretório se não existir
+            java.io.File diretorioFotos = new java.io.File("fotos-apenados");
+            if (!diretorioFotos.exists()) {
+                diretorioFotos.mkdirs();
+                System.out.println("Diretório fotos-apenados criado");
+            }
+
+            // Gera nome do arquivo: usuario_ID_timestamp.jpg
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            String nomeArquivo = "usuario_" + idUsuario + "_" + timestamp + ".jpg";
+            java.io.File arquivoFoto = new java.io.File(diretorioFotos, nomeArquivo);
+
+            // Salva a imagem
+            boolean salvo = ImageIO.write(imagemCapturada, "jpg", arquivoFoto);
+
+            if (salvo) {
+                String caminhoCompleto = arquivoFoto.getAbsolutePath();
+                System.out.println("Foto salva com sucesso: " + caminhoCompleto);
+                return caminhoCompleto;
+            } else {
+                System.err.println("Erro ao salvar a imagem");
+                return null;
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erro ao salvar foto em arquivo: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Carrega uma foto de arquivo para exibição
+     */
+    private void carregarFotoDoArquivo(int idUsuario) {
+        try {
+            // Busca arquivos que começam com "usuario_ID_"
+            java.io.File diretorioFotos = new java.io.File("fotos-apenados");
+            if (!diretorioFotos.exists()) {
+                System.out.println("Diretório fotos-apenados não existe");
+                return;
+            }
+
+            java.io.File[] arquivos = diretorioFotos.listFiles((dir, name)
+                    -> name.startsWith("usuario_" + idUsuario + "_") && name.endsWith(".jpg"));
+
+            if (arquivos != null && arquivos.length > 0) {
+                // Pega o arquivo mais recente (último da lista ordenada)
+                java.util.Arrays.sort(arquivos, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+                java.io.File arquivoFoto = arquivos[0];
+
+                // Carrega a imagem
+                BufferedImage imagemCarregada = ImageIO.read(arquivoFoto);
+                if (imagemCarregada != null) {
+                    // Converte e exibe
+                    Image imagePreview = converterBufferedImageParaImage(imagemCarregada);
+                    if (imagePreview != null) {
+                        foto.setImage(imagePreview);
+                        foto.setFitWidth(120);
+                        foto.setFitHeight(120);
+                        foto.setPreserveRatio(true);
+                        foto.setSmooth(true);
+
+                        // Armazena para possível atualização
+                        this.imagemCapturada = imagemCarregada;
+
+                        System.out.println("Foto carregada: " + arquivoFoto.getName());
+                    }
+                }
+            } else {
+                System.out.println("Nenhuma foto encontrada para o usuário ID: " + idUsuario);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar foto do arquivo: " + e.getMessage());
             e.printStackTrace();
         }
     }

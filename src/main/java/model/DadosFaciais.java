@@ -9,7 +9,7 @@ public class DadosFaciais {
     private int fkUsuarioIdUsuario;
     private Blob imagemRosto;
     private String descritoresFaciais; // JSON com os descritores faciais
-    private Date dataCadastro;
+    private Date criadoEm;
     private Date dataAtualizacao;
     private boolean ativo;
 
@@ -22,7 +22,7 @@ public class DadosFaciais {
         this.fkUsuarioIdUsuario = fkUsuarioIdUsuario;
         this.imagemRosto = imagemRosto;
         this.descritoresFaciais = descritoresFaciais;
-        this.dataCadastro = new Date(System.currentTimeMillis());
+        this.criadoEm = new Date(System.currentTimeMillis());
         this.dataAtualizacao = new Date(System.currentTimeMillis());
         this.ativo = true;
     }
@@ -60,12 +60,12 @@ public class DadosFaciais {
         this.descritoresFaciais = descritoresFaciais;
     }
 
-    public Date getDataCadastro() {
-        return dataCadastro;
+    public Date getCriadoEm() {
+        return criadoEm;
     }
 
-    public void setDataCadastro(Date dataCadastro) {
-        this.dataCadastro = dataCadastro;
+    public void setCriadoEm(Date criadoEm) {
+        this.criadoEm = criadoEm;
     }
 
     public Date getDataAtualizacao() {
@@ -89,7 +89,7 @@ public class DadosFaciais {
         return "DadosFaciais{"
                 + "idDadosFaciais=" + idDadosFaciais
                 + ", fkUsuarioIdUsuario=" + fkUsuarioIdUsuario
-                + ", dataCadastro=" + dataCadastro
+                + ", criadoEm=" + criadoEm
                 + ", ativo=" + ativo
                 + '}';
     }

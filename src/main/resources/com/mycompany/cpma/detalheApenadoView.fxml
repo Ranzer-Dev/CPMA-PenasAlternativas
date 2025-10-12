@@ -3,24 +3,29 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<StackPane prefHeight="750.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.DetalheApenadoController">
+<StackPane prefHeight="800.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.DetalheApenadoController">
    <children>
-      <AnchorPane prefHeight="750.0" prefWidth="900.0" styleClass="main-container">
-         <children>
-            <!-- Container principal com card -->
-            <VBox alignment="CENTER" layoutX="50.0" layoutY="20.0" prefHeight="710.0" prefWidth="800.0" styleClass="content-card">
+      <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+         <content>
+            <VBox alignment="CENTER" spacing="20.0" styleClass="content-container">
+               <padding>
+                  <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+               </padding>
                <children>
                   <!-- Cabeçalho -->
                   <VBox alignment="CENTER" spacing="10.0">
@@ -44,138 +49,149 @@
                   </VBox>
                   
                   <!-- Seção de informações pessoais -->
-                  <HBox alignment="TOP_LEFT" spacing="30.0">
+                  <VBox spacing="20.0" styleClass="section-container">
                      <children>
-                        <!-- Foto do apenado -->
-                        <VBox alignment="CENTER" spacing="10.0">
-                           <children>
-                              <ImageView fx:id="imgFoto" fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" styleClass="image-view-container" />
-                           </children>
-                        </VBox>
+                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="👤 Informações Pessoais" textAlignment="CENTER">
+                           <font>
+                              <Font name="Segoe UI Bold" size="20.0" />
+                           </font>
+                        </Text>
                         
-                        <!-- Informações básicas -->
-                        <VBox spacing="15.0" prefWidth="600.0">
+                        <HBox alignment="TOP_LEFT" spacing="40.0">
                            <children>
-                              <!-- Nome -->
-                              <VBox spacing="5.0">
+                              <!-- Foto do apenado -->
+                              <VBox alignment="CENTER" spacing="10.0">
                                  <children>
-                                    <Label text="Nome Completo" styleClass="label-primary" />
-                                    <TextField fx:id="txtNome" editable="false" styleClass="input-field" />
+                                    <ImageView fx:id="imgFoto" fitHeight="140.0" fitWidth="140.0" pickOnBounds="true" preserveRatio="true" styleClass="profile-image" />
+                                    <Label text="📷 Foto do Apenado" styleClass="label-secondary" />
                                  </children>
                               </VBox>
                               
-                              <!-- CPF, Data Nascimento, Código -->
-                              <GridPane hgap="15.0" vgap="15.0">
-                                 <columnConstraints>
-                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                 </columnConstraints>
-                                 <rowConstraints>
-                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                 </rowConstraints>
+                              <!-- Informações básicas -->
+                              <VBox spacing="20.0" prefWidth="700.0">
                                  <children>
-                                    <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <!-- Nome -->
+                                    <VBox spacing="8.0">
                                        <children>
-                                          <Label text="CPF" styleClass="label-primary" />
-                                          <TextField fx:id="txtCpf" editable="false" styleClass="input-field" />
+                                          <Label text="📝 Nome Completo" styleClass="label-primary" />
+                                          <TextField fx:id="txtNome" editable="false" styleClass="input-field readonly" />
                                        </children>
                                     </VBox>
-                                    <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                              
+                                    <!-- CPF, Data Nascimento, Código -->
+                                    <GridPane hgap="20.0" vgap="15.0">
+                                       <columnConstraints>
+                                          <ColumnConstraints hgrow="ALWAYS" minWidth="120.0" prefWidth="200.0" />
+                                          <ColumnConstraints hgrow="ALWAYS" minWidth="120.0" prefWidth="200.0" />
+                                          <ColumnConstraints hgrow="ALWAYS" minWidth="120.0" prefWidth="200.0" />
+                                       </columnConstraints>
+                                       <rowConstraints>
+                                          <RowConstraints minHeight="60.0" prefHeight="60.0" vgrow="NEVER" />
+                                       </rowConstraints>
                                        <children>
-                                          <Label text="Data de Nascimento" styleClass="label-primary" />
-                                          <TextField fx:id="txtDataNasc" editable="false" styleClass="input-field" />
+                                          <VBox spacing="8.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                             <children>
+                                                <Label text="🆔 CPF" styleClass="label-primary" />
+                                                <TextField fx:id="txtCpf" editable="false" styleClass="input-field readonly" />
+                                             </children>
+                                          </VBox>
+                                          <VBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                             <children>
+                                                <Label text="📅 Data de Nascimento" styleClass="label-primary" />
+                                                <TextField fx:id="txtDataNasc" editable="false" styleClass="input-field readonly" />
+                                             </children>
+                                          </VBox>
+                                          <VBox spacing="8.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                             <children>
+                                                <Label text="🔢 Código" styleClass="label-primary" />
+                                                <TextField fx:id="txtCodigo" editable="false" styleClass="input-field readonly" />
+                                             </children>
+                                          </VBox>
                                        </children>
-                                    </VBox>
-                                    <VBox spacing="5.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                       <children>
-                                          <Label text="Código" styleClass="label-primary" />
-                                          <TextField fx:id="txtCodigo" editable="false" styleClass="input-field" />
-                                       </children>
-                                    </VBox>
+                                    </GridPane>
                                  </children>
-                              </GridPane>
+                              </VBox>
                            </children>
-                        </VBox>
+                        </HBox>
                      </children>
-                  </HBox>
+                  </VBox>
                   
                   <!-- Seção de endereço -->
-                  <VBox spacing="15.0" prefWidth="750.0">
+                  <VBox spacing="20.0" styleClass="section-container">
                      <children>
-                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Informações de Endereço" textAlignment="CENTER">
+                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="🏠 Informações de Endereço" textAlignment="CENTER">
                            <font>
-                              <Font name="Segoe UI Bold" size="18.0" />
+                              <Font name="Segoe UI Bold" size="20.0" />
                            </font>
                         </Text>
                         
                         <!-- Endereço -->
-                        <VBox spacing="5.0">
+                        <VBox spacing="8.0">
                            <children>
-                              <Label text="Endereço" styleClass="label-primary" />
-                              <TextField fx:id="txtEndereco" editable="false" styleClass="input-field" />
+                              <Label text="📍 Endereço Completo" styleClass="label-primary" />
+                              <TextField fx:id="txtEndereco" editable="false" styleClass="input-field readonly" />
                            </children>
                         </VBox>
                         
                         <!-- Bairro, Cidade, UF, Nacionalidade -->
-                        <GridPane hgap="15.0" vgap="15.0">
+                        <GridPane hgap="20.0" vgap="15.0">
                            <columnConstraints>
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="ALWAYS" minWidth="120.0" prefWidth="150.0" />
+                              <ColumnConstraints hgrow="ALWAYS" minWidth="120.0" prefWidth="150.0" />
+                              <ColumnConstraints hgrow="ALWAYS" minWidth="80.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="ALWAYS" minWidth="120.0" prefWidth="150.0" />
                            </columnConstraints>
                            <rowConstraints>
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="60.0" prefHeight="60.0" vgrow="NEVER" />
                            </rowConstraints>
                            <children>
-                              <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                              <VBox spacing="8.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
                                  <children>
-                                    <Label text="Bairro" styleClass="label-primary" />
-                                    <TextField fx:id="txtBairro" editable="false" styleClass="input-field" />
+                                    <Label text="🏘️ Bairro" styleClass="label-primary" />
+                                    <TextField fx:id="txtBairro" editable="false" styleClass="input-field readonly" />
                                  </children>
                               </VBox>
-                              <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                              <VBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
                                  <children>
-                                    <Label text="Cidade" styleClass="label-primary" />
-                                    <TextField fx:id="txtCidade" editable="false" styleClass="input-field" />
+                                    <Label text="🏙️ Cidade" styleClass="label-primary" />
+                                    <TextField fx:id="txtCidade" editable="false" styleClass="input-field readonly" />
                                  </children>
                               </VBox>
-                              <VBox spacing="5.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                              <VBox spacing="8.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
                                  <children>
-                                    <Label text="UF" styleClass="label-primary" />
-                                    <TextField fx:id="txtUf" editable="false" styleClass="input-field" />
+                                    <Label text="🗺️ UF" styleClass="label-primary" />
+                                    <TextField fx:id="txtUf" editable="false" styleClass="input-field readonly" />
                                  </children>
                               </VBox>
-                              <VBox spacing="5.0" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                              <VBox spacing="8.0" GridPane.columnIndex="3" GridPane.rowIndex="0">
                                  <children>
-                                    <Label text="Nacionalidade" styleClass="label-primary" />
-                                    <TextField fx:id="txtNac" editable="false" styleClass="input-field" />
+                                    <Label text="🌍 Nacionalidade" styleClass="label-primary" />
+                                    <TextField fx:id="txtNac" editable="false" styleClass="input-field readonly" />
                                  </children>
                               </VBox>
                            </children>
                         </GridPane>
                         
                         <!-- Data de cadastro e Telefone -->
-                        <GridPane hgap="15.0" vgap="15.0">
+                        <GridPane hgap="20.0" vgap="15.0">
                            <columnConstraints>
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="ALWAYS" minWidth="150.0" prefWidth="250.0" />
+                              <ColumnConstraints hgrow="ALWAYS" minWidth="150.0" prefWidth="250.0" />
                            </columnConstraints>
                            <rowConstraints>
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="60.0" prefHeight="60.0" vgrow="NEVER" />
                            </rowConstraints>
                            <children>
-                              <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                              <VBox spacing="8.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
                                  <children>
-                                    <Label text="Data de Cadastro" styleClass="label-primary" />
-                                    <TextField fx:id="txtDataCad" editable="false" styleClass="input-field" />
+                                    <Label text="📅 Data de Cadastro" styleClass="label-primary" />
+                                    <TextField fx:id="txtDataCad" editable="false" styleClass="input-field readonly" />
                                  </children>
                               </VBox>
-                              <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                              <VBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
                                  <children>
-                                    <Label text="Telefone" styleClass="label-primary" />
-                                    <TextField fx:id="txtFone" editable="false" styleClass="input-field" />
+                                    <Label text="📞 Telefone" styleClass="label-primary" />
+                                    <TextField fx:id="txtFone" editable="false" styleClass="input-field readonly" />
                                  </children>
                               </VBox>
                            </children>
@@ -184,40 +200,41 @@
                   </VBox>
                   
                   <!-- Seção de registros de trabalho -->
-                  <VBox spacing="15.0" prefWidth="750.0">
+                  <VBox spacing="20.0" styleClass="section-container">
                      <children>
-                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Registros de Trabalho" textAlignment="CENTER">
+                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="💼 Registros de Trabalho" textAlignment="CENTER">
                            <font>
-                              <Font name="Segoe UI Bold" size="18.0" />
+                              <Font name="Segoe UI Bold" size="20.0" />
                            </font>
                         </Text>
                         
                         <!-- Tabela de registros -->
-                        <TableView fx:id="tblRegistros" prefHeight="200.0" styleClass="table-view">
+                        <TableView fx:id="tblRegistros" prefHeight="250.0" styleClass="responsive-table">
                            <columns>
-                              <TableColumn fx:id="colData" prefWidth="150.0" text="Data" />
-                              <TableColumn fx:id="colCumprida" prefWidth="150.0" text="Horas Cumpridas" />
-                              <TableColumn fx:id="colFalta" prefWidth="150.0" text="Horas a Cumprir" />
-                              <TableColumn fx:id="colInst" prefWidth="200.0" text="Instituição" />
+                              <TableColumn fx:id="colData" prefWidth="120.0" minWidth="100.0" text="📅 Data" />
+                              <TableColumn fx:id="colCumprida" prefWidth="130.0" minWidth="120.0" text="✅ Horas Cumpridas" />
+                              <TableColumn fx:id="colFalta" prefWidth="130.0" minWidth="120.0" text="⏳ Horas a Cumprir" />
+                              <TableColumn fx:id="colInst" prefWidth="250.0" minWidth="200.0" text="🏢 Instituição" />
                            </columns>
                         </TableView>
                      </children>
                   </VBox>
                   
                   <!-- Botões de ação -->
-                  <HBox alignment="CENTER" spacing="20.0">
+                  <VBox spacing="20.0" styleClass="section-container">
                      <children>
-                        <Button fx:id="btnImprimir" mnemonicParsing="false" prefHeight="48.0" prefWidth="120.0" styleClass="btn-secondary" text="Imprimir" />
-                        <Button fx:id="btnEditar" mnemonicParsing="false" prefHeight="48.0" prefWidth="120.0" styleClass="btn-primary" text="Editar" />
-                        <Button fx:id="btnVoltar" mnemonicParsing="false" prefHeight="48.0" prefWidth="120.0" styleClass="btn-secondary" text="Voltar" />
+                        <HBox alignment="CENTER" spacing="20.0">
+                           <children>
+                              <Button fx:id="btnImprimir" mnemonicParsing="false" prefHeight="50.0" prefWidth="140.0" styleClass="btn-info" text="🖨️ Imprimir" />
+                              <Button fx:id="btnEditar" mnemonicParsing="false" prefHeight="50.0" prefWidth="140.0" styleClass="btn-primary" text="✏️ Editar" />
+                              <Button fx:id="btnVoltar" mnemonicParsing="false" prefHeight="50.0" prefWidth="140.0" styleClass="btn-secondary" text="🔙 Voltar" />
+                           </children>
+                        </HBox>
                      </children>
-                  </HBox>
+                  </VBox>
                </children>
-               <padding>
-                  <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
-               </padding>
             </VBox>
-         </children>
-      </AnchorPane>
+         </content>
+      </ScrollPane>
    </children>
 </StackPane>

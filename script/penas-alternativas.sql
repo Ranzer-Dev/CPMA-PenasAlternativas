@@ -92,6 +92,7 @@ CREATE TABLE [dbo].[Administrador](
 	[nivel_permissao] [int] NOT NULL,
 	[pergunta_secreta] [varchar](100) NULL,
 	[resposta_secreta] [varchar](100) NULL,
+	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
 PRIMARY KEY CLUSTERED 
 (
 	[id_admin] ASC
@@ -115,6 +116,7 @@ CREATE TABLE [dbo].[disponibilidade_instituicao](
 	[hora_inicio_2] [time](7) NULL,
 	[hora_fim_2] [time](7) NULL,
 	[fk_instituicao_id_instituicao] [int] NOT NULL,
+	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
 PRIMARY KEY CLUSTERED 
 (
 	[id_disponibilidade] ASC
@@ -137,6 +139,7 @@ CREATE TABLE [dbo].[Instituicao](
 	[responsavel] [varchar](100) NULL,
 	[telefone] [varchar](20) NULL,
 	[tipo] [int] NOT NULL,
+	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
 PRIMARY KEY CLUSTERED 
 (
 	[id_instituicao] ASC
@@ -161,6 +164,7 @@ CREATE TABLE [dbo].[Pena](
 	[horas_totais] [int] NOT NULL,
 	[fk_usuario_id_usuario] [int] NOT NULL,
 	[fk_instituicao_id_instituicao] [int] NOT NULL,
+	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
 PRIMARY KEY CLUSTERED 
 (
 	[id_pena] ASC
@@ -182,6 +186,7 @@ CREATE TABLE [dbo].[RegistroDeTrabalho](
 	[horario_volta] [time](7) NULL,
 	[horario_saida] [time](7) NULL,
 	[fk_pena_id_pena] [int] NOT NULL,
+	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
 PRIMARY KEY CLUSTERED 
 (
 	[id_registro] ASC
@@ -196,6 +201,7 @@ GO
 CREATE TABLE [dbo].[tipoDeInstituição](
 	[id_tipo] [int] IDENTITY(1,1) NOT NULL,
 	[tipo] [varchar](20) NULL,
+	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
 PRIMARY KEY CLUSTERED 
 (
 	[id_tipo] ASC
@@ -219,7 +225,7 @@ CREATE TABLE [dbo].[Usuario](
 	[cep] [varchar](20) NULL,
 	[uf] [char](2) NULL,
 	[nacionalidade] [varchar](50) NULL,
-	[data_cadastro] [date] NULL,
+	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
 	[foto] [varchar](200) NULL,
 	[senha] [varchar](100) NULL,
 	[observacao] [text] NULL,

@@ -10,7 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <javafx.version>17.0.6</javafx.version>
+        <javafx.version>23.0.1</javafx.version>
     </properties>
 
     <dependencies>
@@ -38,6 +38,11 @@
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>20231013</version>
+        </dependency>
+        <dependency>
+            <groupId>org.controlsfx</groupId>
+            <artifactId>controlsfx</artifactId>
+            <version>11.2.0</version>
         </dependency>
     </dependencies>
 
@@ -71,6 +76,17 @@
                             <noManPages>true</noManPages>
                             <stripDebug>true</stripDebug>
                             <noHeaderFiles>true</noHeaderFiles>
+                            <options>
+                                <option>--enable-native-access=javafx.graphics</option>
+                                <option>--add-exports=javafx.graphics/com.sun.glass.utils=ALL-UNNAMED</option>
+                                <option>--add-exports=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED</option>
+                                <option>--add-opens=javafx.controls/com.sun.javafx.scene.control.behavior=ALL-UNNAMED</option>
+                                <option>--add-opens=javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED</option>
+                                <option>--add-opens=javafx.base/com.sun.javafx.binding=ALL-UNNAMED</option>
+                                <option>--add-opens=javafx.base/com.sun.javafx.event=ALL-UNNAMED</option>
+                                <option>--add-opens=javafx.graphics/com.sun.javafx.stage=ALL-UNNAMED</option>
+                                <option>--add-opens=javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED</option>
+                            </options>
                         </configuration>
                     </execution>
                 </executions>
