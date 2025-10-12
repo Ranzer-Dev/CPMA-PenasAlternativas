@@ -497,76 +497,32 @@
   -fx-font-weight: bold;
 }
 
-/* Layout responsivo para telas pequenas */
-@media (max-width: 600px) {
-  .responsive-input {
-    -fx-max-width: 300px;
-    -fx-pref-width: 280px;
-  }
-
-  .responsive-card {
-    -fx-min-width: 150px;
-    -fx-max-width: 250px;
-    -fx-pref-width: 200px;
-  }
-
-  .responsive-card-button {
-    -fx-min-width: 60px;
-    -fx-max-width: 80px;
-    -fx-pref-width: 70px;
-    -fx-font-size: 10px;
-  }
-
-  .card-icon {
-    -fx-font-size: 20px;
-  }
-
-  .card-title {
-    -fx-font-size: 12px;
-  }
+/* Estilos responsivos para JavaFX (sem media queries) */
+.responsive-input {
+  -fx-max-width: 400px;
+  -fx-pref-width: 350px;
+  -fx-min-width: 200px;
 }
 
-/* Layout responsivo para telas médias */
-@media (min-width: 601px) and (max-width: 900px) {
-  .responsive-input {
-    -fx-max-width: 450px;
-    -fx-pref-width: 400px;
-  }
-
-  .responsive-card {
-    -fx-min-width: 200px;
-    -fx-max-width: 300px;
-    -fx-pref-width: 250px;
-  }
+.responsive-card {
+  -fx-min-width: 200px;
+  -fx-max-width: 300px;
+  -fx-pref-width: 250px;
 }
 
-/* Layout responsivo para telas grandes */
-@media (min-width: 901px) {
-  .responsive-input {
-    -fx-max-width: 500px;
-    -fx-pref-width: 400px;
-  }
+.responsive-card-button {
+  -fx-min-width: 70px;
+  -fx-max-width: 90px;
+  -fx-pref-width: 80px;
+  -fx-font-size: 11px;
+}
 
-  .responsive-card {
-    -fx-min-width: 220px;
-    -fx-max-width: 350px;
-    -fx-pref-width: 280px;
-  }
+.card-icon {
+  -fx-font-size: 24px;
+}
 
-  .responsive-card-button {
-    -fx-min-width: 80px;
-    -fx-max-width: 100px;
-    -fx-pref-width: 90px;
-    -fx-font-size: 12px;
-  }
-
-  .card-icon {
-    -fx-font-size: 28px;
-  }
-
-  .card-title {
-    -fx-font-size: 14px;
-  }
+.card-title {
+  -fx-font-size: 13px;
 }
 
 /* Melhorias para responsividade do container principal */
