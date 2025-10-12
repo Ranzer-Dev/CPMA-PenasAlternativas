@@ -111,66 +111,75 @@
                   </HBox>
                   
                   <!-- Seção de endereço -->
-                  <VBox spacing="25.0" prefWidth="750.0">
+                  <VBox spacing="25.0" prefWidth="750.0" styleClass="section-container">
                      <children>
-                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Informações de Endereço" textAlignment="CENTER">
+                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="📍 Informações de Endereço" textAlignment="LEFT">
                            <font>
                               <Font name="Segoe UI Bold" size="18.0" />
                            </font>
                         </Text>
                         
-                        <!-- CEP em primeiro lugar, seguido pelos outros campos -->
-                        <GridPane hgap="40.0" vgap="40.0">
+                        <!-- CEP - Campo principal com botão de busca -->
+                        <VBox spacing="5.0">
+                           <children>
+                              <Label text="📮 CEP *" styleClass="label-primary" />
+                              <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                 <children>
+                                    <TextField fx:id="cep" promptText="00000-000" styleClass="input-field" prefWidth="150.0" />
+                                    <Button fx:id="btnBuscarCep" prefHeight="40.0" prefWidth="120.0" styleClass="btn-info" text="🔍 Buscar CEP" />
+                                 </children>
+                              </HBox>
+                              <Label fx:id="lblStatusCep" text="" styleClass="label-info" />
+                           </children>
+                        </VBox>
+                        
+                        <!-- Endereço completo -->
+                        <VBox spacing="5.0">
+                           <children>
+                              <Label text="🏠 Endereço Completo" styleClass="label-primary" />
+                              <TextField fx:id="endereco" promptText="Rua, número, complemento" styleClass="input-field" />
+                           </children>
+                        </VBox>
+                        
+                        <!-- Cidade, UF e Bairro -->
+                        <GridPane hgap="15.0" vgap="15.0">
                            <columnConstraints>
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="50.0" />
-                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="50.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" prefWidth="300.0" />
+                              <ColumnConstraints hgrow="NEVER" minWidth="80.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" prefWidth="300.0" />
                            </columnConstraints>
                            <rowConstraints>
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="30.0" prefHeight="40.0" />
                            </rowConstraints>
                            <children>
-                              <!-- CEP em primeiro lugar -->
                               <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
                                  <children>
-                                    <Label text="CEP" styleClass="label-primary" />
-                                    <TextField fx:id="cep" promptText="00000-000" styleClass="input-field" />
+                                    <Label text="🏙️ Cidade" styleClass="label-primary" />
+                                    <TextField fx:id="cidade" promptText="Ex: São Paulo" styleClass="input-field" />
                                  </children>
                               </VBox>
                               <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
                                  <children>
-                                    <Label text="Endereço" styleClass="label-primary" />
-                                    <TextField fx:id="endereco" promptText="Rua, número, complemento" styleClass="input-field" />
-                                 </children>
-                              </VBox>
-                              <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                                 <children>
-                                    <Label text="Cidade" styleClass="label-primary" />
-                                    <TextField fx:id="cidade" promptText="Nome da cidade" styleClass="input-field" />
-                                 </children>
-                              </VBox>
-                              <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                 <children>
-                                    <Label text="UF" styleClass="label-primary" />
+                                    <Label text="🗺️ UF" styleClass="label-primary" />
                                     <TextField fx:id="uf" promptText="SP" styleClass="input-field" />
                                  </children>
                               </VBox>
-                              <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                              <VBox spacing="5.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
                                  <children>
-                                    <Label text="Bairro" styleClass="label-primary" />
-                                    <TextField fx:id="bairro" promptText="Nome do bairro" styleClass="input-field" />
-                                 </children>
-                              </VBox>
-                              <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                                 <children>
-                                    <Label text="Telefone" styleClass="label-primary" />
-                                    <TextField fx:id="telefone" promptText="(00) 00000-0000" styleClass="input-field" />
+                                    <Label text="🏘️ Bairro" styleClass="label-primary" />
+                                    <TextField fx:id="bairro" promptText="Ex: Centro" styleClass="input-field" />
                                  </children>
                               </VBox>
                            </children>
                         </GridPane>
+                        
+                        <!-- Telefone -->
+                        <VBox spacing="5.0">
+                           <children>
+                              <Label text="📱 Telefone" styleClass="label-primary" />
+                              <TextField fx:id="telefone" promptText="(11) 99999-9999" styleClass="input-field" />
+                           </children>
+                        </VBox>
                      </children>
                   </VBox>
                   
