@@ -30,7 +30,7 @@ public class UsuarioDAO {
                 usuario.setSenha(rs.getString("senha"));
                 usuario.setNacionalidade(rs.getString("nacionalidade"));
                 usuario.setDataNascimento(rs.getDate("data_nascimento"));
-                usuario.setCriadoEm(rs.getDate("criado_em"));
+                usuario.setCriadoEm(rs.getDate("data_cadastro"));
                 usuario.setFoto(rs.getString("foto"));
                 usuario.setEndereco(rs.getString("endereco"));
                 usuario.setBairro(rs.getString("bairro"));
@@ -65,7 +65,7 @@ public class UsuarioDAO {
                 usuario.setSenha(rs.getString("senha"));
                 usuario.setNacionalidade(rs.getString("nacionalidade"));
                 usuario.setDataNascimento(rs.getDate("data_nascimento"));
-                usuario.setCriadoEm(rs.getDate("criado_em"));
+                usuario.setCriadoEm(rs.getDate("data_cadastro"));
                 usuario.setFoto(rs.getString("foto"));
                 usuario.setEndereco(rs.getString("endereco"));
                 usuario.setBairro(rs.getString("bairro"));
