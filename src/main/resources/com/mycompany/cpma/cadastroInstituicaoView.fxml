@@ -208,14 +208,14 @@
                                                 </GridPane>
                                                 
                                                 <!-- Tabela de horários -->
-                                                <TableView fx:id="tabelaHorarios" prefHeight="200.0" styleClass="table-view">
+                                                <TableView fx:id="tabelaHorarios" prefHeight="200.0" minHeight="150.0" styleClass="table-view responsive-table">
                                                     <columns>
-                                                        <TableColumn fx:id="colDia" text="Dia da Semana" prefWidth="150.0" minWidth="120.0" />
-                                                        <TableColumn fx:id="colInicio1" text="Início 1" prefWidth="100.0" minWidth="80.0" />
-                                                        <TableColumn fx:id="colFim1" text="Fim 1" prefWidth="100.0" minWidth="80.0" />
-                                                        <TableColumn fx:id="colInicio2" text="Início 2" prefWidth="100.0" minWidth="80.0" />
-                                                        <TableColumn fx:id="colFim2" text="Fim 2" prefWidth="100.0" minWidth="80.0" />
-                                                        <TableColumn fx:id="colAcao" text="Ação" prefWidth="60.0" minWidth="50.0" />
+                                                        <TableColumn fx:id="colDia" text="📅 Dia da Semana" prefWidth="180.0" minWidth="150.0" maxWidth="200.0" />
+                                                        <TableColumn fx:id="colInicio1" text="🕐 Início 1" prefWidth="120.0" minWidth="100.0" maxWidth="140.0" />
+                                                        <TableColumn fx:id="colFim1" text="🕐 Fim 1" prefWidth="120.0" minWidth="100.0" maxWidth="140.0" />
+                                                        <TableColumn fx:id="colInicio2" text="🕐 Início 2" prefWidth="120.0" minWidth="100.0" maxWidth="140.0" />
+                                                        <TableColumn fx:id="colFim2" text="🕐 Fim 2" prefWidth="120.0" minWidth="100.0" maxWidth="140.0" />
+                                                        <TableColumn fx:id="colAcao" text="⚙️ Ação" prefWidth="80.0" minWidth="70.0" maxWidth="90.0" />
                                                     </columns>
                                                 </TableView>
                                                 
