@@ -83,6 +83,14 @@
                                             </children>
                                         </GridPane>
                                         
+                                        <!-- ComboBox de Penas (modo de edição) -->
+                                        <VBox fx:id="vboxComboPenas" spacing="5.0" visible="false">
+                                            <children>
+                                                <Label text="⚖️ Selecionar Pena" styleClass="label-primary" />
+                                                <ComboBox fx:id="comboPenas" styleClass="combo-box" />
+                                            </children>
+                                        </VBox>
+                                        
                                         <!-- Linha 2: Tipo de Pena e Tempo -->
                                         <GridPane hgap="20.0" vgap="15.0">
                                             <columnConstraints>

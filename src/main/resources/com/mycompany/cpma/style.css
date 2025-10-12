@@ -738,7 +738,7 @@
 }
 
 .responsive-table .column-header {
-  -fx-background-color: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+  -fx-background-color: #f1f5f9;
   -fx-text-fill: #1e293b;
   -fx-font-family: "Segoe UI", "Roboto", sans-serif;
   -fx-font-size: 13px;
@@ -766,7 +766,7 @@
 }
 
 .responsive-table .table-row-cell:selected {
-  -fx-background-color: linear-gradient(to right, #dbeafe, #bfdbfe);
+  -fx-background-color: #dbeafe;
   -fx-text-fill: #1e40af;
   -fx-border-color: #3b82f6;
 }
@@ -785,7 +785,7 @@
 }
 
 .responsive-table .table-row-cell:odd:selected {
-  -fx-background-color: linear-gradient(to right, #dbeafe, #bfdbfe);
+  -fx-background-color: #dbeafe;
 }
 
 /* Botão de ação na tabela */

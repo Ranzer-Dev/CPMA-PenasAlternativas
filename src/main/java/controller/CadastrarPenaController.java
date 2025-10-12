@@ -20,6 +20,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import model.Instituicao;
@@ -31,6 +32,7 @@ public class CadastrarPenaController {
     @FXML private ComboBox<Usuario> usuario;
     @FXML private ComboBox<Instituicao> instituicao;
     @FXML private ComboBox<Pena> comboPenas;
+    @FXML private VBox vboxComboPenas;
     @FXML private TextField tipoPena, tempoPena, horasSemanais, horasTotais;
     @FXML private DatePicker dataInicio, dataTermino;
     @FXML private TextArea descricao, atividadesAcordadas;
@@ -68,11 +70,7 @@ public class CadastrarPenaController {
 
     public void ativarModoEdicao() {
         modoEdicao = true;
-        usuario.setLayoutX(28);
-        usuario.setPrefWidth(260);
-        comboPenas.setLayoutX(309);
-        comboPenas.setPrefWidth(269);
-        comboPenas.setVisible(true);
+        vboxComboPenas.setVisible(true);
         btnCadastrarPena.setText("Salvar alterações");
 
         usuario.setOnAction(e -> carregarPenasDoUsuario());
