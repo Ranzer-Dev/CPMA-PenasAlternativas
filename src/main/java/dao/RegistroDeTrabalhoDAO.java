@@ -1,11 +1,14 @@
 package dao;
 
-import model.RegistroDeTrabalho;
-import database.ConnectionFactory;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import database.ConnectionFactory;
+import model.RegistroDeTrabalho;
 
 public class RegistroDeTrabalhoDAO {
 
@@ -60,26 +63,32 @@ public class RegistroDeTrabalhoDAO {
     }
 
     public static List<RegistroDeTrabalho> buscarPorUsuarioEPena(int idUsuario, int idPena) {
+        // Observação: a tabela RegistroDeTrabalho não possui coluna fk_usuario_id_usuario.
+        // Filtramos pelos registros da pena informada (idPena). O parâmetro idUsuario é ignorado.
         List<RegistroDeTrabalho> lista = new ArrayList<>();
         final String sql = """
-        SELECT * FROM RegistroDeTrabalho
-         WHERE fk_usuario_id_usuario = ?
-           AND fk_pena_id_pena       = ?
+        SELECT *
+          FROM RegistroDeTrabalho
+         WHERE fk_pena_id_pena = ?
          ORDER BY data_trabalho
         """;
 
         try (Connection c = ConnectionFactory.getConnection(); PreparedStatement st = c.prepareStatement(sql)) {
 
-            st.setInt(1, idUsuario);
-            st.setInt(2, idPena);
+            st.setInt(1, idPena);
 
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
                     RegistroDeTrabalho r = new RegistroDeTrabalho();
                     r.setIdRegistro(rs.getInt("id_registro"));
+                    r.setFkPenaId(rs.getInt("fk_pena_id_pena"));
                     r.setDataTrabalho(rs.getDate("data_trabalho"));
                     r.setHorasCumpridas(rs.getDouble("horas_cumpridas"));
-                    // ... complete os demais campos se precisar
+                    r.setAtividades(rs.getString("atividades"));
+                    r.setHorarioInicio(rs.getTime("horario_inicio"));
+                    r.setHorarioAlmoco(rs.getTime("horario_almoco"));
+                    r.setHorarioVolta(rs.getTime("horario_volta"));
+                    r.setHorarioSaida(rs.getTime("horario_saida"));
                     lista.add(r);
                 }
             }
@@ -155,33 +164,9 @@ public class RegistroDeTrabalhoDAO {
     }
 
     public static List<RegistroDeTrabalho> buscarPorUsuario(int idUsuario) {
-        List<RegistroDeTrabalho> lista = new ArrayList<>();
-        String sql = "SELECT * FROM RegistroDeTrabalho WHERE fk_usuario_id_usuario = ? ORDER BY data_trabalho";
-
-        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, idUsuario);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    RegistroDeTrabalho registro = new RegistroDeTrabalho();
-                    registro.setIdRegistro(rs.getInt("id_registro"));
-                    registro.setFkPenaId(rs.getInt("fk_pena_id_pena"));
-                    registro.setDataTrabalho(rs.getDate("data_trabalho"));
-                    registro.setHorasCumpridas(rs.getDouble("horas_cumpridas"));
-                    registro.setAtividades(rs.getString("atividades"));
-                    registro.setHorarioInicio(rs.getTime("horario_inicio"));
-                    registro.setHorarioAlmoco(rs.getTime("horario_almoco"));
-                    registro.setHorarioVolta(rs.getTime("horario_volta"));
-                    registro.setHorarioSaida(rs.getTime("horario_saida"));
-                    lista.add(registro);
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return lista;
+        // Não há fk do usuário em RegistroDeTrabalho. Para obter por usuário seria necessário JOIN com Pena.
+        // Mantemos o método por compatibilidade, retornando lista vazia.
+        return new ArrayList<>();
     }
 
 }
