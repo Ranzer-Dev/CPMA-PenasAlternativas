@@ -169,4 +169,67 @@ public class RegistroDeTrabalhoDAO {
         return new ArrayList<>();
     }
 
+    /**
+     * Busca a última data de trabalho cadastrada para uma pena.
+     * Retorna null se não houver registros.
+     */
+    public static java.sql.Date buscarUltimaDataPorPena(int idPena) {
+        String sql = "SELECT TOP 1 data_trabalho FROM RegistroDeTrabalho WHERE fk_pena_id_pena = ? ORDER BY data_trabalho DESC";
+        
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idPena);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getDate("data_trabalho");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Insere múltiplos registros de uma vez (batch insert).
+     */
+    public boolean inserirBatch(List<RegistroDeTrabalho> registros) {
+        if (registros == null || registros.isEmpty()) {
+            return false;
+        }
+        
+        String sql = "INSERT INTO RegistroDeTrabalho (fk_pena_id_pena, data_trabalho, horas_cumpridas, atividades, horario_inicio, horario_almoco, horario_volta, horario_saida) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            for (RegistroDeTrabalho registro : registros) {
+                stmt.setInt(1, registro.getFkPenaId());
+                stmt.setDate(2, registro.getDataTrabalho());
+                stmt.setDouble(3, registro.getHorasCumpridas());
+                stmt.setString(4, registro.getAtividades());
+                stmt.setTime(5, registro.getHorarioInicio());
+                stmt.setTime(6, registro.getHorarioAlmoco());
+                stmt.setTime(7, registro.getHorarioVolta());
+                stmt.setTime(8, registro.getHorarioSaida());
+                stmt.addBatch();
+            }
+            
+            int[] resultados = stmt.executeBatch();
+            // Verifica se todos foram inseridos com sucesso
+            for (int resultado : resultados) {
+                if (resultado <= 0) {
+                    return false;
+                }
+            }
+            return true;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
