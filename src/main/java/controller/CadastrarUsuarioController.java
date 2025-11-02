@@ -66,8 +66,6 @@ public class CadastrarUsuarioController {
     @FXML
     private TextField cep;
     @FXML
-    private TextField codigo;
-    @FXML
     private TextField telefone;
     @FXML
     private ComboBox<String> comboTipoPena;
@@ -528,7 +526,7 @@ public class CadastrarUsuarioController {
             String nome, String cpf,
             String nacionalidade, LocalDate dataNascimento,
             String endereco, String bairro, String cidade, String uf,
-            String observacao, String telefone, String cep, String codigo) {
+            String observacao, String telefone, String cep) {
 
         if (nome == null || nome.trim().isEmpty() || !nome.matches("[a-zA-ZÀ-ú\\s]+")) {
             throw new IllegalArgumentException("Nome inválido.");
@@ -585,8 +583,9 @@ public class CadastrarUsuarioController {
         usuario.setObservacao(observacao == null ? "" : observacao.trim());
         usuario.setFoto("");
         usuario.setTelefone(foneLimpo);
-        usuario.setCodigo(codigo);
         usuario.setCep(cep);
+        // Código será gerado automaticamente quando a primeira pena for cadastrada
+        usuario.setCodigo(""); // Inicia vazio
 
         return UsuarioDAO.inserir(usuario);
     }
@@ -601,7 +600,7 @@ public class CadastrarUsuarioController {
                     nome.getText(), cpf.getText(), nacionalidade.getText(),
                     dataNascimento.getValue(), endereco.getText(),
                     bairro.getText(), cidade.getText(), uf.getText(), observacao.getText(),
-                    telefone.getText().trim(), cep.getText(), codigo.getText());
+                    telefone.getText().trim(), cep.getText());
 
             // Se uma foto foi capturada, salvar os dados faciais
             if (imagemCapturada != null) {

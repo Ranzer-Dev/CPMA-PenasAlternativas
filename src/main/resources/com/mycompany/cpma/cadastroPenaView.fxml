@@ -83,6 +83,21 @@
                                             </children>
                                         </GridPane>
                                         
+                                        <!-- Campo Código de Penas (somente leitura) -->
+                                        <VBox spacing="5.0">
+                                            <children>
+                                                <Label text="🔢 Código de Penas" styleClass="label-primary" />
+                                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label text="Código atual:" styleClass="label-secondary" />
+                                                        <TextField fx:id="codigoAtual" styleClass="input-field" editable="false" prefWidth="100.0" />
+                                                        <Label text="Próximo código:" styleClass="label-secondary" />
+                                                        <TextField fx:id="proximoCodigo" styleClass="input-field" editable="false" prefWidth="100.0" style="-fx-background-color: #e0f2fe; -fx-font-weight: bold;" />
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </VBox>
+                                        
                                         <!-- ComboBox de Penas (modo de edição) -->
                                         <VBox fx:id="vboxComboPenas" spacing="5.0" visible="false">
                                             <children>

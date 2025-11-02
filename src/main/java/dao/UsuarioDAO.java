@@ -208,4 +208,28 @@ public class UsuarioDAO {
         }
         return -1;
     }
+
+    /**
+     * Atualiza o código de penas de um usuário.
+     * 
+     * @param idUsuario ID do usuário
+     * @param codigo Novo código (ex: "1a", "1b", "2a")
+     * @return true se a atualização foi bem-sucedida
+     */
+    public static boolean atualizarCodigo(int idUsuario, String codigo) {
+        String sql = "UPDATE Usuario SET codigo = ? WHERE id_usuario = ?";
+
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, codigo);
+            stmt.setInt(2, idUsuario);
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
