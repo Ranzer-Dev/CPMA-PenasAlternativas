@@ -227,7 +227,6 @@ CREATE TABLE [dbo].[Usuario](
 	[nacionalidade] [varchar](50) NULL,
 	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
 	[foto] [varchar](200) NULL,
-	[senha] [varchar](100) NULL,
 	[observacao] [text] NULL,
 	[telefone] [varchar](20) NULL,
 	[fk_administrador_id_admin] [int] NOT NULL,
