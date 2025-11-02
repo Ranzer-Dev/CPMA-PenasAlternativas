@@ -15,6 +15,7 @@ import dao.RegistroDeTrabalhoDAO;
 import model.Pena;
 import model.RegistroDeTrabalho;
 import model.Usuario;
+import util.CodigoPenaUtil;
 
 public class DetalheApenadoController {
 
@@ -43,7 +44,10 @@ public class DetalheApenadoController {
         txtNome.setText(usuario.getNome());
         txtCpf.setText(usuario.getCpf());
         txtDataNasc.setText(String.valueOf(usuario.getDataNascimento()));
-        //txtCodigo   .setText(usuario.getCodigo());
+        
+        // Preenche o código de penas
+        preencherCodigoPenas();
+        
         txtEndereco.setText(usuario.getEndereco());
         txtBairro.setText(usuario.getBairro());
         txtCidade.setText(usuario.getCidade());
@@ -52,6 +56,37 @@ public class DetalheApenadoController {
         txtDataCad.setText(String.valueOf(usuario.getCriadoEm()));
         txtFone.setText(usuario.getTelefone());
         // foto? -> use ImageView.setImage()
+    }
+    
+    /**
+     * Preenche o campo de código de penas.
+     * Mostra o código salvo no banco ou calcula baseado no número de penas.
+     */
+    private void preencherCodigoPenas() {
+        int numeroPenas = PenaDAO.contarPenasPorUsuario(usuario.getIdUsuario());
+        
+        if (numeroPenas == 0) {
+            // Se não tem penas, mostra o código salvo no banco ou "Nenhuma pena"
+            String codigoSalvo = (usuario.getCodigo() != null && !usuario.getCodigo().trim().isEmpty()) 
+                    ? usuario.getCodigo() 
+                    : "Nenhuma pena cadastrada";
+            txtCodigo.setText(codigoSalvo);
+        } else {
+            // Mostra o código calculado baseado no número de penas
+            String codigoAtual = CodigoPenaUtil.calcularCodigoAtual(numeroPenas);
+            
+            // Se houver código salvo diferente, mostra ambos
+            String codigoSalvo = (usuario.getCodigo() != null && !usuario.getCodigo().trim().isEmpty()) 
+                    ? usuario.getCodigo() 
+                    : null;
+            
+            if (codigoSalvo != null && !codigoSalvo.equals(codigoAtual)) {
+                // Se o código salvo é diferente do calculado, mostra o salvo
+                txtCodigo.setText(codigoSalvo);
+            } else {
+                txtCodigo.setText(codigoAtual);
+            }
+        }
     }
 
     private void carregarRegistros() {
