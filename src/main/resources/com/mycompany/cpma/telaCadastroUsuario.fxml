@@ -64,24 +64,45 @@
                         <!-- Informações básicas -->
                         <VBox spacing="25.0" prefWidth="600.0">
                            <children>
-                              <!-- Nome -->
+                              <!-- Nome e Código lado a lado -->
+                              <GridPane hgap="15.0" vgap="15.0">
+                                 <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" prefWidth="400.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="200.0" />
+                                 </columnConstraints>
+                                 <rowConstraints>
+                                    <RowConstraints minHeight="30.0" prefHeight="40.0" />
+                                 </rowConstraints>
+                                 <children>
+                                    <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                       <children>
+                                          <Label text="Nome Completo" styleClass="label-primary" />
+                                          <TextField fx:id="nome" promptText="Digite o nome completo" styleClass="input-field" />
+                                       </children>
+                                    </VBox>
+                                    <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                       <children>
+                                          <Label text="Código" styleClass="label-primary" />
+                                          <TextField fx:id="codigo" promptText="Código do usuário" styleClass="input-field" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </GridPane>
+                              
+                              <!-- ComboBox para edição (se necessário) -->
                               <VBox spacing="5.0">
                                  <children>
-                                    <Label text="Nome Completo" styleClass="label-primary" />
-                                    <TextField fx:id="nome" promptText="Digite o nome completo" styleClass="input-field" />
                                     <ComboBox fx:id="comboUsuarios" promptText="Selecione usuário para editar" styleClass="combo-box" visible="false" />
                                  </children>
                               </VBox>
                               
-                              <!-- Linha 1: CPF, Data Nascimento, Código -->
+                              <!-- Linha: CPF e Data Nascimento -->
                               <GridPane hgap="40.0" vgap="40.0">
                                  <columnConstraints>
                                     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                  </columnConstraints>
                                  <rowConstraints>
-                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                  </rowConstraints>
                                  <children>
@@ -95,12 +116,6 @@
                                        <children>
                                           <Label text="Data de Nascimento" styleClass="label-primary" />
                                           <DatePicker fx:id="dataNascimento" styleClass="combo-box" />
-                                       </children>
-                                    </VBox>
-                                    <VBox spacing="5.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                       <children>
-                                          <Label text="Código" styleClass="label-primary" />
-                                          <TextField fx:id="codigo" promptText="Código do usuário" styleClass="input-field" />
                                        </children>
                                     </VBox>
                                  </children>
@@ -206,12 +221,6 @@
                                  <children>
                                     <Label text="Nacionalidade" styleClass="label-primary" />
                                     <TextField fx:id="nacionalidade" promptText="Brasileira" styleClass="input-field" />
-                                 </children>
-                              </VBox>
-                              <VBox spacing="5.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                 <children>
-                                    <Label text="Senha" styleClass="label-primary" />
-                                    <TextField fx:id="senha" promptText="Digite uma senha" styleClass="input-field" />
                                  </children>
                               </VBox>
                            </children>
