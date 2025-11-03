@@ -8,6 +8,7 @@ import java.time.LocalTime;
  * Usada para permitir edição de múltiplos dias antes de salvar no banco.
  */
 public class RegistroTrabalhoTemp {
+    private Integer idRegistro; // ID do registro no banco (null se for novo)
     private LocalDate data;
     private LocalTime horarioInicio;
     private LocalTime horarioAlmoco;
@@ -16,12 +17,26 @@ public class RegistroTrabalhoTemp {
     private double horasCalculadas;
 
     public RegistroTrabalhoTemp() {
+        this.idRegistro = null;
         this.horasCalculadas = 0.0;
     }
 
     public RegistroTrabalhoTemp(LocalDate data) {
+        this.idRegistro = null;
         this.data = data;
         this.horasCalculadas = 0.0;
+    }
+
+    public Integer getIdRegistro() {
+        return idRegistro;
+    }
+
+    public void setIdRegistro(Integer idRegistro) {
+        this.idRegistro = idRegistro;
+    }
+
+    public boolean isNovoRegistro() {
+        return idRegistro == null;
     }
 
     public LocalDate getData() {

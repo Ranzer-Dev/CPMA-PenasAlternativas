@@ -37,7 +37,7 @@ public class RegistroDeTrabalhoDAO {
     public boolean atualizar(RegistroDeTrabalho r) {
         final String sql = """
             UPDATE RegistroDeTrabalho SET
-                fk_usuario_id_usuario        = ?,
+                fk_pena_id_pena = ?,
                 data_trabalho  = ?, horas_cumpridas = ?, atividades = ?,
                 horario_inicio = ?, horario_almoco  = ?,
                 horario_volta  = ?, horario_saida   = ?
@@ -189,6 +189,42 @@ public class RegistroDeTrabalhoDAO {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * Busca registros de uma pena para um mês e ano específico.
+     */
+    public static List<RegistroDeTrabalho> buscarPorPenaEMes(int idPena, int mes, int ano) {
+        List<RegistroDeTrabalho> lista = new ArrayList<>();
+        String sql = "SELECT * FROM RegistroDeTrabalho WHERE fk_pena_id_pena = ? " +
+                     "AND MONTH(data_trabalho) = ? AND YEAR(data_trabalho) = ? " +
+                     "ORDER BY data_trabalho";
+        
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idPena);
+            stmt.setInt(2, mes);
+            stmt.setInt(3, ano);
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                RegistroDeTrabalho r = new RegistroDeTrabalho();
+                r.setIdRegistro(rs.getInt("id_registro"));
+                r.setFkPenaId(rs.getInt("fk_pena_id_pena"));
+                r.setDataTrabalho(rs.getDate("data_trabalho"));
+                r.setHorasCumpridas(rs.getDouble("horas_cumpridas"));
+                r.setAtividades(rs.getString("atividades"));
+                r.setHorarioInicio(rs.getTime("horario_inicio"));
+                r.setHorarioAlmoco(rs.getTime("horario_almoco"));
+                r.setHorarioVolta(rs.getTime("horario_volta"));
+                r.setHorarioSaida(rs.getTime("horario_saida"));
+                lista.add(r);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
     }
 
     /**
