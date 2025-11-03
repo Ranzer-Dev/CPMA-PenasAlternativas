@@ -127,18 +127,28 @@ public class CadastroRegistroDeTrabalhoController {
             atualizarVisibilidadeBotoes();
         });
         
-        comboUsuario.setOnAction(e -> {
+                comboUsuario.setOnAction(e -> {
             Usuario u = comboUsuario.getValue();
             if (u != null) {
                 carregarPenasDoUsuario(u.getIdUsuario());
                 comboPena.setDisable(false);
-                // Quando selecionar pena, buscar última data e continuar de onde parou
+                // Quando selecionar pena, verificar se há registros do mês e carregar
                 comboPena.setOnAction(e2 -> {
+                    // Limpa registros anteriores e reseta modo de edição
+                    listaRegistros.clear();
+                    modoEdicao = false;
+                    atualizarVisibilidadeBotoes();
+                    atualizarTotalHoras();
+                    
                     continuarDeOndeParou();
                 });
             } else {
                 comboPena.getItems().clear();
                 comboPena.setDisable(true);
+                listaRegistros.clear();
+                modoEdicao = false;
+                atualizarVisibilidadeBotoes();
+                atualizarTotalHoras();
             }
         });
         
@@ -150,6 +160,8 @@ public class CadastroRegistroDeTrabalhoController {
         btnAdicionarMes.setManaged(false);
     }
     
+    private boolean modoEdicao = false; // Indica se está editando registros existentes
+    
     private void atualizarVisibilidadeBotoes() {
         boolean temRegistros = !listaRegistros.isEmpty();
         int quantidadeRegistros = listaRegistros.size();
@@ -160,6 +172,17 @@ public class CadastroRegistroDeTrabalhoController {
         
         // Habilita botão de preencher horários apenas se tiver mês inteiro
         btnPreencherHorariosPena.setDisable(!mesInteiroAdicionado);
+        
+        // Se está em modo de edição, desabilita botões de adicionar
+        if (modoEdicao) {
+            btnAdicionarDia.setDisable(true);
+            btnAdicionarMes.setDisable(true);
+        } else {
+            btnAdicionarDia.setDisable(false);
+            if (btnAdicionarMes.isVisible()) {
+                btnAdicionarMes.setDisable(false);
+            }
+        }
     }
     
     private void removerTudoComConfirmacao() {
@@ -186,19 +209,63 @@ public class CadastroRegistroDeTrabalhoController {
         Pena pena = comboPena.getValue();
         if (pena == null) return;
         
-        // Busca última data cadastrada
-        java.sql.Date ultimaData = RegistroDeTrabalhoDAO.buscarUltimaDataPorPena(pena.getIdPena());
+        LocalDate hoje = LocalDate.now();
+        int mesAtual = hoje.getMonthValue();
+        int anoAtual = hoje.getYear();
         
-        if (ultimaData != null) {
-            // Se houver última data, sugere adicionar a partir do dia seguinte
-            LocalDate dataInicio = ultimaData.toLocalDate().plusDays(1);
-            if (listaRegistros.isEmpty()) {
-                // Adiciona um dia começando do próximo dia após a última data
-                RegistroTrabalhoTemp novoRegistro = new RegistroTrabalhoTemp(dataInicio);
-                listaRegistros.add(novoRegistro);
-                atualizarTotalHoras();
-                atualizarVisibilidadeBotoes();
+        // Verifica se já existem registros do mês atual
+        List<RegistroDeTrabalho> registrosDoMes = RegistroDeTrabalhoDAO.buscarPorPenaEMes(
+            pena.getIdPena(), mesAtual, anoAtual);
+        
+        if (!registrosDoMes.isEmpty()) {
+            // Se já existem registros do mês atual, carrega eles para edição
+            carregarRegistrosExistentes(registrosDoMes);
+            alert("Registros do mês atual já existem. Carregados para edição.");
+        } else {
+            // Se não existem, busca última data cadastrada e sugere continuar
+            java.sql.Date ultimaData = RegistroDeTrabalhoDAO.buscarUltimaDataPorPena(pena.getIdPena());
+            
+            if (ultimaData != null) {
+                LocalDate dataUltima = ultimaData.toLocalDate();
+                // Só sugere continuar se a última data não for do mês atual
+                if (dataUltima.getMonthValue() != mesAtual || dataUltima.getYear() != anoAtual) {
+                    LocalDate dataInicio = ultimaData.toLocalDate().plusDays(1);
+                    if (listaRegistros.isEmpty()) {
+                        RegistroTrabalhoTemp novoRegistro = new RegistroTrabalhoTemp(dataInicio);
+                        listaRegistros.add(novoRegistro);
+                        atualizarTotalHoras();
+                        atualizarVisibilidadeBotoes();
+                    }
+                }
             }
+        }
+    }
+    
+    /**
+     * Carrega registros existentes na tabela para edição.
+     */
+    private void carregarRegistrosExistentes(List<RegistroDeTrabalho> registros) {
+        modoEdicao = true;
+        listaRegistros.clear();
+        
+        for (RegistroDeTrabalho reg : registros) {
+            RegistroTrabalhoTemp temp = new RegistroTrabalhoTemp(reg.getDataTrabalho().toLocalDate());
+            temp.setIdRegistro(reg.getIdRegistro()); // Armazena o ID para UPDATE posterior
+            temp.setHorarioInicio(reg.getHorarioInicio() != null ? reg.getHorarioInicio().toLocalTime() : null);
+            temp.setHorarioAlmoco(reg.getHorarioAlmoco() != null ? reg.getHorarioAlmoco().toLocalTime() : null);
+            temp.setHorarioVolta(reg.getHorarioVolta() != null ? reg.getHorarioVolta().toLocalTime() : null);
+            temp.setHorarioSaida(reg.getHorarioSaida() != null ? reg.getHorarioSaida().toLocalTime() : null);
+            
+            listaRegistros.add(temp);
+        }
+        
+        atualizarTotalHoras();
+        atualizarVisibilidadeBotoes();
+        
+        // Mostra botão de adicionar mês se necessário, mas desabilitado
+        if (!listaRegistros.isEmpty()) {
+            btnAdicionarMes.setVisible(true);
+            btnAdicionarMes.setManaged(true);
         }
     }
 
@@ -692,6 +759,7 @@ public class CadastroRegistroDeTrabalhoController {
 
             // Converte registros temporários válidos para registros definitivos
             List<RegistroDeTrabalho> registrosParaSalvar = new ArrayList<>();
+            List<RegistroDeTrabalho> registrosParaAtualizar = new ArrayList<>();
             int registrosDescartados = 0;
             
             for (RegistroTrabalhoTemp temp : listaRegistros) {
@@ -711,21 +779,53 @@ public class CadastroRegistroDeTrabalhoController {
                 registro.setHorarioVolta(Time.valueOf(temp.getHorarioVolta()));
                 registro.setHorarioSaida(Time.valueOf(temp.getHorarioSaida()));
                 
-                registrosParaSalvar.add(registro);
+                if (modoEdicao && !temp.isNovoRegistro()) {
+                    // É um registro existente que precisa ser atualizado
+                    registro.setIdRegistro(temp.getIdRegistro());
+                    registrosParaAtualizar.add(registro);
+                } else {
+                    // É um novo registro
+                    registrosParaSalvar.add(registro);
+                }
             }
             
-            if (registrosParaSalvar.isEmpty()) {
-                alert("Nenhum registro válido para cadastrar. Preencha os horários.");
+            if (registrosParaSalvar.isEmpty() && registrosParaAtualizar.isEmpty()) {
+                alert("Nenhum registro válido para salvar. Preencha os horários.");
                 return;
             }
 
-            // Salva todos os registros em batch
             RegistroDeTrabalhoDAO dao = new RegistroDeTrabalhoDAO();
-            boolean ok = dao.inserirBatch(registrosParaSalvar);
+            boolean ok = true;
+            String mensagem = "";
             
-            String mensagem = ok 
-                ? String.format("Registro gravado! %d dia(s) cadastrado(s).", registrosParaSalvar.size())
-                : "Falha ao gravar.";
+            // Atualiza registros existentes
+            if (!registrosParaAtualizar.isEmpty()) {
+                int atualizados = 0;
+                for (RegistroDeTrabalho reg : registrosParaAtualizar) {
+                    if (dao.atualizar(reg)) {
+                        atualizados++;
+                    } else {
+                        ok = false;
+                    }
+                }
+                if (atualizados > 0) {
+                    mensagem = String.format("%d registro(s) atualizado(s). ", atualizados);
+                }
+            }
+            
+            // Insere novos registros
+            if (!registrosParaSalvar.isEmpty()) {
+                boolean inseridos = dao.inserirBatch(registrosParaSalvar);
+                if (inseridos) {
+                    mensagem += String.format("%d registro(s) cadastrado(s).", registrosParaSalvar.size());
+                } else {
+                    ok = false;
+                }
+            }
+            
+            if (!ok) {
+                mensagem = "Falha ao gravar as alterações.";
+            }
             
             if (registrosDescartados > 0) {
                 mensagem += String.format("\n%d registro(s) foram descartados por estarem incompletos.", registrosDescartados);

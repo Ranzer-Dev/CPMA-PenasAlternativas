@@ -157,7 +157,7 @@ CREATE TABLE [dbo].[Pena](
 	[data_inicio] [date] NOT NULL,
 	[data_termino] [date] NULL,
 	[descricao] [text] NULL,
-	[dias_semana_e_horarios_disponivel] [varchar](100) NULL,
+	[dias_semana_e_horarios_disponivel] [varchar](500) NULL,
 	[atividades_acordadas] [text] NULL,
 	[horas_semanais] [int] NOT NULL,
 	[tempo_pena] [int] NOT NULL,
