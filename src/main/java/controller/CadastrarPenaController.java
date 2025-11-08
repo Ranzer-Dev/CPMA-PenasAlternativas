@@ -10,6 +10,7 @@ import dao.InstituicaoDAO;
 import dao.PenaDAO;
 import dao.UsuarioDAO;
 import utils.FormatacaoUtils;
+import util.CodigoPenaUtil;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -34,6 +35,7 @@ public class CadastrarPenaController {
     @FXML private ComboBox<Pena> comboPenas;
     @FXML private VBox vboxComboPenas;
     @FXML private TextField tipoPena, tempoPena, horasSemanais, horasTotais;
+    @FXML private TextField codigoAtual, proximoCodigo;
     @FXML private DatePicker dataInicio, dataTermino;
     @FXML private TextArea descricao, atividadesAcordadas;
     @FXML private Button btnCadastrarPena;
@@ -65,7 +67,12 @@ public class CadastrarPenaController {
         horasSemanais.textProperty().addListener((obs, oldVal, newVal) -> atualizarCamposCalculados());
         dataInicio.valueProperty().addListener((obs, oldVal, newVal) -> atualizarCamposCalculados());
 
+        // Listener para atualizar código quando usuário for selecionado
+        usuario.setOnAction(e -> atualizarCodigoPenas());
+
         tempoPena.setEditable(false);
+        codigoAtual.setEditable(false);
+        proximoCodigo.setEditable(false);
     }
 
     public void ativarModoEdicao() {
@@ -73,7 +80,10 @@ public class CadastrarPenaController {
         vboxComboPenas.setVisible(true);
         btnCadastrarPena.setText("Salvar alterações");
 
-        usuario.setOnAction(e -> carregarPenasDoUsuario());
+        usuario.setOnAction(e -> {
+            carregarPenasDoUsuario();
+            atualizarCodigoPenas(); // Atualiza código quando usuário é selecionado
+        });
 
         comboPenas.setOnAction(e -> {
             Pena p = comboPenas.getValue();
@@ -137,6 +147,9 @@ public class CadastrarPenaController {
         dataInicio.setValue(p.getDataInicio().toLocalDate());
         dataTermino.setValue(p.getDataTermino() != null ? p.getDataTermino().toLocalDate() : null);
         preencherHorarios(p.getDiasSemanaEHorariosDisponivel());
+        
+        // Atualiza o código de penas quando uma pena é selecionada para edição
+        atualizarCodigoPenas();
     }
 
     private Usuario buscarUsuarioPorId(int id) {
@@ -151,9 +164,23 @@ public class CadastrarPenaController {
         Pena novaPena = construirPena();
         if (novaPena == null) return;
 
+        Usuario u = usuario.getValue();
+        if (u == null) {
+            alert("Selecione um usuário.");
+            return;
+        }
+
+        // Conta penas atuais antes de inserir
+        int numeroPenasAtuais = PenaDAO.contarPenasPorUsuario(u.getIdUsuario());
+        
+        // Calcula o próximo código
+        String novoCodigo = CodigoPenaUtil.calcularProximoCodigo(numeroPenasAtuais);
+
         boolean sucesso = PenaDAO.inserirPena(novaPena) > 0;
         if (sucesso) {
-            alert("Pena cadastrada com sucesso!");
+            // Atualiza o código do usuário no banco
+            UsuarioDAO.atualizarCodigo(u.getIdUsuario(), novoCodigo);
+            alert("Pena cadastrada com sucesso! Código atualizado para: " + novoCodigo);
             limparCampos();
             fecharJanela();
         } else {
@@ -311,6 +338,46 @@ public class CadastrarPenaController {
     }
 
 
+    /**
+     * Atualiza os campos de código quando um usuário é selecionado.
+     */
+    private void atualizarCodigoPenas() {
+        Usuario u = usuario.getValue();
+        if (u == null) {
+            codigoAtual.setText("");
+            proximoCodigo.setText("");
+            return;
+        }
+
+        int numeroPenas = PenaDAO.contarPenasPorUsuario(u.getIdUsuario());
+        
+        if (numeroPenas == 0) {
+            // Se não tem penas, mostra o código salvo no banco ou "Nenhuma pena"
+            String codigoSalvo = (u.getCodigo() != null && !u.getCodigo().trim().isEmpty()) 
+                    ? u.getCodigo() 
+                    : "Nenhuma pena";
+            codigoAtual.setText(codigoSalvo);
+            proximoCodigo.setText(CodigoPenaUtil.calcularProximoCodigo(0));
+        } else {
+            // Mostra o código calculado baseado no número de penas (deve corresponder ao salvo no banco)
+            String codigoAtualStr = CodigoPenaUtil.calcularCodigoAtual(numeroPenas);
+            String proximoCodigoStr = CodigoPenaUtil.calcularProximoCodigo(numeroPenas);
+            
+            // Se houver código salvo que seja diferente, mostra ambos (salvo e calculado)
+            String codigoSalvo = (u.getCodigo() != null && !u.getCodigo().trim().isEmpty()) 
+                    ? u.getCodigo() 
+                    : null;
+            
+            if (codigoSalvo != null && !codigoSalvo.equals(codigoAtualStr)) {
+                // Se o código salvo é diferente do calculado, mostra o salvo como referência
+                codigoAtual.setText(codigoSalvo + " (calc: " + codigoAtualStr + ")");
+            } else {
+                codigoAtual.setText(codigoAtualStr);
+            }
+            proximoCodigo.setText(proximoCodigoStr);
+        }
+    }
+
     private void limparCampos() {
         usuario.getSelectionModel().clearSelection();
         instituicao.getSelectionModel().clearSelection();
@@ -318,6 +385,8 @@ public class CadastrarPenaController {
         horasSemanais.clear(); horasTotais.clear();
         dataInicio.setValue(null); dataTermino.setValue(null);
         descricao.clear(); atividadesAcordadas.clear();
+        codigoAtual.clear();
+        proximoCodigo.clear();
     }
 
     /**
