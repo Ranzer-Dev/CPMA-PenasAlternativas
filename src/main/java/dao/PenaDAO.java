@@ -158,6 +158,30 @@ public class PenaDAO {
         return null;
     }
 
+    /**
+     * Conta o número total de penas cadastradas para um usuário.
+     * 
+     * @param idUsuario ID do usuário
+     * @return Número total de penas cadastradas
+     */
+    public static int contarPenasPorUsuario(int idUsuario) {
+        String sql = "SELECT COUNT(*) as total FROM Pena WHERE fk_usuario_id_usuario = ?";
+
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idUsuario);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     private static Pena mapear(ResultSet rs) throws SQLException {
         Pena p = new Pena();
         p.setIdPena(rs.getInt("id_pena"));

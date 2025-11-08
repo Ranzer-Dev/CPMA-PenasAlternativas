@@ -17,7 +17,6 @@ public class Usuario {
     private String nacionalidade;
     private Date criadoEm;
     private String foto;
-    private String senha;
     private String observacao;
     private int fkAdministradorIdAdmin;
 
@@ -105,13 +104,6 @@ public class Usuario {
     }
     public void setFoto(String foto) {
         this.foto = foto;
-    }
-
-    public String getSenha() {
-        return senha;
-    }
-    public void setSenha(String senha) {
-        this.senha = senha;
     }
 
     public String getObservacao() {

@@ -58,16 +58,13 @@ import model.DadosFaciais;
 import model.Instituicao;
 import model.Pena;
 import model.Usuario;
-import util.HashUtil;
-import util.ReconhecimentoFacial;
+ import util.ReconhecimentoFacial;
 import util.ValidadorCPF;
 
 public class CadastrarUsuarioController {
 
     @FXML
     private TextField cep;
-    @FXML
-    private TextField codigo;
     @FXML
     private TextField telefone;
     @FXML
@@ -79,7 +76,7 @@ public class CadastrarUsuarioController {
     @FXML
     private TextField criadoEm;
     @FXML
-    private TextField nome, cpf, senha, nacionalidade;
+    private TextField nome, cpf, nacionalidade;
     @FXML
     private TextField endereco, bairro, cidade, uf;
     @FXML
@@ -526,10 +523,10 @@ public class CadastrarUsuarioController {
     }
 
     public static int cadastrarUsuario(
-            String nome, String cpf, String senha,
+            String nome, String cpf,
             String nacionalidade, LocalDate dataNascimento,
             String endereco, String bairro, String cidade, String uf,
-            String observacao, String telefone, String cep, String codigo) {
+            String observacao, String telefone, String cep) {
 
         if (nome == null || nome.trim().isEmpty() || !nome.matches("[a-zA-ZÀ-ú\\s]+")) {
             throw new IllegalArgumentException("Nome inválido.");
@@ -547,10 +544,6 @@ public class CadastrarUsuarioController {
 
         if (UsuarioDAO.cpfExiste(cpfLimpo)) {
             throw new IllegalArgumentException("CPF já cadastrado.");
-        }
-
-        if (senha == null || senha.trim().isEmpty()) {
-            throw new IllegalArgumentException("Senha vazia.");
         }
 
         if (nacionalidade == null || nacionalidade.trim().isEmpty()) {
@@ -580,7 +573,6 @@ public class CadastrarUsuarioController {
         Usuario usuario = new Usuario();
         usuario.setNome(nome.trim());
         usuario.setCpf(cpfLimpo);
-        usuario.setSenha(HashUtil.gerarHash(senha.trim()));
         usuario.setNacionalidade(nacionalidade.trim());
         usuario.setDataNascimento(Date.valueOf(dataNascimento));
         usuario.setCriadoEm(new Date(System.currentTimeMillis()));
@@ -591,8 +583,9 @@ public class CadastrarUsuarioController {
         usuario.setObservacao(observacao == null ? "" : observacao.trim());
         usuario.setFoto("");
         usuario.setTelefone(foneLimpo);
-        usuario.setCodigo(codigo);
         usuario.setCep(cep);
+        // Código será gerado automaticamente quando a primeira pena for cadastrada
+        usuario.setCodigo(""); // Inicia vazio
 
         return UsuarioDAO.inserir(usuario);
     }
@@ -604,10 +597,10 @@ public class CadastrarUsuarioController {
             }
 
             idUsuarioInserido = cadastrarUsuario(
-                    nome.getText(), cpf.getText(), senha.getText(), nacionalidade.getText(),
+                    nome.getText(), cpf.getText(), nacionalidade.getText(),
                     dataNascimento.getValue(), endereco.getText(),
                     bairro.getText(), cidade.getText(), uf.getText(), observacao.getText(),
-                    telefone.getText().trim(), cep.getText(), codigo.getText());
+                    telefone.getText().trim(), cep.getText());
 
             // Se uma foto foi capturada, salvar os dados faciais
             if (imagemCapturada != null) {
@@ -669,10 +662,6 @@ public class CadastrarUsuarioController {
             usuarioEditando.setNome(nome.getText());
             usuarioEditando.setCpf(cpf.getText().replaceAll("\\D", ""));
 
-            if (!senha.getText().trim().isEmpty()) {
-                usuarioEditando.setSenha(HashUtil.gerarHash(senha.getText().trim()));
-            }
-
             usuarioEditando.setNacionalidade(nacionalidade.getText());
             usuarioEditando.setDataNascimento(Date.valueOf(dataNascimento.getValue()));
             // criadoEm não é editável, mantém o valor original
@@ -729,7 +718,6 @@ public class CadastrarUsuarioController {
         usuarioEditando = u;
         nome.setText(u.getNome());
         cpf.setText(u.getCpf());
-        senha.setText("");
         nacionalidade.setText(u.getNacionalidade());
         dataNascimento.setValue(convertToLocalDate(u.getDataNascimento()));
         criadoEm.setText(u.getCriadoEm() != null ? 
@@ -821,7 +809,6 @@ public class CadastrarUsuarioController {
         cep.textProperty().addListener((o, ov, nv) -> limparErro(cep));
         nome.textProperty().addListener((o, ov, nv) -> limparErro(nome));
         cpf.textProperty().addListener((o, ov, nv) -> limparErro(cpf));
-        senha.textProperty().addListener((o, ov, nv) -> limparErro(senha));
         nacionalidade.textProperty().addListener((o, ov, nv) -> limparErro(nacionalidade));
         dataNascimento.valueProperty().addListener((o, ov, nv) -> limparErro(dataNascimento));
         endereco.textProperty().addListener((o, ov, nv) -> limparErro(endereco));

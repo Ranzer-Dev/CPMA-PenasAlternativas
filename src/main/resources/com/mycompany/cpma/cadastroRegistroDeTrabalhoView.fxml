@@ -17,7 +17,7 @@
                 <AnchorPane styleClass="main-container">
             <children>
                 <!-- Container principal com card -->
-                <VBox alignment="CENTER" styleClass="content-card" AnchorPane.topAnchor="20.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0">
+                <VBox alignment="CENTER" spacing="30.0" styleClass="content-card" maxWidth="900.0" AnchorPane.topAnchor="20.0" AnchorPane.leftAnchor="50.0">
                     <children>
                         <!-- Cabeçalho -->
                         <VBox alignment="CENTER" spacing="10.0">
@@ -32,7 +32,7 @@
                                         <Font name="Segoe UI" size="14.0" />
                                     </font>
                                 </Text>
-                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Cadastro de Registro de Trabalho" textAlignment="CENTER">
+                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Registro de Cumprimento de Pena" textAlignment="CENTER">
                                     <font>
                                         <Font name="Segoe UI Bold" size="24.0" />
                                     </font>
@@ -41,7 +41,7 @@
                         </VBox>
                         
                         <!-- Seção de seleção -->
-                        <VBox spacing="20.0" maxWidth="750.0" VBox.vgrow="SOMETIMES">
+                        <VBox spacing="20.0" maxWidth="750.0" VBox.vgrow="NEVER">
                             <children>
                                 <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Seleção de Dados" textAlignment="CENTER">
                                     <font>
@@ -52,12 +52,12 @@
                                 <!-- Usuário, Instituição e Tipo de Pena -->
                                 <GridPane hgap="15.0" vgap="15.0" styleClass="responsive-grid">
                                     <columnConstraints>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="150.0" prefWidth="200.0" maxWidth="250.0" />
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="150.0" prefWidth="200.0" maxWidth="250.0" />
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="150.0" prefWidth="200.0" maxWidth="250.0" />
+                                        <ColumnConstraints hgrow="NEVER" minWidth="150.0" prefWidth="200.0" maxWidth="250.0" />
+                                        <ColumnConstraints hgrow="NEVER" minWidth="150.0" prefWidth="200.0" maxWidth="250.0" />
+                                        <ColumnConstraints hgrow="NEVER" minWidth="150.0" prefWidth="200.0" maxWidth="250.0" />
                                     </columnConstraints>
                                     <rowConstraints>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                                     </rowConstraints>
                                     <children>
                                         <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
@@ -83,97 +83,55 @@
                             </children>
                         </VBox>
                         
-                        <!-- Seção de informações do trabalho -->
-                        <VBox spacing="20.0" maxWidth="750.0" VBox.vgrow="SOMETIMES">
+                        <!-- Seção de Controle de Horários -->
+                        <VBox spacing="15.0" maxWidth="900.0" VBox.vgrow="NEVER">
                             <children>
-                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Informações do Trabalho" textAlignment="CENTER">
-                                    <font>
-                                        <Font name="Segoe UI Bold" size="18.0" />
-                                    </font>
-                                </Text>
                                 
-                                <!-- Data e Horas -->
-                                <GridPane hgap="15.0" vgap="15.0" styleClass="responsive-grid">
-                                    <columnConstraints>
-                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="150.0" prefWidth="200.0" maxWidth="250.0" />
-                                        <ColumnConstraints hgrow="NEVER" minWidth="100.0" prefWidth="120.0" maxWidth="150.0" />
-                                    </columnConstraints>
-                                    <rowConstraints>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                    </rowConstraints>
+                                <!-- Cabeçalho da seção com botão de informação -->
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <children>
-                                        <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                            <children>
-                                                <Label text="Data do Trabalho" styleClass="label-primary" />
-                                                <DatePicker fx:id="dataTrabalho" styleClass="combo-box responsive-input" />
-                                            </children>
-                                        </VBox>
-                                        <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                            <children>
-                                                <Label text="Horas Cumpridas" styleClass="label-primary" />
-                                                <TextField fx:id="horasCumpridas" promptText="Ex: 8.0" styleClass="input-field responsive-input" />
-                                            </children>
-                                        </VBox>
+                                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="🕒 Controle de Horários" textAlignment="CENTER">
+                                            <font>
+                                                <Font name="Segoe UI Bold" size="18.0" />
+                                            </font>
+                                        </Text>
+                                        <Button fx:id="btnInfoHorarios" mnemonicParsing="false" prefHeight="30.0" prefWidth="30.0" styleClass="btn-info" text="ℹ️">
+                                            <tooltip>
+                                                <Tooltip text="Informações sobre os botões" />
+                                            </tooltip>
+                                        </Button>
                                     </children>
-                                </GridPane>
+                                </HBox>
                                 
-                                <!-- Atividades -->
-                                <VBox spacing="5.0">
+                                <!-- Botões de ação para a tabela - Linha 1 -->
+                                <HBox alignment="CENTER_LEFT" spacing="15.0">
                                     <children>
-                                        <Label text="Atividades Realizadas" styleClass="label-primary" />
-                                        <TextArea fx:id="atividades" promptText="Descreva as atividades realizadas durante o trabalho..." styleClass="text-area responsive-input" />
+                                        <Button fx:id="btnAdicionarDia" mnemonicParsing="false" prefHeight="40.0" prefWidth="140.0" styleClass="btn-secondary" text="➕ Adicionar Dia" />
+                                        <Button fx:id="btnAdicionarMes" mnemonicParsing="false" prefHeight="40.0" prefWidth="150.0" styleClass="btn-info" text="📅 Adicionar Mês" visible="false" />
+                                        <Button fx:id="btnPreencherHorariosPena" mnemonicParsing="false" prefHeight="40.0" prefWidth="220.0" styleClass="btn-primary" text="⏰ Preencher Horários" disable="true" />
                                     </children>
-                                </VBox>
-                            </children>
-                        </VBox>
-                        
-                        <!-- Seção de horários -->
-                        <VBox spacing="20.0" maxWidth="750.0" VBox.vgrow="SOMETIMES">
-                            <children>
-                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Controle de Horários" textAlignment="CENTER">
-                                    <font>
-                                        <Font name="Segoe UI Bold" size="18.0" />
-                                    </font>
-                                </Text>
+                                </HBox>
                                 
-                                <!-- Grid de horários -->
-                                <GridPane hgap="15.0" vgap="15.0" styleClass="responsive-grid">
-                                    <columnConstraints>
-                                        <ColumnConstraints hgrow="NEVER" minWidth="100.0" prefWidth="120.0" maxWidth="150.0" />
-                                        <ColumnConstraints hgrow="NEVER" minWidth="100.0" prefWidth="120.0" maxWidth="150.0" />
-                                        <ColumnConstraints hgrow="NEVER" minWidth="100.0" prefWidth="120.0" maxWidth="150.0" />
-                                        <ColumnConstraints hgrow="NEVER" minWidth="100.0" prefWidth="120.0" maxWidth="150.0" />
-                                    </columnConstraints>
-                                    <rowConstraints>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                    </rowConstraints>
+                                <!-- Botões de ação - Linha 2 -->
+                                <HBox alignment="CENTER_LEFT" spacing="15.0">
                                     <children>
-                                        <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                            <children>
-                                                <Label text="Horário Início" styleClass="label-primary" />
-                                                <TextField fx:id="horarioInicio" promptText="08:00" styleClass="input-field responsive-input" />
-                                            </children>
-                                        </VBox>
-                                        <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                            <children>
-                                                <Label text="Horário Almoço" styleClass="label-primary" />
-                                                <TextField fx:id="horarioAlmoco" promptText="12:00" styleClass="input-field responsive-input" />
-                                            </children>
-                                        </VBox>
-                                        <VBox spacing="5.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                            <children>
-                                                <Label text="Horário Volta" styleClass="label-primary" />
-                                                <TextField fx:id="horarioVolta" promptText="13:00" styleClass="input-field responsive-input" />
-                                            </children>
-                                        </VBox>
-                                        <VBox spacing="5.0" GridPane.columnIndex="3" GridPane.rowIndex="0">
-                                            <children>
-                                                <Label text="Horário Saída" styleClass="label-primary" />
-                                                <TextField fx:id="horarioSaida" promptText="17:00" styleClass="input-field responsive-input" />
-                                            </children>
-                                        </VBox>
+                                        <Button fx:id="btnRemoverTudo" mnemonicParsing="false" prefHeight="40.0" prefWidth="150.0" styleClass="btn-secondary" text="🗑️ Remover Tudo" />
+                                        <Label fx:id="lblTotalHoras" text="Total: 0.00 horas" styleClass="label-secondary" />
                                     </children>
-                                </GridPane>
+                                </HBox>
+                                
+                                <!-- Tabela de registros de trabalho -->
+                                <TableView fx:id="tabelaRegistros" prefHeight="350.0" minHeight="200.0" styleClass="table-view responsive-table">
+                                    <columns>
+                                        <TableColumn fx:id="colData" text="📅 Data" prefWidth="150.0" minWidth="120.0" maxWidth="180.0" />
+                                        <TableColumn fx:id="colInicio" text="🕐 Início" prefWidth="110.0" minWidth="100.0" maxWidth="130.0" />
+                                        <TableColumn fx:id="colAlmoco" text="🍽️ Almoço" prefWidth="110.0" minWidth="100.0" maxWidth="130.0" />
+                                        <TableColumn fx:id="colVolta" text="↩️ Volta" prefWidth="110.0" minWidth="100.0" maxWidth="130.0" />
+                                        <TableColumn fx:id="colSaida" text="🏁 Saída" prefWidth="110.0" minWidth="100.0" maxWidth="130.0" />
+                                        <TableColumn fx:id="colHoras" text="⏱️ Horas" prefWidth="100.0" minWidth="90.0" maxWidth="120.0" />
+                                        <TableColumn fx:id="colAcao" text="⚙️ Ação" prefWidth="80.0" minWidth="70.0" maxWidth="90.0" />
+                                    </columns>
+                                </TableView>
                             </children>
                         </VBox>
                         
