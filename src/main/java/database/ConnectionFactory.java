@@ -12,7 +12,13 @@ public class ConnectionFactory {
 
     public static Connection getConnection() {
         try {
-            return DriverManager.getConnection(URL, USER, PASSWORD);
+            // SQLite não precisa de usuário e senha
+            if (URL != null && URL.startsWith("jdbc:sqlite:")) {
+                return DriverManager.getConnection(URL);
+            } else {
+                // Para outros bancos de dados (compatibilidade)
+                return DriverManager.getConnection(URL, USER, PASSWORD);
+            }
         } catch (SQLException e) {
             System.err.println("Erro ao conectar ao banco de dados:");
             e.printStackTrace();

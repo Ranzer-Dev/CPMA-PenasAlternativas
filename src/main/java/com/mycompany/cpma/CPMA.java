@@ -2,6 +2,7 @@ package com.mycompany.cpma;
 
 import java.io.IOException;
 
+import database.DatabaseInitializer;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -13,6 +14,9 @@ public class CPMA extends Application {
     @Override
     public void start(Stage stage) {
         try {
+            // Inicializar banco de dados (cria tabelas se não existirem)
+            DatabaseInitializer.initialize();
+            
             Font.loadFont(getClass().getResourceAsStream("/fonts/Nunito-Regular.ttf"), 10);
             Font.loadFont(getClass().getResourceAsStream("/fonts/Nunito-Bold.ttf"), 10);
             Font.loadFont(getClass().getResourceAsStream("/fonts/Nunito-Italic.ttf"), 10);

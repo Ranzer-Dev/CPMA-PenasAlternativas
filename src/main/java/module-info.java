@@ -3,7 +3,6 @@ module com.mycompany.cpma {
     requires javafx.fxml;
     requires javafx.graphics;
 
-    requires com.microsoft.sqlserver.jdbc;
     requires java.sql;
 
     requires org.bytedeco.javacv;

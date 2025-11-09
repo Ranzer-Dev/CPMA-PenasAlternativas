@@ -2,6 +2,7 @@ package dao;
 
 import database.ConnectionFactory;
 import model.Instituicao;
+import util.SQLiteDateUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -12,25 +13,29 @@ public final class InstituicaoDAO {
     public static boolean inserir(Instituicao inst) {
         final String sql = """
             INSERT INTO Instituicao
-                (nome, endereco, cidade, uf, bairro, cep, responsavel, responsavel2, telefone, telefone2, tipo)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                (nome, endereco, cidade, uf, bairro, cep, responsavel, telefone, tipo)
+            VALUES (?,?,?,?,?,?,?,?,?)
         """;
         try (Connection c = ConnectionFactory.getConnection();
-             PreparedStatement st = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement st = c.prepareStatement(sql)) {
 
             preencherParams(st, inst);
             int affected = st.executeUpdate();
 
             if (affected > 0) {
-                ResultSet keys = st.getGeneratedKeys();
-                if (keys.next()) {
-                    inst.setIdInstituicao(keys.getInt(1));
+                // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
+                try (Statement stmt2 = c.createStatement();
+                     ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
+                    if (rs.next()) {
+                        inst.setIdInstituicao(rs.getInt(1));
+                    }
                 }
             }
 
             return affected > 0;
 
         } catch (SQLException e) {
+            System.err.println("Erro ao inserir instituição:");
             e.printStackTrace();
             return false;
         }
@@ -38,31 +43,51 @@ public final class InstituicaoDAO {
 
     public static int inserirEPegarID(Instituicao inst) {
         String sql = """
-        INSERT INTO instituicao (nome, endereco, cidade, uf, bairro, cep, responsavel, telefone, tipo)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """;
+            INSERT INTO Instituicao (nome, endereco, cidade, uf, bairro, cep, responsavel, telefone, tipo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """;
         try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, inst.getNome());
-            stmt.setString(2, inst.getEndereco());
-            stmt.setString(3, inst.getCidade());
-            stmt.setString(4, inst.getUf());
-            stmt.setString(5, inst.getBairro());
-            stmt.setString(6, inst.getCep());
-            stmt.setString(7, inst.getResponsavel());
-            stmt.setString(8, inst.getTelefone());
+            stmt.setString(2, inst.getEndereco() != null ? inst.getEndereco() : "");
+            stmt.setString(3, inst.getCidade() != null ? inst.getCidade() : "");
+            stmt.setString(4, inst.getUf() != null ? inst.getUf() : "");
+            stmt.setString(5, inst.getBairro() != null ? inst.getBairro() : "");
+            stmt.setString(6, inst.getCep() != null ? inst.getCep() : "");
+            stmt.setString(7, inst.getResponsavel() != null ? inst.getResponsavel() : "");
+            stmt.setString(8, inst.getTelefone() != null ? inst.getTelefone() : "");
             stmt.setInt(9, inst.getTipo());
 
+            System.out.println("Tentando inserir instituição: " + inst.getNome() + ", tipo: " + inst.getTipo());
+
             int affected = stmt.executeUpdate();
+            System.out.println("Linhas afetadas: " + affected);
+
             if (affected > 0) {
-                ResultSet rs = stmt.getGeneratedKeys();
-                if (rs.next()) {
-                    return rs.getInt(1);
+                // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
+                try (Statement stmt2 = conn.createStatement();
+                     ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
+                    if (rs.next()) {
+                        int idGerado = rs.getInt(1);
+                        System.out.println("ID gerado: " + idGerado);
+                        return idGerado;
+                    }
                 }
+                
+                System.err.println("Aviso: Não foi possível obter o ID gerado");
+            } else {
+                System.err.println("Erro: Nenhuma linha foi inserida");
             }
 
         } catch (SQLException e) {
+            System.err.println("Erro ao inserir instituição:");
+            System.err.println("Mensagem: " + e.getMessage());
+            System.err.println("Código SQL: " + e.getSQLState());
+            System.err.println("Erro: " + e.getErrorCode());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Erro inesperado ao inserir instituição:");
             e.printStackTrace();
         }
         return -1;
@@ -114,7 +139,15 @@ public final class InstituicaoDAO {
         try (Connection c = ConnectionFactory.getConnection();
              PreparedStatement st = c.prepareStatement(sql)) {
 
-            preencherParams(st, inst);
+            st.setString(1, inst.getNome());
+            st.setString(2, inst.getEndereco());
+            st.setString(3, inst.getCidade());
+            st.setString(4, inst.getUf());
+            st.setString(5, inst.getBairro());
+            st.setString(6, inst.getCep());
+            st.setString(7, inst.getResponsavel());
+            st.setString(8, inst.getTelefone());
+            st.setInt(9, inst.getTipo());
             st.setInt(10, inst.getIdInstituicao());
             return st.executeUpdate() > 0;
 
@@ -177,6 +210,11 @@ public final class InstituicaoDAO {
         i.setResponsavel(rs.getString("responsavel"));
         i.setTelefone(rs.getString("telefone"));
         i.setTipo(rs.getInt("tipo"));
+        // Mapear criado_em se necessário
+        java.sql.Date criadoEm = SQLiteDateUtil.getDate(rs, "criado_em");
+        if (criadoEm != null) {
+            i.setCriadoEm(new java.util.Date(criadoEm.getTime()));
+        }
         return i;
     }
 

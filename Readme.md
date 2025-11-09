@@ -51,26 +51,21 @@ O **CPMA (Centro de Penas e Medidas Alternativas)** é um sistema desktop desenv
 ### Camadas de Acesso a Dados
 
 - **DAO (Data Access Object)**: Padrão para acesso ao banco de dados
-- **Database**: Configuração e conexão com SQL Server
+- **Database**: Configuração e conexão com SQLite
 - **Connection Factory**: Gerenciamento de conexões
 
 ## 🛠️ Tecnologias Utilizadas
 
 ### Backend
 
-- **Java 24**: Linguagem principal
-- **JavaFX 24**: Framework para interface gráfica
+- **Java 17+**: Linguagem principal
+- **JavaFX 23**: Framework para interface gráfica
 - **Maven**: Gerenciamento de dependências e build
 
 ### Banco de Dados
 
-- **Microsoft SQL Server 2022**: Banco de dados principal
-- **JDBC**: Driver para conexão com SQL Server
-
-### Containerização
-
-- **Docker**: Container SQL Server para desenvolvimento
-- **Docker Compose**: Orquestração de serviços
+- **SQLite 3**: Banco de dados embarcado
+- **JDBC**: Driver SQLite-JDBC para conexão
 
 ## 📁 Estrutura do Projeto
 
@@ -89,8 +84,8 @@ CPMA-PenasAlternativas/
 │   │       ├── view/                # Arquivos FXML
 │   │       └── db.properties.example # Configuração do banco
 ├── script/
-│   └── penas-alternativas.sql      # Script de criação do banco
-├── docker-compose.yml               # Configuração Docker
+│   ├── penas-alternativas.sql      # Script de criação do banco SQLite
+│   └── dados-faciais.sql           # Script de criação da tabela de dados faciais
 ├── pom.xml                         # Configuração Maven
 └── README.md                       # Este arquivo
 ```
@@ -99,40 +94,44 @@ CPMA-PenasAlternativas/
 
 ### Pré-requisitos
 
-- Java 24 ou superior
+- Java 17 ou superior
 - Maven 3.6+
-- Docker e Docker Compose
+- SQLite 3 (opcional, apenas para acesso via linha de comando)
 
 ### 1. Configuração do Banco de Dados
 
+O banco de dados SQLite será criado automaticamente quando a aplicação for executada pela primeira vez.
+O arquivo `penas_alternativas.db` será criado no diretório raiz do projeto.
+
+**Opção 1: Criação automática (recomendado)**
+
 ```bash
-# Iniciar o container SQL Server
-docker-compose up -d
+# A aplicação criará o banco automaticamente na primeira execução
+# Não é necessário executar scripts manualmente
+```
 
-# Copiar o script SQL para o container
-docker cp ./script/penas-alternativas.sql sqlserver_dev:/tmp/
+**Opção 2: Criação manual (opcional)**
 
-# Executar o script de criação do banco
-docker exec -it sqlserver_dev /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U SA -P 'MinhaSenha_forte123' \
-  -i /tmp/penas-alternativas.sql -C
+```bash
+# Se você tiver SQLite instalado, pode criar o banco manualmente:
+sqlite3 penas_alternativas.db < script/penas-alternativas.sql
+sqlite3 penas_alternativas.db < script/dados-faciais.sql
 
-# Executar para ver as tabelas
-docker exec -it sqlserver_dev /bin/bash
+# Para verificar as tabelas criadas:
+sqlite3 penas_alternativas.db ".tables"
 
-# Entrar no container
-/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'MinhaSenha_forte123'
-
+# Para ver a estrutura de uma tabela:
+sqlite3 penas_alternativas.db ".schema Usuario"
 ```
 
 ### 2. Configuração da Aplicação
 
 ```bash
-# Copiar o arquivo de exemplo de configuração
+# Copiar o arquivo de exemplo de configuração (se necessário)
 cp src/main/resources/db.properties.example src/main/resources/db.properties
 
-# Editar as configurações do banco se necessário
-# As configurações padrão já estão corretas para o Docker
+# O arquivo db.properties já está configurado para SQLite
+# O caminho do banco pode ser alterado se necessário
 ```
 
 ### 3. Compilação e Execução
@@ -149,10 +148,11 @@ mvn javafx:run
 
 ### Banco de Dados
 
-- **Host**: localhost:1433
-- **Database**: PENAS_ALTERNATIVAS
-- **Usuário**: sa
-- **Senha**: MinhaSenha_forte123
+- **Tipo**: SQLite 3
+- **Arquivo**: `penas_alternativas.db` (criado no diretório raiz do projeto)
+- **Driver**: `org.xerial.sqlite-jdbc`
+- **URL**: `jdbc:sqlite:penas_alternativas.db`
+- **Usuário/Senha**: Não necessário (SQLite não requer autenticação)
 
 ### JavaFX
 
@@ -194,6 +194,23 @@ Para testar a conexão com o banco de dados:
 # Executar a classe de teste de conexão
 mvn exec:java -Dexec.mainClass="database.TestaConexaoBanco"
 ```
+
+### Migração de SQL Server para SQLite
+
+Este projeto foi migrado de SQL Server para SQLite. As principais mudanças incluem:
+
+- **Driver**: Substituído `mssql-jdbc` por `sqlite-jdbc`
+- **Scripts SQL**: Convertidos para sintaxe SQLite (sem IDENTITY, GETDATE(), etc.)
+- **Queries**: Atualizadas para usar `LIMIT` ao invés de `TOP`, `strftime()` para funções de data
+- **Configuração**: Removida necessidade de usuário/senha e servidor
+- **Docker**: Não é mais necessário (docker-compose.yml foi movido para .old)
+
+### Notas sobre SQLite
+
+- O arquivo do banco é criado automaticamente na primeira execução
+- O banco é um arquivo único que pode ser facilmente copiado ou movido
+- Não há servidor - o banco é acessado diretamente via arquivo
+- Backups podem ser feitos simplesmente copiando o arquivo `.db`
 
 ### Teste de Identificação Facial
 

@@ -2,6 +2,7 @@ package dao;
 
 import database.ConnectionFactory;
 import model.DisponibilidadeInstituicao;
+import util.SQLiteTimeUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -18,12 +19,20 @@ public class DisponibilidadeInstituicaoDAO {
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, disp.getDiaSemana());
-            stmt.setTime(2, Time.valueOf(disp.getHoraInicio1()));
-            stmt.setTime(3, Time.valueOf(disp.getHoraFim1()));
+            if (disp.getHoraInicio1() != null) {
+                stmt.setString(2, SQLiteTimeUtil.timeToString(Time.valueOf(disp.getHoraInicio1())));
+            } else {
+                stmt.setNull(2, Types.TIME);
+            }
+            if (disp.getHoraFim1() != null) {
+                stmt.setString(3, SQLiteTimeUtil.timeToString(Time.valueOf(disp.getHoraFim1())));
+            } else {
+                stmt.setNull(3, Types.TIME);
+            }
 
             if (disp.getHoraInicio2() != null && disp.getHoraFim2() != null) {
-                stmt.setTime(4, Time.valueOf(disp.getHoraInicio2()));
-                stmt.setTime(5, Time.valueOf(disp.getHoraFim2()));
+                stmt.setString(4, SQLiteTimeUtil.timeToString(Time.valueOf(disp.getHoraInicio2())));
+                stmt.setString(5, SQLiteTimeUtil.timeToString(Time.valueOf(disp.getHoraFim2())));
             } else {
                 stmt.setNull(4, Types.TIME);
                 stmt.setNull(5, Types.TIME);
@@ -54,11 +63,14 @@ public class DisponibilidadeInstituicaoDAO {
                 DisponibilidadeInstituicao disp = new DisponibilidadeInstituicao();
                 disp.setId(rs.getInt("id_disponibilidade"));
                 disp.setDiaSemana(rs.getString("dia_semana"));
-                disp.setHoraInicio1(rs.getTime("hora_inicio_1").toLocalTime());
-                disp.setHoraFim1(rs.getTime("hora_fim_1").toLocalTime());
+                
+                Time hi1 = SQLiteTimeUtil.getTime(rs, "hora_inicio_1");
+                Time hf1 = SQLiteTimeUtil.getTime(rs, "hora_fim_1");
+                disp.setHoraInicio1(hi1 != null ? hi1.toLocalTime() : null);
+                disp.setHoraFim1(hf1 != null ? hf1.toLocalTime() : null);
 
-                Time hi2 = rs.getTime("hora_inicio_2");
-                Time hf2 = rs.getTime("hora_fim_2");
+                Time hi2 = SQLiteTimeUtil.getTime(rs, "hora_inicio_2");
+                Time hf2 = SQLiteTimeUtil.getTime(rs, "hora_fim_2");
                 disp.setHoraInicio2(hi2 != null ? hi2.toLocalTime() : null);
                 disp.setHoraFim2(hf2 != null ? hf2.toLocalTime() : null);
                 disp.setFkInstituicaoId(idInstituicao);

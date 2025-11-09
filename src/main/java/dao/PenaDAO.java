@@ -2,6 +2,7 @@ package dao;
 
 import database.ConnectionFactory;
 import model.Pena;
+import util.SQLiteDateUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -14,12 +15,16 @@ public class PenaDAO {
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, pena.getTipoPena());
-            stmt.setDate(2, new java.sql.Date(pena.getDataInicio().getTime()));
+            if (pena.getDataInicio() != null) {
+                stmt.setString(2, new java.sql.Date(pena.getDataInicio().getTime()).toString());
+            } else {
+                stmt.setNull(2, Types.DATE);
+            }
             if (pena.getDataTermino() != null) {
-                stmt.setDate(3, new java.sql.Date(pena.getDataTermino().getTime()));
+                stmt.setString(3, new java.sql.Date(pena.getDataTermino().getTime()).toString());
             } else {
                 stmt.setNull(3, Types.DATE);
             }
@@ -34,10 +39,16 @@ public class PenaDAO {
 
             int rows = stmt.executeUpdate();
             if (rows > 0) {
-                ResultSet rs = stmt.getGeneratedKeys();
-                if (rs.next()) return rs.getInt(1);
+                // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
+                try (Statement stmt2 = conn.createStatement();
+                     ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
             }
         } catch (SQLException e) {
+            System.err.println("Erro ao inserir pena:");
             e.printStackTrace();
         }
         return -1;
@@ -98,9 +109,13 @@ public class PenaDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, pena.getTipoPena());
-            stmt.setDate(2, new java.sql.Date(pena.getDataInicio().getTime()));
+            if (pena.getDataInicio() != null) {
+                stmt.setString(2, new java.sql.Date(pena.getDataInicio().getTime()).toString());
+            } else {
+                stmt.setNull(2, Types.DATE);
+            }
             if (pena.getDataTermino() != null) {
-                stmt.setDate(3, new java.sql.Date(pena.getDataTermino().getTime()));
+                stmt.setString(3, new java.sql.Date(pena.getDataTermino().getTime()).toString());
             } else {
                 stmt.setNull(3, Types.DATE);
             }
@@ -137,12 +152,13 @@ public class PenaDAO {
 
     public static Pena buscarPenaAtivaPorUsuario(int idUsuario) {
         String sql = """
-            SELECT TOP 1 *
+            SELECT *
             FROM Pena
             WHERE fk_usuario_id_usuario = ?
             ORDER BY
-                CASE WHEN data_termino IS NULL OR data_termino >= GETDATE() THEN 0 ELSE 1 END,
+                CASE WHEN data_termino IS NULL OR data_termino >= date('now', 'localtime') THEN 0 ELSE 1 END,
                 data_inicio DESC
+            LIMIT 1
         """;
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -186,8 +202,8 @@ public class PenaDAO {
         Pena p = new Pena();
         p.setIdPena(rs.getInt("id_pena"));
         p.setTipoPena(rs.getString("tipo_pena"));
-        p.setDataInicio(rs.getDate("data_inicio"));
-        p.setDataTermino(rs.getDate("data_termino"));
+        p.setDataInicio(SQLiteDateUtil.getDate(rs, "data_inicio"));
+        p.setDataTermino(SQLiteDateUtil.getDate(rs, "data_termino"));
         p.setDescricao(rs.getString("descricao"));
         p.setDiasSemanaEHorariosDisponivel(rs.getString("dias_semana_e_horarios_disponivel"));
         p.setAtividadesAcordadas(rs.getString("atividades_acordadas"));

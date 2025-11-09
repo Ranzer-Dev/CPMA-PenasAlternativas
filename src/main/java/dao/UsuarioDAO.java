@@ -11,6 +11,7 @@ import java.util.List;
 import database.ConnectionFactory;
 import model.Usuario;
 import util.SessaoUsuario;
+import util.SQLiteDateUtil;
 
 public class UsuarioDAO {
 
@@ -19,7 +20,9 @@ public class UsuarioDAO {
 
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, cpf);
+            // Normaliza o CPF removendo pontos e hífens para comparar
+            String cpfNormalizado = cpf != null ? cpf.replaceAll("[^0-9]", "") : "";
+            stmt.setString(1, cpfNormalizado);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
@@ -27,9 +30,10 @@ public class UsuarioDAO {
                 usuario.setIdUsuario(rs.getInt("id_usuario"));
                 usuario.setNome(rs.getString("nome"));
                 usuario.setCpf(rs.getString("cpf"));
+                usuario.setCodigo(rs.getString("codigo"));
                 usuario.setNacionalidade(rs.getString("nacionalidade"));
-                usuario.setDataNascimento(rs.getDate("data_nascimento"));
-                usuario.setCriadoEm(rs.getDate("data_cadastro"));
+                usuario.setDataNascimento(SQLiteDateUtil.getDate(rs, "data_nascimento"));
+                usuario.setCriadoEm(SQLiteDateUtil.getDate(rs, "criado_em"));
                 usuario.setFoto(rs.getString("foto"));
                 usuario.setEndereco(rs.getString("endereco"));
                 usuario.setBairro(rs.getString("bairro"));
@@ -61,9 +65,10 @@ public class UsuarioDAO {
                 usuario.setIdUsuario(rs.getInt("id_usuario"));
                 usuario.setNome(rs.getString("nome"));
                 usuario.setCpf(rs.getString("cpf"));
+                usuario.setCodigo(rs.getString("codigo"));
                 usuario.setNacionalidade(rs.getString("nacionalidade"));
-                usuario.setDataNascimento(rs.getDate("data_nascimento"));
-                usuario.setCriadoEm(rs.getDate("data_cadastro"));
+                usuario.setDataNascimento(SQLiteDateUtil.getDate(rs, "data_nascimento"));
+                usuario.setCriadoEm(SQLiteDateUtil.getDate(rs, "criado_em"));
                 usuario.setFoto(rs.getString("foto"));
                 usuario.setEndereco(rs.getString("endereco"));
                 usuario.setBairro(rs.getString("bairro"));
@@ -87,14 +92,18 @@ public class UsuarioDAO {
                 + "endereco, bairro, cidade, uf, observacao, foto, fk_Administrador_id_admin, telefone, cep, codigo) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             usuario.setFkAdministradorIdAdmin(SessaoUsuario.getAdminLogado().getIdAdministrador());
 
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getCpf());
             stmt.setString(3, usuario.getNacionalidade());
-            stmt.setDate(4, new java.sql.Date(usuario.getDataNascimento().getTime()));
+            if (usuario.getDataNascimento() != null) {
+                stmt.setString(4, new java.sql.Date(usuario.getDataNascimento().getTime()).toString());
+            } else {
+                stmt.setNull(4, java.sql.Types.DATE);
+            }
             stmt.setString(5, usuario.getEndereco());
             stmt.setString(6, usuario.getBairro());
             stmt.setString(7, usuario.getCidade());
@@ -108,13 +117,16 @@ public class UsuarioDAO {
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
+                try (Statement stmt2 = conn.createStatement();
+                     ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
                     if (rs.next()) {
                         return rs.getInt(1);
                     }
                 }
             }
         } catch (SQLException e) {
+            System.err.println("Erro ao inserir usuário:");
             e.printStackTrace();
         }
         return -1;
@@ -129,7 +141,11 @@ public class UsuarioDAO {
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getCpf());
             stmt.setString(3, usuario.getNacionalidade());
-            stmt.setDate(4, new java.sql.Date(usuario.getDataNascimento().getTime()));
+            if (usuario.getDataNascimento() != null) {
+                stmt.setString(4, new java.sql.Date(usuario.getDataNascimento().getTime()).toString());
+            } else {
+                stmt.setNull(4, java.sql.Types.DATE);
+            }
             stmt.setString(5, usuario.getEndereco());
             stmt.setString(6, usuario.getBairro());
             stmt.setString(7, usuario.getCidade());
@@ -152,7 +168,7 @@ public class UsuarioDAO {
 
     public static List<Usuario> buscarTodosUsuarios() {
         List<Usuario> lista = new ArrayList<>();
-        String sql = "SELECT * FROM usuario";
+        String sql = "SELECT * FROM Usuario";
 
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
@@ -162,13 +178,13 @@ public class UsuarioDAO {
                 u.setFkAdministradorIdAdmin(rs.getInt("fk_administrador_id_admin"));
                 u.setNome(rs.getString("nome"));
                 u.setCpf(rs.getString("cpf"));
-                u.setDataNascimento(rs.getDate("data_nascimento"));
+                u.setDataNascimento(SQLiteDateUtil.getDate(rs, "data_nascimento"));
                 u.setEndereco(rs.getString("endereco"));
                 u.setBairro(rs.getString("bairro"));
                 u.setCidade(rs.getString("cidade"));
                 u.setUf(rs.getString("uf"));
                 u.setNacionalidade(rs.getString("nacionalidade"));
-                u.setCriadoEm(rs.getDate("data_cadastro"));
+                u.setCriadoEm(SQLiteDateUtil.getDate(rs, "criado_em"));
                 u.setFoto(rs.getString("foto"));
                 u.setObservacao(rs.getString("observacao"));
                 u.setTelefone(rs.getString("telefone"));
