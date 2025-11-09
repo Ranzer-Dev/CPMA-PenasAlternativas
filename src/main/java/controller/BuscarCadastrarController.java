@@ -32,6 +32,8 @@ public class BuscarCadastrarController {
     private Button botaoBuscar;
     @FXML
     private Button btnInst, btnPena, btnPonto, btnUsuario;
+    @FXML
+    private Button botaoListar;
 
     @FXML
     private void initialize() {
@@ -77,6 +79,8 @@ public class BuscarCadastrarController {
         });
 
         botaoSair.setOnAction(e -> voltarParaLogin());
+        
+        botaoListar.setOnAction(e -> abrir("/com/mycompany/cpma/listarApenadosView.fxml", "Lista de Apenados"));
 
         btnUsuario.setOnAction(e
                 -> abrir("/com/mycompany/cpma/telaCadastroUsuario.fxml", "Cadastro de Usuário"));
