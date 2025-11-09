@@ -1,267 +1,113 @@
-USE [master]
-GO
-/****** Object:  Database [PENAS_ALTERNATIVAS]    Script Date: 27/08/2025 20:59:37 ******/
-CREATE DATABASE [PENAS_ALTERNATIVAS]
- WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET COMPATIBILITY_LEVEL = 160
-GO
-IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
-begin
-EXEC [PENAS_ALTERNATIVAS].[dbo].[sp_fulltext_database] @action = 'enable'
-end
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET ANSI_NULL_DEFAULT OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET ANSI_NULLS OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET ANSI_PADDING OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET ANSI_WARNINGS OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET ARITHABORT OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET AUTO_CLOSE OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET AUTO_SHRINK OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET AUTO_UPDATE_STATISTICS ON 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET CURSOR_CLOSE_ON_COMMIT OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET CURSOR_DEFAULT  GLOBAL 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET CONCAT_NULL_YIELDS_NULL OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET NUMERIC_ROUNDABORT OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET QUOTED_IDENTIFIER OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET RECURSIVE_TRIGGERS OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET  ENABLE_BROKER 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET DATE_CORRELATION_OPTIMIZATION OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET TRUSTWORTHY OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET ALLOW_SNAPSHOT_ISOLATION OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET PARAMETERIZATION SIMPLE 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET READ_COMMITTED_SNAPSHOT OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET HONOR_BROKER_PRIORITY OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET RECOVERY FULL 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET  MULTI_USER 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET PAGE_VERIFY CHECKSUM  
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET DB_CHAINING OFF 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET TARGET_RECOVERY_TIME = 60 SECONDS 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET DELAYED_DURABILITY = DISABLED 
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET ACCELERATED_DATABASE_RECOVERY = OFF  
-GO
-EXEC sys.sp_db_vardecimal_storage_format N'PENAS_ALTERNATIVAS', N'ON'
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET QUERY_STORE = ON
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_POLICY = (STALE_QUERY_THRESHOLD_DAYS = 30), DATA_FLUSH_INTERVAL_SECONDS = 900, INTERVAL_LENGTH_MINUTES = 60, MAX_STORAGE_SIZE_MB = 1000, QUERY_CAPTURE_MODE = AUTO, SIZE_BASED_CLEANUP_MODE = AUTO, MAX_PLANS_PER_QUERY = 200, WAIT_STATS_CAPTURE_MODE = ON)
-GO
-USE [PENAS_ALTERNATIVAS]
-GO
-/****** Object:  Table [dbo].[Administrador]    Script Date: 27/08/2025 20:59:37 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[Administrador](
-	[id_admin] [int] IDENTITY(1,1) NOT NULL,
-	[nome] [varchar](100) NOT NULL,
-	[cpf] [varchar](14) NOT NULL,
-	[senha] [varchar](100) NOT NULL,
-	[nivel_permissao] [int] NOT NULL,
-	[pergunta_secreta] [varchar](100) NULL,
-	[resposta_secreta] [varchar](100) NULL,
-	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
-PRIMARY KEY CLUSTERED 
-(
-	[id_admin] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-UNIQUE NONCLUSTERED 
-(
-	[cpf] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-/****** Object:  Table [dbo].[disponibilidade_instituicao]    Script Date: 27/08/2025 20:59:38 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[disponibilidade_instituicao](
-	[id_disponibilidade] [int] IDENTITY(1,1) NOT NULL,
-	[dia_semana] [varchar](10) NULL,
-	[hora_inicio_1] [time](7) NULL,
-	[hora_fim_1] [time](7) NULL,
-	[hora_inicio_2] [time](7) NULL,
-	[hora_fim_2] [time](7) NULL,
-	[fk_instituicao_id_instituicao] [int] NOT NULL,
-	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
-PRIMARY KEY CLUSTERED 
-(
-	[id_disponibilidade] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-/****** Object:  Table [dbo].[Instituicao]    Script Date: 27/08/2025 20:59:38 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[Instituicao](
-	[id_instituicao] [int] IDENTITY(1,1) NOT NULL,
-	[nome] [varchar](100) NOT NULL,
-	[endereco] [varchar](200) NULL,
-	[cidade] [varchar](100) NULL,
-	[uf] [char](2) NULL,
-	[bairro] [varchar](100) NULL,
-	[cep] [varchar](20) NULL,
-	[responsavel] [varchar](100) NULL,
-	[telefone] [varchar](20) NULL,
-	[tipo] [int] NOT NULL,
-	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
-PRIMARY KEY CLUSTERED 
-(
-	[id_instituicao] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-/****** Object:  Table [dbo].[Pena]    Script Date: 27/08/2025 20:59:38 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[Pena](
-	[id_pena] [int] IDENTITY(1,1) NOT NULL,
-	[tipo_pena] [varchar](100) NOT NULL,
-	[data_inicio] [date] NOT NULL,
-	[data_termino] [date] NULL,
-	[descricao] [text] NULL,
-	[dias_semana_e_horarios_disponivel] [varchar](500) NULL,
-	[atividades_acordadas] [text] NULL,
-	[horas_semanais] [int] NOT NULL,
-	[tempo_pena] [int] NOT NULL,
-	[horas_totais] [int] NOT NULL,
-	[fk_usuario_id_usuario] [int] NOT NULL,
-	[fk_instituicao_id_instituicao] [int] NOT NULL,
-	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
-PRIMARY KEY CLUSTERED 
-(
-	[id_pena] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
-/****** Object:  Table [dbo].[RegistroDeTrabalho]    Script Date: 27/08/2025 20:59:38 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[RegistroDeTrabalho](
-	[id_registro] [int] IDENTITY(1,1) NOT NULL,
-	[data_trabalho] [date] NOT NULL,
-	[horas_cumpridas] [int] NOT NULL,
-	[atividades] [text] NULL,
-	[horario_inicio] [time](7) NULL,
-	[horario_almoco] [time](7) NULL,
-	[horario_volta] [time](7) NULL,
-	[horario_saida] [time](7) NULL,
-	[fk_pena_id_pena] [int] NOT NULL,
-	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
-PRIMARY KEY CLUSTERED 
-(
-	[id_registro] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
-/****** Object:  Table [dbo].[tipoDeInstituição]    Script Date: 27/08/2025 20:59:38 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[tipoDeInstituição](
-	[id_tipo] [int] IDENTITY(1,1) NOT NULL,
-	[tipo] [varchar](20) NULL,
-	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
-PRIMARY KEY CLUSTERED 
-(
-	[id_tipo] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-/****** Object:  Table [dbo].[Usuario]    Script Date: 27/08/2025 20:59:38 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[Usuario](
-	[id_usuario] [int] IDENTITY(1,1) NOT NULL,
-	[codigo] [varchar](30) NOT NULL,
-	[nome] [varchar](100) NOT NULL,
-	[cpf] [varchar](14) NOT NULL,
-	[data_nascimento] [date] NULL,
-	[endereco] [varchar](200) NULL,
-	[bairro] [varchar](100) NULL,
-	[cidade] [varchar](100) NULL,
-	[cep] [varchar](20) NULL,
-	[uf] [char](2) NULL,
-	[nacionalidade] [varchar](50) NULL,
-	[criado_em] [datetime] NOT NULL DEFAULT GETDATE(),
-	[foto] [varchar](200) NULL,
-	[observacao] [text] NULL,
-	[telefone] [varchar](20) NULL,
-	[fk_administrador_id_admin] [int] NOT NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[id_usuario] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-UNIQUE NONCLUSTERED 
-(
-	[cpf] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
-ALTER TABLE [dbo].[disponibilidade_instituicao]  WITH CHECK ADD FOREIGN KEY([fk_instituicao_id_instituicao])
-REFERENCES [dbo].[Instituicao] ([id_instituicao])
-GO
-ALTER TABLE [dbo].[Instituicao]  WITH CHECK ADD FOREIGN KEY([tipo])
-REFERENCES [dbo].[tipoDeInstituição] ([id_tipo])
-GO
-ALTER TABLE [dbo].[Pena]  WITH CHECK ADD FOREIGN KEY([fk_instituicao_id_instituicao])
-REFERENCES [dbo].[Instituicao] ([id_instituicao])
-GO
-ALTER TABLE [dbo].[Pena]  WITH CHECK ADD FOREIGN KEY([fk_usuario_id_usuario])
-REFERENCES [dbo].[Usuario] ([id_usuario])
-GO
-ALTER TABLE [dbo].[RegistroDeTrabalho]  WITH CHECK ADD  CONSTRAINT [FK_RegistroDeTrabalho_Pena] FOREIGN KEY([fk_pena_id_pena])
-REFERENCES [dbo].[Pena] ([id_pena])
-ON DELETE CASCADE
-GO
-ALTER TABLE [dbo].[RegistroDeTrabalho] CHECK CONSTRAINT [FK_RegistroDeTrabalho_Pena]
-GO
-ALTER TABLE [dbo].[Usuario]  WITH CHECK ADD FOREIGN KEY([fk_administrador_id_admin])
-REFERENCES [dbo].[Administrador] ([id_admin])
-GO
-USE [master]
-GO
-ALTER DATABASE [PENAS_ALTERNATIVAS] SET  READ_WRITE 
-GO
+-- Script SQLite para criação do banco de dados PENAS_ALTERNATIVAS
+-- Execute este script usando: sqlite3 penas_alternativas.db < penas-alternativas.sql
+
+-- Tabela Administrador
+CREATE TABLE IF NOT EXISTS Administrador (
+    id_admin INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    cpf TEXT NOT NULL UNIQUE,
+    senha TEXT NOT NULL,
+    nivel_permissao INTEGER NOT NULL,
+    pergunta_secreta TEXT,
+    resposta_secreta TEXT,
+    criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Tabela tipoDeInstituição
+CREATE TABLE IF NOT EXISTS tipoDeInstituição (
+    id_tipo INTEGER PRIMARY KEY AUTOINCREMENT,
+    tipo TEXT,
+    criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Tabela Instituicao
+CREATE TABLE IF NOT EXISTS Instituicao (
+    id_instituicao INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    endereco TEXT,
+    cidade TEXT,
+    uf TEXT,
+    bairro TEXT,
+    cep TEXT,
+    responsavel TEXT,
+    telefone TEXT,
+    tipo INTEGER NOT NULL,
+    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (tipo) REFERENCES tipoDeInstituição(id_tipo)
+);
+
+-- Tabela Usuario
+CREATE TABLE IF NOT EXISTS Usuario (
+    id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo TEXT NOT NULL,
+    nome TEXT NOT NULL,
+    cpf TEXT NOT NULL UNIQUE,
+    data_nascimento TEXT,
+    endereco TEXT,
+    bairro TEXT,
+    cidade TEXT,
+    cep TEXT,
+    uf TEXT,
+    nacionalidade TEXT,
+    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    foto TEXT,
+    observacao TEXT,
+    telefone TEXT,
+    fk_administrador_id_admin INTEGER NOT NULL,
+    FOREIGN KEY (fk_administrador_id_admin) REFERENCES Administrador(id_admin)
+);
+
+-- Tabela Pena
+CREATE TABLE IF NOT EXISTS Pena (
+    id_pena INTEGER PRIMARY KEY AUTOINCREMENT,
+    tipo_pena TEXT NOT NULL,
+    data_inicio TEXT NOT NULL,
+    data_termino TEXT,
+    descricao TEXT,
+    dias_semana_e_horarios_disponivel TEXT,
+    atividades_acordadas TEXT,
+    horas_semanais INTEGER NOT NULL,
+    tempo_pena INTEGER NOT NULL,
+    horas_totais INTEGER NOT NULL,
+    fk_usuario_id_usuario INTEGER NOT NULL,
+    fk_instituicao_id_instituicao INTEGER NOT NULL,
+    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (fk_usuario_id_usuario) REFERENCES Usuario(id_usuario),
+    FOREIGN KEY (fk_instituicao_id_instituicao) REFERENCES Instituicao(id_instituicao)
+);
+
+-- Tabela RegistroDeTrabalho
+CREATE TABLE IF NOT EXISTS RegistroDeTrabalho (
+    id_registro INTEGER PRIMARY KEY AUTOINCREMENT,
+    data_trabalho TEXT NOT NULL,
+    horas_cumpridas INTEGER NOT NULL,
+    atividades TEXT,
+    horario_inicio TEXT,
+    horario_almoco TEXT,
+    horario_volta TEXT,
+    horario_saida TEXT,
+    fk_pena_id_pena INTEGER NOT NULL,
+    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (fk_pena_id_pena) REFERENCES Pena(id_pena) ON DELETE CASCADE
+);
+
+-- Tabela disponibilidade_instituicao
+CREATE TABLE IF NOT EXISTS disponibilidade_instituicao (
+    id_disponibilidade INTEGER PRIMARY KEY AUTOINCREMENT,
+    dia_semana TEXT,
+    hora_inicio_1 TEXT,
+    hora_fim_1 TEXT,
+    hora_inicio_2 TEXT,
+    hora_fim_2 TEXT,
+    fk_instituicao_id_instituicao INTEGER NOT NULL,
+    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (fk_instituicao_id_instituicao) REFERENCES Instituicao(id_instituicao)
+);
+
+-- Criar índices para melhor performance
+CREATE INDEX IF NOT EXISTS idx_usuario_cpf ON Usuario(cpf);
+CREATE INDEX IF NOT EXISTS idx_administrador_cpf ON Administrador(cpf);
+CREATE INDEX IF NOT EXISTS idx_pena_usuario ON Pena(fk_usuario_id_usuario);
+CREATE INDEX IF NOT EXISTS idx_pena_instituicao ON Pena(fk_instituicao_id_instituicao);
+CREATE INDEX IF NOT EXISTS idx_registro_pena ON RegistroDeTrabalho(fk_pena_id_pena);
+CREATE INDEX IF NOT EXISTS idx_disponibilidade_instituicao ON disponibilidade_instituicao(fk_instituicao_id_instituicao);

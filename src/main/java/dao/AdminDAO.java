@@ -12,14 +12,15 @@ public class AdminDAO {
 
     public Administrador buscarPorCpf(String cpf) {
         Administrador admin = null;
-        String sql = "SELECT * FROM administrador WHERE cpf = ?";
+        String sql = "SELECT * FROM Administrador WHERE cpf = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            cpf = cpf.replaceAll("[^\\d]", "");
+            // Normaliza o CPF removendo pontos e hífens para comparar
+            String cpfNormalizado = cpf != null ? cpf.replaceAll("[^0-9]", "") : "";
 
-            stmt.setString(1, cpf);
+            stmt.setString(1, cpfNormalizado);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
@@ -45,14 +46,16 @@ public class AdminDAO {
 
 
     public boolean alterarSenhaPorCpf(String cpf, String novaSenha) {
-        String sql = "UPDATE administrador SET senha = ? WHERE cpf = ?";
+        String sql = "UPDATE Administrador SET senha = ? WHERE cpf = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
+            // Normaliza o CPF removendo pontos e hífens
+            String cpfNormalizado = cpf != null ? cpf.replaceAll("[^0-9]", "") : "";
             String hashSenha = HashUtil.gerarHash(novaSenha);
             stmt.setString(1, hashSenha);
-            stmt.setString(2, cpf);
+            stmt.setString(2, cpfNormalizado);
 
             int linhasAfetadas = stmt.executeUpdate();
             return linhasAfetadas > 0;

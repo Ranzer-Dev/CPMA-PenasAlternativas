@@ -12,14 +12,9 @@ import java.util.List;
 import database.ConnectionFactory;
 import model.DadosFaciais;
 import model.Usuario;
+import util.SQLiteDateUtil;
 
 public class DadosFaciaisDAO {
-
-    private final ConnectionFactory connectionFactory;
-
-    public DadosFaciaisDAO() {
-        this.connectionFactory = new ConnectionFactory();
-    }
 
     /**
      * Cadastra novos dados faciais para um usuário
@@ -27,26 +22,38 @@ public class DadosFaciaisDAO {
     public boolean cadastrar(DadosFaciais dadosFaciais) {
         String sql = "INSERT INTO DadosFaciais (fk_usuario_id_usuario, imagem_rosto, descritores_faciais, data_cadastro, data_atualizacao, ativo) VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, dadosFaciais.getFkUsuarioIdUsuario());
             stmt.setBlob(2, dadosFaciais.getImagemRosto());
             stmt.setString(3, dadosFaciais.getDescritoresFaciais());
-            stmt.setDate(4, dadosFaciais.getCriadoEm());
-            stmt.setDate(5, dadosFaciais.getDataAtualizacao());
+            if (dadosFaciais.getCriadoEm() != null) {
+                stmt.setString(4, dadosFaciais.getCriadoEm().toString());
+            } else {
+                stmt.setNull(4, java.sql.Types.DATE);
+            }
+            if (dadosFaciais.getDataAtualizacao() != null) {
+                stmt.setString(5, dadosFaciais.getDataAtualizacao().toString());
+            } else {
+                stmt.setNull(5, java.sql.Types.DATE);
+            }
             stmt.setBoolean(6, dadosFaciais.isAtivo());
 
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                ResultSet rs = stmt.getGeneratedKeys();
-                if (rs.next()) {
-                    dadosFaciais.setIdDadosFaciais(rs.getInt(1));
+                // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
+                try (Statement stmt2 = conn.createStatement();
+                     ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
+                    if (rs.next()) {
+                        dadosFaciais.setIdDadosFaciais(rs.getInt(1));
+                    }
                 }
                 return true;
             }
 
         } catch (SQLException e) {
+            System.err.println("Erro ao cadastrar dados faciais:");
             e.printStackTrace();
         }
 
@@ -59,11 +66,11 @@ public class DadosFaciaisDAO {
     public boolean atualizar(DadosFaciais dadosFaciais) {
         String sql = "UPDATE DadosFaciais SET imagem_rosto = ?, descritores_faciais = ?, data_atualizacao = ? WHERE id_dados_faciais = ?";
 
-        try (Connection conn = connectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setBlob(1, dadosFaciais.getImagemRosto());
             stmt.setString(2, dadosFaciais.getDescritoresFaciais());
-            stmt.setDate(3, new Date(System.currentTimeMillis()));
+            stmt.setString(3, new Date(System.currentTimeMillis()).toString());
             stmt.setInt(4, dadosFaciais.getIdDadosFaciais());
 
             return stmt.executeUpdate() > 0;
@@ -81,7 +88,7 @@ public class DadosFaciaisDAO {
     public DadosFaciais buscarPorUsuario(int idUsuario) {
         String sql = "SELECT * FROM DadosFaciais WHERE fk_usuario_id_usuario = ? AND ativo = 1";
 
-        try (Connection conn = connectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, idUsuario);
             ResultSet rs = stmt.executeQuery();
@@ -105,7 +112,7 @@ public class DadosFaciaisDAO {
                 + "INNER JOIN DadosFaciais df ON u.id_usuario = df.fk_usuario_id_usuario "
                 + "WHERE df.ativo = 1";
 
-        try (Connection conn = connectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             ResultSet rs = stmt.executeQuery();
 
@@ -132,7 +139,7 @@ public class DadosFaciaisDAO {
         String sql = "SELECT * FROM DadosFaciais WHERE ativo = 1 ORDER BY data_cadastro DESC";
         List<DadosFaciais> lista = new ArrayList<>();
 
-        try (Connection conn = connectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 lista.add(mapearResultSet(rs));
@@ -151,9 +158,9 @@ public class DadosFaciaisDAO {
     public boolean desativar(int idDadosFaciais) {
         String sql = "UPDATE DadosFaciais SET ativo = 0, data_atualizacao = ? WHERE id_dados_faciais = ?";
 
-        try (Connection conn = connectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setDate(1, new Date(System.currentTimeMillis()));
+            stmt.setString(1, new Date(System.currentTimeMillis()).toString());
             stmt.setInt(2, idDadosFaciais);
 
             return stmt.executeUpdate() > 0;
@@ -174,8 +181,8 @@ public class DadosFaciaisDAO {
         dadosFaciais.setFkUsuarioIdUsuario(rs.getInt("fk_usuario_id_usuario"));
         dadosFaciais.setImagemRosto(rs.getBlob("imagem_rosto"));
         dadosFaciais.setDescritoresFaciais(rs.getString("descritores_faciais"));
-        dadosFaciais.setCriadoEm(rs.getDate("data_cadastro"));
-        dadosFaciais.setDataAtualizacao(rs.getDate("data_atualizacao"));
+        dadosFaciais.setCriadoEm(SQLiteDateUtil.getDate(rs, "data_cadastro"));
+        dadosFaciais.setDataAtualizacao(SQLiteDateUtil.getDate(rs, "data_atualizacao"));
         dadosFaciais.setAtivo(rs.getBoolean("ativo"));
         return dadosFaciais;
     }
@@ -188,7 +195,7 @@ public class DadosFaciaisDAO {
         usuario.setIdUsuario(rs.getInt("id_usuario"));
         usuario.setNome(rs.getString("nome"));
         usuario.setCpf(rs.getString("cpf"));
-        usuario.setDataNascimento(rs.getDate("data_nascimento"));
+        usuario.setDataNascimento(SQLiteDateUtil.getDate(rs, "data_nascimento"));
         usuario.setEndereco(rs.getString("endereco"));
         usuario.setCidade(rs.getString("cidade"));
         usuario.setUf(rs.getString("uf"));
@@ -196,7 +203,7 @@ public class DadosFaciaisDAO {
         usuario.setCep(rs.getString("cep"));
         usuario.setTelefone(rs.getString("telefone"));
         usuario.setNacionalidade(rs.getString("nacionalidade"));
-        usuario.setCriadoEm(rs.getDate("data_cadastro"));
+        usuario.setCriadoEm(SQLiteDateUtil.getDate(rs, "criado_em"));
         usuario.setFoto(rs.getString("foto"));
         usuario.setObservacao(rs.getString("observacao"));
         return usuario;
