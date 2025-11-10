@@ -248,4 +248,18 @@ public class UsuarioDAO {
         }
         return false;
     }
+
+    public static boolean deletar(int idUsuario) {
+        String sql = "DELETE FROM Usuario WHERE id_usuario = ?";
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idUsuario);
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

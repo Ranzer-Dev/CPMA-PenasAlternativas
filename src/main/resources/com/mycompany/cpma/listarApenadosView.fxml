@@ -54,11 +54,12 @@
                             <children>
                                 <TableView fx:id="tabelaApenados" styleClass="responsive-table" VBox.vgrow="ALWAYS">
                                     <columns>
-                                        <TableColumn fx:id="colNome" prefWidth="300.0" minWidth="200.0" text="👤 Nome" />
-                                        <TableColumn fx:id="colCpf" prefWidth="180.0" minWidth="150.0" text="🆔 CPF" />
-                                        <TableColumn fx:id="colDataNasc" prefWidth="150.0" minWidth="120.0" text="📅 Data de Nascimento" />
-                                        <TableColumn fx:id="colCidade" prefWidth="200.0" minWidth="150.0" text="🏙️ Cidade" />
-                                        <TableColumn fx:id="colUf" prefWidth="80.0" minWidth="60.0" text="🗺️ UF" />
+                                        <TableColumn fx:id="colNome" prefWidth="250.0" minWidth="200.0" text="👤 Nome" />
+                                        <TableColumn fx:id="colCpf" prefWidth="150.0" minWidth="120.0" text="🆔 CPF" />
+                                        <TableColumn fx:id="colDataNasc" prefWidth="130.0" minWidth="100.0" text="📅 Data de Nascimento" />
+                                        <TableColumn fx:id="colCidade" prefWidth="150.0" minWidth="120.0" text="🏙️ Cidade" />
+                                        <TableColumn fx:id="colUf" prefWidth="60.0" minWidth="50.0" text="🗺️ UF" />
+                                        <TableColumn fx:id="colAcoes" prefWidth="150.0" minWidth="120.0" text="⚙️ Ações" />
                                     </columns>
                                 </TableView>
                                 <Label fx:id="labelTotal" text="Total: 0 apenados" styleClass="label-secondary" />

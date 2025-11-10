@@ -98,7 +98,7 @@
                                                 <HBox alignment="CENTER" spacing="6.0">
                                                     <children>
                                                         <Button fx:id="btnUsuario" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-success-small responsive-card-button" text="➕ Novo" />
-                                                        <Button fx:id="btnEditarUsuario" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-secondary-small responsive-card-button" text="✏️ Editar" />
+                                                        <Button fx:id="btnEditarUsuario" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-secondary-small responsive-card-button" text="✏️ Listar" />
                                                     </children>
                                                 </HBox>
                                             </children>
@@ -120,7 +120,7 @@
                                                 <HBox alignment="CENTER" spacing="6.0">
                                                     <children>
                                                         <Button fx:id="btnInst" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-success-small responsive-card-button" text="➕ Novo" />
-                                                        <Button fx:id="btnEditarInst" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-secondary-small responsive-card-button" text="✏️ Editar" />
+                                                        <Button fx:id="btnEditarInst" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-secondary-small responsive-card-button" text="✏️ Listar" />
                                                     </children>
                                                 </HBox>
                                             </children>
@@ -142,7 +142,7 @@
                                                 <HBox alignment="CENTER" spacing="6.0">
                                                     <children>
                                                         <Button fx:id="btnPena" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-success-small responsive-card-button" text="➕ Novo" />
-                                                        <Button fx:id="btnEditarPena" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-secondary-small responsive-card-button" text="✏️ Editar" />
+                                                        <Button fx:id="btnEditarPena" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-secondary-small responsive-card-button" text="✏️ Listar" />
                                                     </children>
                                                 </HBox>
                                             </children>
@@ -164,7 +164,7 @@
                                                 <HBox alignment="CENTER" spacing="6.0">
                                                     <children>
                                                         <Button fx:id="btnPonto" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-success-small responsive-card-button" text="➕ Novo" />
-                                                        <Button fx:id="btnEditarPonto" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-secondary-small responsive-card-button" text="✏️ Editar" />
+                                                        <Button fx:id="btnEditarPonto" mnemonicParsing="false" prefHeight="32.0" minWidth="80.0" styleClass="btn-secondary-small responsive-card-button" text="✏️ Listar" />
                                                     </children>
                                                 </HBox>
                                             </children>
