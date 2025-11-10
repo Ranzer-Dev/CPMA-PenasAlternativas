@@ -14,9 +14,14 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.TableCell;
+import javafx.scene.layout.HBox;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.MouseEvent;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.animation.PauseTransition;
@@ -40,6 +45,8 @@ public class ListarApenadosController {
     private TableColumn<Usuario, String> colCidade;
     @FXML
     private TableColumn<Usuario, String> colUf;
+    @FXML
+    private TableColumn<Usuario, String> colAcoes;
     @FXML
     private TextField campoFiltro;
     @FXML
@@ -98,6 +105,34 @@ public class ListarApenadosController {
         
         colCidade.setCellValueFactory(new PropertyValueFactory<>("cidade"));
         colUf.setCellValueFactory(new PropertyValueFactory<>("uf"));
+        
+        // Configura coluna de ações com botões Editar e Excluir
+        colAcoes.setCellFactory(column -> new TableCell<Usuario, String>() {
+            private final Button btnEditar = new Button("Editar");
+            private final Button btnExcluir = new Button("Excluir");
+
+            {
+                btnEditar.setOnAction(e -> {
+                    Usuario usuario = getTableView().getItems().get(getIndex());
+                    editarApenado(usuario);
+                });
+                btnExcluir.setOnAction(e -> {
+                    Usuario usuario = getTableView().getItems().get(getIndex());
+                    excluirApenado(usuario);
+                });
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    HBox hbox = new HBox(5, btnEditar, btnExcluir);
+                    setGraphic(hbox);
+                }
+            }
+        });
     }
 
     private void carregarApenados() {
@@ -241,6 +276,42 @@ public class ListarApenadosController {
     private void fechar() {
         Stage stage = (Stage) botaoFechar.getScene().getWindow();
         stage.close();
+    }
+
+    private void editarApenado(Usuario usuario) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/telaCadastroUsuario.fxml"));
+            Parent root = loader.load();
+            CadastrarUsuarioController controller = loader.getController();
+            controller.carregarUsuarioParaEdicao(usuario);
+            
+            Stage stage = new Stage();
+            stage.setTitle("Editar Apenado");
+            stage.setScene(new Scene(root));
+            stage.show();
+            
+            // Atualizar lista após edição
+            stage.setOnCloseRequest(e -> carregarApenados());
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro", "Erro ao abrir tela de edição: " + e.getMessage());
+        }
+    }
+
+    private void excluirApenado(Usuario usuario) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirmar Exclusão");
+        confirm.setHeaderText("Excluir Apenado");
+        confirm.setContentText("Deseja realmente excluir o apenado " + usuario.getNome() + "?");
+        
+        if (confirm.showAndWait().get() == ButtonType.OK) {
+            if (UsuarioDAO.deletar(usuario.getIdUsuario())) {
+                mostrarAlerta("Sucesso", "Apenado excluído com sucesso!");
+                carregarApenados();
+            } else {
+                mostrarAlerta("Erro", "Erro ao excluir apenado.");
+            }
+        }
     }
 
     private void mostrarAlerta(String titulo, String mensagem) {

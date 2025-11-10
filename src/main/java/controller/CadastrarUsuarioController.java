@@ -714,6 +714,12 @@ public class CadastrarUsuarioController {
         return true;
     }
 
+    public void carregarUsuarioParaEdicao(Usuario u) {
+        modoEdicao = true;
+        btnCadastrar.setText("Salvar Alterações");
+        preencherCamposComUsuario(u);
+    }
+
     private void preencherCamposComUsuario(Usuario u) {
         usuarioEditando = u;
         nome.setText(u.getNome());
