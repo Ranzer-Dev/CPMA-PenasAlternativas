@@ -25,19 +25,29 @@ public class DadosFaciaisDAO {
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, dadosFaciais.getFkUsuarioIdUsuario());
-            stmt.setBlob(2, dadosFaciais.getImagemRosto());
-            stmt.setString(3, dadosFaciais.getDescritoresFaciais());
+            
+            // SQLite: se o blob for null, usar setNull, senão usar setBlob
+            if (dadosFaciais.getImagemRosto() != null) {
+                stmt.setBlob(2, dadosFaciais.getImagemRosto());
+            } else {
+                stmt.setNull(2, java.sql.Types.BLOB);
+            }
+            
+            stmt.setString(3, dadosFaciais.getDescritoresFaciais() != null ? dadosFaciais.getDescritoresFaciais() : "");
+            
             if (dadosFaciais.getCriadoEm() != null) {
                 stmt.setString(4, dadosFaciais.getCriadoEm().toString());
             } else {
                 stmt.setNull(4, java.sql.Types.DATE);
             }
+            
             if (dadosFaciais.getDataAtualizacao() != null) {
                 stmt.setString(5, dadosFaciais.getDataAtualizacao().toString());
             } else {
                 stmt.setNull(5, java.sql.Types.DATE);
             }
-            stmt.setBoolean(6, dadosFaciais.isAtivo());
+            
+            stmt.setInt(6, dadosFaciais.isAtivo() ? 1 : 0); // SQLite usa INTEGER para boolean
 
             int rowsAffected = stmt.executeUpdate();
 
@@ -68,8 +78,14 @@ public class DadosFaciaisDAO {
 
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setBlob(1, dadosFaciais.getImagemRosto());
-            stmt.setString(2, dadosFaciais.getDescritoresFaciais());
+            // SQLite: se o blob for null, usar setNull, senão usar setBlob
+            if (dadosFaciais.getImagemRosto() != null) {
+                stmt.setBlob(1, dadosFaciais.getImagemRosto());
+            } else {
+                stmt.setNull(1, java.sql.Types.BLOB);
+            }
+            
+            stmt.setString(2, dadosFaciais.getDescritoresFaciais() != null ? dadosFaciais.getDescritoresFaciais() : "");
             stmt.setString(3, new Date(System.currentTimeMillis()).toString());
             stmt.setInt(4, dadosFaciais.getIdDadosFaciais());
 
@@ -179,11 +195,19 @@ public class DadosFaciaisDAO {
         DadosFaciais dadosFaciais = new DadosFaciais();
         dadosFaciais.setIdDadosFaciais(rs.getInt("id_dados_faciais"));
         dadosFaciais.setFkUsuarioIdUsuario(rs.getInt("fk_usuario_id_usuario"));
-        dadosFaciais.setImagemRosto(rs.getBlob("imagem_rosto"));
+        
+        // Lê o blob (pode ser null)
+        java.sql.Blob blob = rs.getBlob("imagem_rosto");
+        dadosFaciais.setImagemRosto(blob);
+        
         dadosFaciais.setDescritoresFaciais(rs.getString("descritores_faciais"));
         dadosFaciais.setCriadoEm(SQLiteDateUtil.getDate(rs, "data_cadastro"));
         dadosFaciais.setDataAtualizacao(SQLiteDateUtil.getDate(rs, "data_atualizacao"));
-        dadosFaciais.setAtivo(rs.getBoolean("ativo"));
+        
+        // SQLite usa INTEGER (1 ou 0) para boolean
+        int ativoInt = rs.getInt("ativo");
+        dadosFaciais.setAtivo(ativoInt == 1);
+        
         return dadosFaciais;
     }
 
