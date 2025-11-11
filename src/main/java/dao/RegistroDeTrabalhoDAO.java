@@ -165,7 +165,7 @@ public class RegistroDeTrabalhoDAO {
                 registro.setIdRegistro(rs.getInt("id_registro"));
                 registro.setFkPenaId(rs.getInt("fk_pena_id_pena"));
                 registro.setDataTrabalho(SQLiteDateUtil.getDate(rs, "data_trabalho"));
-                registro.setHorasCumpridas(rs.getInt("horas_cumpridas"));
+                registro.setHorasCumpridas(rs.getDouble("horas_cumpridas"));
                 registro.setAtividades(rs.getString("atividades"));
                 registro.setHorarioInicio(SQLiteTimeUtil.getTime(rs, "horario_inicio"));
                 registro.setHorarioAlmoco(SQLiteTimeUtil.getTime(rs, "horario_almoco"));
@@ -190,7 +190,7 @@ public class RegistroDeTrabalhoDAO {
                 registro.setIdRegistro(rs.getInt("id_registro"));
                 registro.setFkPenaId(rs.getInt("fk_pena_id_pena"));
                 registro.setDataTrabalho(SQLiteDateUtil.getDate(rs, "data_trabalho"));
-                registro.setHorasCumpridas(rs.getInt("horas_cumpridas"));
+                registro.setHorasCumpridas(rs.getDouble("horas_cumpridas"));
                 registro.setAtividades(rs.getString("atividades"));
                 registro.setHorarioInicio(SQLiteTimeUtil.getTime(rs, "horario_inicio"));
                 registro.setHorarioAlmoco(SQLiteTimeUtil.getTime(rs, "horario_almoco"));

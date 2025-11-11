@@ -159,6 +159,18 @@ public class CadastrarInstituicaoController {
         });
     }
 
+    public void carregarInstituicaoParaEdicao(Instituicao instituicao) {
+        modoEdicao = true;
+        btnCadastrar.setText("Salvar alterações");
+        
+        // Não mostra o combobox, carrega diretamente a instituição
+        comboInstituicoes.setVisible(false);
+        
+        if (instituicao != null) {
+            preencherCampos(instituicao);
+        }
+    }
+
     private void carregarInstituicoesNaComboBox() {
         List<Instituicao> lista = InstituicaoDAO.buscarTodasInstituicoes();
         comboInstituicoes.setItems(FXCollections.observableArrayList(lista));
