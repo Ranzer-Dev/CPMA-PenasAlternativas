@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS Pena (
 CREATE TABLE IF NOT EXISTS RegistroDeTrabalho (
     id_registro INTEGER PRIMARY KEY AUTOINCREMENT,
     data_trabalho TEXT NOT NULL,
-    horas_cumpridas INTEGER NOT NULL,
+    horas_cumpridas REAL NOT NULL,
     atividades TEXT,
     horario_inicio TEXT,
     horario_almoco TEXT,

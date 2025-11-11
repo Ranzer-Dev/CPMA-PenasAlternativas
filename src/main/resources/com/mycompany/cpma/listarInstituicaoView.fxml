@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<StackPane xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ListarInstituicaoController">
+    <children>
+        <AnchorPane styleClass="main-container">
+            <children>
+                <!-- Container principal com card responsivo -->
+                <VBox alignment="TOP_CENTER" styleClass="content-card" spacing="20.0" AnchorPane.topAnchor="20.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0">
+                    <children>
+                        <!-- Cabeçalho -->
+                        <VBox alignment="CENTER" spacing="8.0">
+                            <children>
+                                <Text fill="#2563eb" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI Bold" size="36.0" />
+                                    </font>
+                                </Text>
+                                <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Lista de Instituições" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI Bold" size="26.0" />
+                                    </font>
+                                </Text>
+                                <Text fill="#64748b" strokeType="OUTSIDE" strokeWidth="0.0" text="Duplo clique nas células de Nome ou Telefone para copiar | Ou use os botões abaixo" textAlignment="CENTER">
+                                    <font>
+                                        <Font name="Segoe UI" size="11.0" />
+                                    </font>
+                                </Text>
+                            </children>
+                        </VBox>
+                        
+                        <!-- Campo de busca/filtro -->
+                        <VBox spacing="10.0" maxWidth="600.0">
+                            <children>
+                                <Label text="🔍 Buscar por Nome, Cidade ou Telefone" styleClass="label-primary" />
+                                <TextField fx:id="campoFiltro" promptText="Digite para filtrar a lista..." styleClass="input-field responsive-input" maxWidth="600.0" prefHeight="40.0" />
+                            </children>
+                        </VBox>
+                        
+                        <!-- Tabela de instituições -->
+                        <VBox spacing="10.0" VBox.vgrow="ALWAYS">
+                            <children>
+                                <TableView fx:id="tabelaInstituicoes" styleClass="responsive-table" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colNome" prefWidth="250.0" minWidth="200.0" text="🏢 Nome" />
+                                        <TableColumn fx:id="colCidade" prefWidth="150.0" minWidth="120.0" text="🏙️ Cidade" />
+                                        <TableColumn fx:id="colUf" prefWidth="60.0" minWidth="50.0" text="🗺️ UF" />
+                                        <TableColumn fx:id="colResponsavel" prefWidth="180.0" minWidth="150.0" text="👤 Responsável" />
+                                        <TableColumn fx:id="colTelefone" prefWidth="150.0" minWidth="120.0" text="📞 Telefone" />
+                                        <TableColumn fx:id="colTipo" prefWidth="120.0" minWidth="100.0" text="🏷️ Tipo" />
+                                        <TableColumn fx:id="colAcoes" prefWidth="150.0" minWidth="120.0" text="⚙️ Ações" />
+                                    </columns>
+                                </TableView>
+                                <Label fx:id="labelTotal" text="Total: 0 instituições" styleClass="label-secondary" />
+                            </children>
+                        </VBox>
+                        
+                        <!-- Botões de ação -->
+                        <HBox alignment="CENTER" spacing="20.0">
+                            <children>
+                                <Button fx:id="botaoCopiarTelefone" mnemonicParsing="false" prefHeight="40.0" minWidth="150.0" styleClass="btn-secondary responsive-button" text="📋 Copiar Telefone Selecionado" />
+                                <Button fx:id="botaoCopiarNome" mnemonicParsing="false" prefHeight="40.0" minWidth="150.0" styleClass="btn-secondary responsive-button" text="📋 Copiar Nome Selecionado" />
+                                <Button fx:id="botaoFechar" mnemonicParsing="false" prefHeight="40.0" minWidth="120.0" styleClass="btn-danger responsive-button" text="✕ Fechar" />
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+                    </padding>
+                </VBox>
+            </children>
+        </AnchorPane>
+    </children>
+</StackPane>

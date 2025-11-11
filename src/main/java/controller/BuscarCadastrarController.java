@@ -98,7 +98,7 @@ public class BuscarCadastrarController {
                 -> abrir("/com/mycompany/cpma/listarApenadosView.fxml", "Lista de Apenados"));
 
         btnEditarInst.setOnAction(e
-                -> abrir("/com/mycompany/cpma/cadastroInstituicaoView.fxml", "Editar Instituição", true));
+                -> abrir("/com/mycompany/cpma/listarInstituicaoView.fxml", "Lista de Instituições"));
 
         btnEditarPena.setOnAction(e
                 -> abrir("/com/mycompany/cpma/cadastroPenaView.fxml", "Editar Pena", true));
