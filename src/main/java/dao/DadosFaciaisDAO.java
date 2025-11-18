@@ -16,8 +16,10 @@ import util.SQLiteDateUtil;
 
 public class DadosFaciaisDAO {
 
+
     /**
      * Cadastra novos dados faciais para um usuário
+     * Salva a imagem como BLOB no campo imagem_rosto e os embeddings (descritores_faciais)
      */
     public boolean cadastrar(DadosFaciais dadosFaciais) {
         String sql = "INSERT INTO DadosFaciais (fk_usuario_id_usuario, imagem_rosto, descritores_faciais, data_cadastro, data_atualizacao, ativo) VALUES (?, ?, ?, ?, ?, ?)";
@@ -26,11 +28,13 @@ public class DadosFaciaisDAO {
 
             stmt.setInt(1, dadosFaciais.getFkUsuarioIdUsuario());
             
-            // SQLite: se o blob for null, usar setNull, senão usar setBlob
-            if (dadosFaciais.getImagemRosto() != null) {
-                stmt.setBlob(2, dadosFaciais.getImagemRosto());
+            // Salva a imagem no banco como BLOB
+            if (dadosFaciais.getImagemRosto() != null && dadosFaciais.getImagemRosto().length > 0) {
+                stmt.setBytes(2, dadosFaciais.getImagemRosto());
+                System.out.println("  - Campo imagem_rosto: " + dadosFaciais.getImagemRosto().length + " bytes (BLOB)");
             } else {
                 stmt.setNull(2, java.sql.Types.BLOB);
+                System.out.println("  - Campo imagem_rosto: NULL (nenhuma imagem fornecida)");
             }
             
             stmt.setString(3, dadosFaciais.getDescritoresFaciais() != null ? dadosFaciais.getDescritoresFaciais() : "");
@@ -49,7 +53,9 @@ public class DadosFaciaisDAO {
             
             stmt.setInt(6, dadosFaciais.isAtivo() ? 1 : 0); // SQLite usa INTEGER para boolean
 
+            System.out.println("Executando INSERT na tabela DadosFaciais...");
             int rowsAffected = stmt.executeUpdate();
+            System.out.println("Rows affected: " + rowsAffected);
 
             if (rowsAffected > 0) {
                 // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
@@ -57,41 +63,55 @@ public class DadosFaciaisDAO {
                      ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
                     if (rs.next()) {
                         dadosFaciais.setIdDadosFaciais(rs.getInt(1));
+                        System.out.println("✅ Dados faciais cadastrados com ID: " + dadosFaciais.getIdDadosFaciais());
                     }
                 }
                 return true;
+            } else {
+                System.err.println("❌ Nenhuma linha foi afetada no INSERT");
             }
 
         } catch (SQLException e) {
-            System.err.println("Erro ao cadastrar dados faciais:");
+            System.err.println("❌ Erro ao cadastrar dados faciais:");
             e.printStackTrace();
         }
 
         return false;
     }
 
+
     /**
      * Atualiza dados faciais existentes
+     * Atualiza a imagem_rosto (BLOB) e os embeddings (descritores_faciais)
      */
     public boolean atualizar(DadosFaciais dadosFaciais) {
-        String sql = "UPDATE DadosFaciais SET imagem_rosto = ?, descritores_faciais = ?, data_atualizacao = ? WHERE id_dados_faciais = ?";
+        // Atualiza descritores_faciais, imagem_rosto e data_atualizacao
+        String sql = "UPDATE DadosFaciais SET descritores_faciais = ?, imagem_rosto = ?, data_atualizacao = ? WHERE id_dados_faciais = ?";
 
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            // SQLite: se o blob for null, usar setNull, senão usar setBlob
-            if (dadosFaciais.getImagemRosto() != null) {
-                stmt.setBlob(1, dadosFaciais.getImagemRosto());
+            stmt.setString(1, dadosFaciais.getDescritoresFaciais() != null ? dadosFaciais.getDescritoresFaciais() : "");
+            
+            // Atualiza a imagem no banco como BLOB
+            if (dadosFaciais.getImagemRosto() != null && dadosFaciais.getImagemRosto().length > 0) {
+                stmt.setBytes(2, dadosFaciais.getImagemRosto());
+                System.out.println("  - Campo imagem_rosto: " + dadosFaciais.getImagemRosto().length + " bytes (BLOB)");
             } else {
-                stmt.setNull(1, java.sql.Types.BLOB);
+                stmt.setNull(2, java.sql.Types.BLOB);
+                System.out.println("  - Campo imagem_rosto: NULL (nenhuma imagem fornecida)");
             }
             
-            stmt.setString(2, dadosFaciais.getDescritoresFaciais() != null ? dadosFaciais.getDescritoresFaciais() : "");
             stmt.setString(3, new Date(System.currentTimeMillis()).toString());
             stmt.setInt(4, dadosFaciais.getIdDadosFaciais());
 
-            return stmt.executeUpdate() > 0;
+            System.out.println("Executando UPDATE na tabela DadosFaciais (ID: " + dadosFaciais.getIdDadosFaciais() + ")...");
+            int rowsAffected = stmt.executeUpdate();
+            System.out.println("Rows affected: " + rowsAffected);
+
+            return rowsAffected > 0;
 
         } catch (SQLException e) {
+            System.err.println("❌ Erro ao atualizar dados faciais:");
             e.printStackTrace();
         }
 
@@ -196,9 +216,15 @@ public class DadosFaciaisDAO {
         dadosFaciais.setIdDadosFaciais(rs.getInt("id_dados_faciais"));
         dadosFaciais.setFkUsuarioIdUsuario(rs.getInt("fk_usuario_id_usuario"));
         
-        // Lê o blob (pode ser null)
-        java.sql.Blob blob = rs.getBlob("imagem_rosto");
-        dadosFaciais.setImagemRosto(blob);
+        // Lê os bytes do campo imagem_rosto (pode ser null)
+        byte[] bytes = rs.getBytes("imagem_rosto");
+        if (bytes != null && bytes.length > 0) {
+            dadosFaciais.setImagemRosto(bytes);
+            System.out.println("✅ Bytes lidos do banco: " + bytes.length + " bytes");
+        } else {
+            System.out.println("⚠️ Bytes são NULL ou vazios no banco de dados");
+            dadosFaciais.setImagemRosto(null);
+        }
         
         dadosFaciais.setDescritoresFaciais(rs.getString("descritores_faciais"));
         dadosFaciais.setCriadoEm(SQLiteDateUtil.getDate(rs, "data_cadastro"));

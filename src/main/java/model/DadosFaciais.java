@@ -1,13 +1,12 @@
 package model;
 
-import java.sql.Blob;
 import java.sql.Date;
 
 public class DadosFaciais {
 
     private int idDadosFaciais;
     private int fkUsuarioIdUsuario;
-    private Blob imagemRosto;
+    private byte[] imagemRosto;
     private String descritoresFaciais; // JSON com os descritores faciais
     private Date criadoEm;
     private Date dataAtualizacao;
@@ -18,7 +17,7 @@ public class DadosFaciais {
     }
 
     // Construtor com parâmetros
-    public DadosFaciais(int fkUsuarioIdUsuario, Blob imagemRosto, String descritoresFaciais) {
+    public DadosFaciais(int fkUsuarioIdUsuario, byte[] imagemRosto, String descritoresFaciais) {
         this.fkUsuarioIdUsuario = fkUsuarioIdUsuario;
         this.imagemRosto = imagemRosto;
         this.descritoresFaciais = descritoresFaciais;
@@ -44,11 +43,11 @@ public class DadosFaciais {
         this.fkUsuarioIdUsuario = fkUsuarioIdUsuario;
     }
 
-    public Blob getImagemRosto() {
+    public byte[] getImagemRosto() { // Mude o retorno
         return imagemRosto;
     }
 
-    public void setImagemRosto(Blob imagemRosto) {
+    public void setImagemRosto(byte[] imagemRosto) { // Mude o parâmetro
         this.imagemRosto = imagemRosto;
     }
 

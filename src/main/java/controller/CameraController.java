@@ -190,13 +190,14 @@ public class CameraController {
             System.out.println("Imagem capturada: " + (this.imagemCapturada != null ? "OK" : "NULL"));
             
             if (this.imagemCapturada != null) {
-                System.out.println("Dimensões da imagem: " + this.imagemCapturada.getWidth() + "x" + this.imagemCapturada.getHeight());
-                System.out.println("Tipo da imagem: " + this.imagemCapturada.getType());
+                System.out.println("✅ Dimensões da imagem: " + this.imagemCapturada.getWidth() + "x" + this.imagemCapturada.getHeight());
+                System.out.println("✅ Tipo da imagem: " + this.imagemCapturada.getType());
+                System.out.println("✅ Imagem armazenada em CameraController.imagemCapturada");
             } else {
                 System.err.println("❌ Falha ao converter frame para BufferedImage!");
             }
 
-            // Para a câmera após capturar
+            // Para a câmera após capturar (mas mantém a imagem na memória)
             pararCamera();
 
             // Atualiza o status
@@ -206,22 +207,71 @@ public class CameraController {
             }
 
             // Fecha a janela após um pequeno delay para o usuário ver a confirmação
-            javafx.concurrent.Task<Void> delayTask = new javafx.concurrent.Task<Void>() {
-                @Override
-                protected Void call() throws Exception {
-                    Thread.sleep(1000); // 1 segundo de delay
-                    return null;
-                }
+            // IMPORTANTE: A imagem já foi capturada e armazenada antes de fechar
+            Platform.runLater(() -> {
+                javafx.concurrent.Task<Void> delayTask = new javafx.concurrent.Task<Void>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        Thread.sleep(300); // 300ms de delay (reduzido para resposta mais rápida)
+                        return null;
+                    }
 
-                @Override
-                protected void succeeded() {
-                    System.out.println("Fechando janela da câmera...");
-                    fecharJanela();
-                }
-            };
-            new Thread(delayTask).start();
+                    @Override
+                    protected void succeeded() {
+                        System.out.println("Fechando janela da câmera...");
+                        System.out.println("  - Verificando se imagem ainda existe antes de fechar: " + (imagemCapturada != null ? "SIM (" + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight() + ")" : "NÃO"));
+                        // NÃO limpa a imagem aqui - ela precisa ser retornada ao controller pai
+                        fecharJanelaSemLimparImagem();
+                    }
+                };
+                new Thread(delayTask).start();
+            });
         } else {
             System.err.println("❌ Frame capturado é NULL ou vazio!");
+            this.imagemCapturada = null; // Garante que está NULL se não houve captura
+        }
+    }
+    
+    /**
+     * Fecha a janela sem limpar a imagem capturada
+     * A imagem deve ser mantida para ser retornada ao controller pai
+     */
+    private void fecharJanelaSemLimparImagem() {
+        // Para a câmera mas NÃO limpa a imagem
+        if (cameraAtiva) {
+            cameraAtiva = false;
+            btnIniciarCamera.setText("Iniciar Câmera");
+            btnCapturar.setVisible(false);
+            
+            // Para o timer
+            if (timer != null && !timer.isShutdown()) {
+                try {
+                    timer.shutdown();
+                    timer.awaitTermination(33, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    System.err.println("Erro ao parar a captura de frames: " + e.getMessage());
+                }
+            }
+            
+            // Para a câmera
+            if (camera != null) {
+                try {
+                    camera.stop();
+                    camera.release();
+                } catch (FrameGrabber.Exception e) {
+                    System.err.println("Erro ao parar a câmera: " + e.getMessage());
+                }
+            }
+        }
+        
+        // Fecha a janela
+        if (btnCancelar != null && btnCancelar.getScene() != null) {
+            Stage stage = (Stage) btnCancelar.getScene().getWindow();
+            if (stage != null) {
+                System.out.println("  - Fechando Stage da câmera...");
+                stage.close();
+                System.out.println("  - Stage fechado. Imagem ainda disponível: " + (imagemCapturada != null ? "SIM" : "NÃO"));
+            }
         }
     }
 
@@ -253,15 +303,36 @@ public class CameraController {
                 Stage stage = (Stage) cameraView.getScene().getWindow();
                 if (stage != null) {
                     // Listener para quando a janela for fechada
+                    // NÃO limpa a imagem aqui - ela precisa ser retornada ao controller pai
                     stage.setOnCloseRequest(event -> {
-                        System.out.println("Janela da câmera sendo fechada - liberando recursos...");
-                        limparRecursos();
+                        System.out.println("Janela da câmera sendo fechada - liberando recursos da câmera (mantendo imagem)...");
+                        // Limpa apenas os recursos da câmera, mas mantém a imagem
+                        if (cameraAtiva) {
+                            cameraAtiva = false;
+                            if (timer != null && !timer.isShutdown()) {
+                                try {
+                                    timer.shutdown();
+                                } catch (Exception e) {
+                                    System.err.println("Erro ao parar timer: " + e.getMessage());
+                                }
+                            }
+                            if (camera != null) {
+                                try {
+                                    camera.stop();
+                                    camera.release();
+                                } catch (FrameGrabber.Exception e) {
+                                    System.err.println("Erro ao parar câmera: " + e.getMessage());
+                                }
+                            }
+                        }
+                        System.out.println("  - Imagem ainda disponível após fechar: " + (imagemCapturada != null ? "SIM" : "NÃO"));
                     });
 
                     // Listener para quando a janela for ocultada
+                    // NÃO limpa a imagem aqui também
                     stage.setOnHidden(event -> {
-                        System.out.println("Janela da câmera ocultada - liberando recursos...");
-                        limparRecursos();
+                        System.out.println("Janela da câmera ocultada - recursos já liberados (imagem mantida)");
+                        System.out.println("  - Imagem ainda disponível após ocultar: " + (imagemCapturada != null ? "SIM" : "NÃO"));
                     });
                 }
             }
