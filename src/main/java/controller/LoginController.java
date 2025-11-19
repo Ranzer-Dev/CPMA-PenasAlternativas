@@ -38,6 +38,8 @@ public class LoginController {
     private TextField campoSenhaVisivel;
     @FXML
     private ImageView iconeOlho;
+    @FXML
+    private Button botaoConsulta;
 
     private final AdminDAO adminDAO = new AdminDAO();
     private Administrador adminAutenticado;
@@ -57,6 +59,7 @@ public class LoginController {
         iconeOlhoFechado = new Image(getClass().getResourceAsStream("/images/eye-closed.png"));
         campoSenhaVisivel.textProperty().bindBidirectional(campoSenha.textProperty());
         iconeOlho.addEventHandler(MouseEvent.MOUSE_CLICKED, this::toggleVisibilidadeSenha);
+        botaoConsulta.setOnAction(this::abrirConsultaPublica);
     }
 
     @FXML
@@ -141,5 +144,26 @@ public class LoginController {
     }
     public Administrador getAdminAutenticado() {
         return adminAutenticado;
+    }
+
+    @FXML
+    private void abrirConsultaPublica(javafx.event.ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/consultaApenadoView.fxml"));
+            Parent root = loader.load();
+            Stage stage = new Stage();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/com/mycompany/cpma/style.css").toExternalForm());
+            stage.setTitle("Consulta de Dados - CPMA");
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erro");
+            alert.setHeaderText("Não foi possível abrir a tela de consulta.");
+            alert.setContentText("Ocorreu um erro ao tentar abrir a consulta pública. Por favor, contate o suporte.");
+            alert.showAndWait();
+        }
     }
 }
