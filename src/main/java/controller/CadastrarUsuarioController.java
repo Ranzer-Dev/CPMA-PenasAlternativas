@@ -262,82 +262,14 @@ public class CadastrarUsuarioController {
             // Configura para ser uma janela modal (bloqueia a janela de cadastro)
             cameraStage.initModality(Modality.APPLICATION_MODAL);
 
-            // Define uma ação para quando a janela for fechada
-            cameraStage.setOnCloseRequest(e -> {
-                System.out.println("Janela da câmera sendo fechada pelo usuário");
-            });
-
             // Mostra a janela e espera ela ser fechada
             System.out.println("Mostrando janela da câmera...");
             cameraStage.showAndWait();
             System.out.println("Janela da câmera fechada!");
 
-            // IMPORTANTE: Aguarda um pouco para garantir que a Task assíncrona que fecha a janela terminou
-            // e que a imagem foi capturada
-            // Tenta pegar a imagem várias vezes, com pequenos delays, até conseguir ou desistir
-            BufferedImage imagemCapturadaTemp = null;
-            int tentativas = 0;
-            int maxTentativas = 15; // Tenta por até 1.5 segundos (15 x 100ms)
-            
-            System.out.println("=== PROCESSANDO RESULTADO DA CÂMERA ===");
-            System.out.println("Verificando imagem capturada após fechar janela...");
-            
-            while (tentativas < maxTentativas && imagemCapturadaTemp == null) {
-                imagemCapturadaTemp = cameraController.getImagemCapturada();
-                if (imagemCapturadaTemp == null) {
-                    tentativas++;
-                    System.out.println("  - Tentativa " + tentativas + "/" + maxTentativas + ": imagem ainda não disponível...");
-                    try {
-                        Thread.sleep(100); // Aguarda 100ms antes de tentar novamente
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                } else {
-                    System.out.println("  - ✅ Imagem encontrada na tentativa " + tentativas + "!");
-                }
-            }
-            
-            // Agora usa uma variável final para o lambda
-            final BufferedImage imagemCapturada = imagemCapturadaTemp;
-            
-            if (imagemCapturada != null) {
-                System.out.println("✅ Imagem capturada do controller: OK (após " + tentativas + " tentativas)");
-                System.out.println("✅ Dimensões da imagem: " + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight());
-                System.out.println("✅ Tipo da imagem: " + imagemCapturada.getType());
-
-                // Guarda a imagem para salvar no banco (BLOB no campo imagem_rosto)
-                this.imagemCapturada = imagemCapturada;
-                System.out.println("✅ Imagem armazenada em this.imagemCapturada");
-                System.out.println("  - Dimensões: " + this.imagemCapturada.getWidth() + "x" + this.imagemCapturada.getHeight());
-                System.out.println("  - Tipo: " + this.imagemCapturada.getType());
-                System.out.println("  - Será salva como BLOB no campo imagem_rosto ao cadastrar o usuário");
-
-                // Exibe a foto imediatamente na ImageView
-                Platform.runLater(() -> {
-                    try {
-                        Image imagePreview = converterBufferedImageParaImage(imagemCapturada);
-                        if (imagePreview != null && !imagePreview.isError()) {
-                            foto.setImage(imagePreview);
-                            foto.setFitWidth(120.0);
-                            foto.setFitHeight(120.0);
-                            foto.setPreserveRatio(true);
-                            foto.setSmooth(true);
-                            foto.setCache(true);
-                            foto.setVisible(true);
-                            System.out.println("✅ Foto exibida no ImageView com sucesso!");
-                        } else {
-                            System.err.println("⚠️ Erro ao exibir foto na ImageView, mas será salva no banco");
-                        }
-                    } catch (Exception ex) {
-                        System.err.println("⚠️ Erro ao exibir foto: " + ex.getMessage());
-                        // A foto ainda será salva no banco mesmo se houver erro na exibição
-                    }
-                });
-            } else {
-                System.out.println("❌ Nenhuma imagem foi capturada após " + tentativas + " tentativas");
-                this.imagemCapturada = null; // Garante que está NULL se não houve captura
-            }
+            // Processa a imagem após a janela ser fechada
+            // Isso garante que estamos na thread correta e a imagem foi capturada
+            processarImagemCapturada(cameraController);
 
         } catch (IOException e) {
             System.err.println("❌ ERRO ao abrir janela da câmera: " + e.getMessage());
@@ -347,6 +279,94 @@ public class CadastrarUsuarioController {
             System.err.println("❌ ERRO inesperado: " + e.getMessage());
             e.printStackTrace();
             mostrarAlerta("Erro", "Erro inesperado: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Processa a imagem capturada e exibe no ImageView
+     */
+    private void processarImagemCapturada(CameraController cameraController) {
+        if (cameraController == null) {
+            System.err.println("❌ CameraController é NULL");
+            return;
+        }
+
+        // Pega a imagem que foi capturada do controller
+        BufferedImage imagemCapturada = cameraController.getImagemCapturada();
+        System.out.println("Imagem capturada do controller: " + (imagemCapturada != null ? "OK" : "NULL"));
+
+        if (imagemCapturada != null) {
+            System.out.println("Dimensões da imagem: " + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight());
+
+            // Guarda a imagem para salvar no banco e arquivo
+            this.imagemCapturada = imagemCapturada;
+            System.out.println("Imagem armazenada para salvamento no banco e arquivo");
+
+            // Usa Platform.runLater para garantir que estamos na thread da UI
+            Platform.runLater(() -> {
+                if (foto == null) {
+                    System.err.println("❌ ImageView 'foto' é NULL - não é possível exibir a imagem");
+                    return;
+                }
+
+                try {
+                    System.out.println("Convertendo BufferedImage para Image JavaFX...");
+                    
+                    // Tenta converter usando o método do controller
+                    Image imagePreviewTemp = converterBufferedImageParaImage(imagemCapturada);
+                    
+                    // Se falhar, tenta método alternativo
+                    if (imagePreviewTemp == null) {
+                        System.out.println("Tentando método alternativo de conversão...");
+                        imagePreviewTemp = converterBufferedImageParaImageAlternativo(imagemCapturada);
+                    }
+                    
+                    // Cria variável final para usar na lambda
+                    final Image imagePreview = imagePreviewTemp;
+                    
+                    if (imagePreview != null && !imagePreview.isError()) {
+                        System.out.println("Image JavaFX criada com sucesso: " + imagePreview.getWidth() + "x" + imagePreview.getHeight());
+                        
+                        // Limpa qualquer imagem anterior para forçar atualização
+                        foto.setImage(null);
+                        
+                        // Define a nova imagem no ImageView diretamente (já estamos na thread da UI)
+                        foto.setImage(imagePreview);
+                        foto.setFitWidth(120.0);
+                        foto.setFitHeight(120.0);
+                        foto.setPreserveRatio(true);
+                        foto.setSmooth(true);
+                        foto.setCache(true);
+                        foto.setVisible(true);
+                        
+                        // Força a atualização do parent (VBox) se existir
+                        if (foto.getParent() != null) {
+                            javafx.scene.Parent parent = foto.getParent();
+                            if (parent instanceof javafx.scene.layout.Region) {
+                                ((javafx.scene.layout.Region) parent).requestLayout();
+                            }
+                        }
+                        
+                        System.out.println("✅ Foto exibida no ImageView com sucesso!");
+                        System.out.println("  - ImageView visível: " + foto.isVisible());
+                        System.out.println("  - ImageView imagem: " + (foto.getImage() != null ? "OK" : "NULL"));
+                        System.out.println("  - ImageView parent: " + (foto.getParent() != null ? foto.getParent().getClass().getSimpleName() : "NULL"));
+                    } else {
+                        System.err.println("❌ Falha ao converter BufferedImage para Image JavaFX");
+                        if (imagePreview != null && imagePreview.isError()) {
+                            Exception exception = imagePreview.getException();
+                            if (exception != null) {
+                                System.err.println("  - Erro na imagem: " + exception.getMessage());
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    System.err.println("❌ Erro ao exibir foto: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+            });
+        } else {
+            System.out.println("❌ Nenhuma imagem foi capturada");
         }
     }
 
@@ -441,6 +461,46 @@ public class CadastrarUsuarioController {
         g2d.dispose();
         
         return improved;
+    }
+
+    /**
+     * Método alternativo para converter BufferedImage para Image JavaFX
+     * Usa formato JPG ao invés de PNG
+     */
+    private Image converterBufferedImageParaImageAlternativo(BufferedImage bufferedImage) {
+        if (bufferedImage == null) {
+            System.err.println("❌ BufferedImage é NULL na conversão alternativa");
+            return null;
+        }
+        try {
+            System.out.println("Convertendo BufferedImage (método alternativo) de " + bufferedImage.getWidth() + "x" + bufferedImage.getHeight());
+            
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            // Tenta salvar como JPG
+            boolean written = ImageIO.write(bufferedImage, "jpg", outputStream);
+            if (!written) {
+                // Se JPG falhar, tenta PNG
+                outputStream.reset();
+                written = ImageIO.write(bufferedImage, "png", outputStream);
+            }
+            
+            if (!written) {
+                System.err.println("❌ Falha ao escrever imagem para stream (método alternativo)");
+                return null;
+            }
+            
+            byte[] bytes = outputStream.toByteArray();
+            System.out.println("Bytes da imagem (alternativo): " + bytes.length);
+            
+            // Cria uma Image do JavaFX a partir do fluxo de bytes
+            Image result = new Image(new ByteArrayInputStream(bytes));
+            System.out.println("Image do JavaFX criada (alternativo): " + (result != null ? "OK" : "FALHOU"));
+            return result;
+        } catch (IOException e) {
+            System.err.println("❌ Erro na conversão alternativa: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 // ... outras importações ...
 
@@ -599,19 +659,9 @@ public class CadastrarUsuarioController {
                     bairro.getText(), cidade.getText(), uf.getText(), observacao.getText(),
                     telefone.getText().trim(), cep.getText());
 
-            System.out.println("=== VERIFICANDO SE HÁ FOTO PARA SALVAR ===");
-            System.out.println("ID Usuário inserido: " + idUsuarioInserido);
-            System.out.println("imagemCapturada é NULL? " + (imagemCapturada == null ? "SIM" : "NÃO"));
-            if (imagemCapturada != null) {
-                System.out.println("  - Dimensões: " + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight());
-            }
-
             // Se uma foto foi capturada, salvar os dados faciais
             if (imagemCapturada != null) {
-                System.out.println("✅ Foto encontrada - chamando salvarDadosFaciais...");
                 salvarDadosFaciais(idUsuarioInserido);
-            } else {
-                System.out.println("⚠️ Nenhuma foto capturada - dados faciais não serão salvos");
             }
 
             mostrarAlerta("Sucesso", "Usuário cadastrado com sucesso!");
@@ -721,24 +771,9 @@ public class CadastrarUsuarioController {
         return true;
     }
 
-    /**
-     * Método público para carregar usuário para edição (chamado por outras telas)
-     */
     public void carregarUsuarioParaEdicao(Usuario u) {
-        if (u == null) {
-            return;
-        }
-        // Configura a tela para modo edição
-        btnCadastrar.setText("Salvar alterações");
-        comboUsuarios.setVisible(true);
-        nome.setPrefWidth(204);
-        nome.setLayoutX(145);
-        if (comboUsuarios != null) {
-            comboUsuarios.setPrefWidth(210);
-            comboUsuarios.setLayoutX(370);
-            carregarUsuariosNaComboBox();
-        }
-        // Preenche os campos com os dados do usuário
+        modoEdicao = true;
+        btnCadastrar.setText("Salvar Alterações");
         preencherCamposComUsuario(u);
     }
 
@@ -757,8 +792,8 @@ public class CadastrarUsuarioController {
         observacao.setText(u.getObservacao());
         telefone.setText(u.getTelefone());
 
-        // Carrega a foto do usuário se existir
-        carregarFotoDoArquivo(u.getIdUsuario());
+        // Carrega a foto do usuário do banco de dados se existir
+        carregarFotoDoBanco(u.getIdUsuario());
     }
 
     private LocalDate convertToLocalDate(java.util.Date d) {
@@ -1006,53 +1041,39 @@ public class CadastrarUsuarioController {
     }
 
     /**
-     * Salva os dados faciais do usuário no banco de dados
-     * Armazena a imagem como BLOB no campo imagem_rosto e os embeddings no campo descritores_faciais
+     * Salva os dados faciais do usuário no banco de dados (apenas BLOB)
+     * Se já existir dados faciais para o usuário, atualiza; senão, cria novo registro
      */
     private void salvarDadosFaciais(int idUsuario) {
         try {
             if (imagemCapturada == null) {
-                System.err.println("❌ Nenhuma imagem capturada para processar");
+                System.err.println("Nenhuma imagem capturada para salvar");
                 return;
             }
 
-            System.out.println("=== SALVANDO DADOS FACIAIS PARA USUÁRIO ID: " + idUsuario + " ===");
-            System.out.println("  - Dimensões da imagem: " + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight());
-            System.out.println("  - Tipo da imagem: " + imagemCapturada.getType());
-
-            // 1. Extrai descritores faciais (embeddings) da imagem capturada
-            String descritores = null;
-            try {
-                System.out.println("Extraindo descritores faciais (embeddings) da imagem...");
-                descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagemCapturada);
-                System.out.println("✅ Descritores faciais extraídos: " + (descritores != null && !descritores.isEmpty() ? "OK" : "VAZIO"));
-                if (descritores != null && !descritores.isEmpty()) {
-                    System.out.println("  - Tamanho dos descritores: " + descritores.length() + " caracteres");
-                }
+            // Converte a imagem para Blob usando OpenCV
+            java.sql.Blob imagemBlob = null;
+            try (java.sql.Connection conn = database.ConnectionFactory.getConnection()) {
+                imagemBlob = reconhecimentoFacial.imagemParaBlob(imagemCapturada, conn);
+                System.out.println("Imagem convertida para Blob: " + (imagemBlob != null ? "OK" : "NULL"));
             } catch (Exception e) {
-                System.err.println("⚠️ Aviso: Erro ao extrair descritores faciais: " + e.getMessage());
+                System.err.println("Erro ao converter imagem para Blob: " + e.getMessage());
                 e.printStackTrace();
-                descritores = "";
+                mostrarAlerta("Erro", "Erro ao converter imagem para Blob: " + e.getMessage());
+                return;
             }
 
-            // 2. Converte a imagem para byte[] para salvar no banco como BLOB
-            byte[] imagemBytes = null;
-            try {
-                System.out.println("Convertendo imagem para byte[] para salvar no banco...");
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                boolean written = ImageIO.write(imagemCapturada, "jpg", baos);
-                if (written) {
-                    imagemBytes = baos.toByteArray();
-                    System.out.println("✅ Imagem convertida para byte[]: " + imagemBytes.length + " bytes");
-                } else {
-                    System.err.println("❌ Erro ao converter imagem para byte[]");
-                }
-            } catch (Exception e) {
-                System.err.println("⚠️ Aviso: Erro ao converter imagem para byte[]: " + e.getMessage());
-                e.printStackTrace();
+            if (imagemBlob == null) {
+                System.err.println("Falha ao converter imagem para Blob");
+                mostrarAlerta("Erro", "Falha ao converter imagem para Blob.");
+                return;
             }
 
-            // 3. Verifica se já existe dados faciais para este usuário
+            // Extrai descritores faciais da imagem capturada
+            String descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagemCapturada);
+            System.out.println("Descritores faciais extraídos: " + (descritores != null && !descritores.isEmpty() ? "OK" : "VAZIO"));
+
+            // Verifica se já existe dados faciais para este usuário
             DadosFaciais dadosFaciaisExistentes = dadosFaciaisDAO.buscarPorUsuario(idUsuario);
             
             DadosFaciais dadosFaciais;
@@ -1062,8 +1083,8 @@ public class CadastrarUsuarioController {
                 // Atualiza registro existente
                 System.out.println("Atualizando dados faciais existentes para o usuário ID: " + idUsuario);
                 dadosFaciais = dadosFaciaisExistentes;
+                dadosFaciais.setImagemRosto(imagemBlob);
                 dadosFaciais.setDescritoresFaciais(descritores != null ? descritores : "");
-                dadosFaciais.setImagemRosto(imagemBytes); // Atualiza a imagem no banco
                 dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
                 dadosFaciais.setAtivo(true);
                 sucesso = dadosFaciaisDAO.atualizar(dadosFaciais);
@@ -1072,8 +1093,8 @@ public class CadastrarUsuarioController {
                 System.out.println("Criando novos dados faciais para o usuário ID: " + idUsuario);
                 dadosFaciais = new DadosFaciais();
                 dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
+                dadosFaciais.setImagemRosto(imagemBlob);
                 dadosFaciais.setDescritoresFaciais(descritores != null ? descritores : "");
-                dadosFaciais.setImagemRosto(imagemBytes); // Salva a imagem no banco como BLOB
                 dadosFaciais.setCriadoEm(new java.sql.Date(System.currentTimeMillis()));
                 dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
                 dadosFaciais.setAtivo(true);
@@ -1081,153 +1102,70 @@ public class CadastrarUsuarioController {
             }
 
             if (sucesso) {
-                System.out.println("✅ Dados faciais salvos com sucesso para o usuário ID: " + idUsuario);
-                System.out.println("  - Imagem no banco (campo imagem_rosto): " + (imagemBytes != null ? "SIM (" + imagemBytes.length + " bytes)" : "NÃO"));
-                System.out.println("  - Embeddings salvos (campo descritores_faciais): " + (descritores != null && !descritores.isEmpty() ? "SIM" : "NÃO"));
+                System.out.println("Dados faciais salvos com sucesso para o usuário ID: " + idUsuario);
+                System.out.println("  - Blob salvo no banco: " + (imagemBlob != null ? "SIM" : "NÃO"));
+                System.out.println("  - Descritores salvos: " + (descritores != null && !descritores.isEmpty() ? "SIM" : "NÃO"));
             } else {
-                System.err.println("❌ Erro ao salvar dados faciais para o usuário ID: " + idUsuario);
+                System.err.println("Erro ao salvar dados faciais para o usuário ID: " + idUsuario);
                 mostrarAlerta("Erro", "Erro ao salvar dados faciais no banco de dados.");
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Erro ao processar dados faciais: " + e.getMessage());
+            System.err.println("Erro ao processar dados faciais: " + e.getMessage());
             e.printStackTrace();
             mostrarAlerta("Erro", "Erro ao processar dados faciais: " + e.getMessage());
         }
     }
 
-    /**
-     * Salva a foto em arquivo na pasta fotos-apenados
-     */
-    private String salvarFotoEmArquivo(int idUsuario) {
-        try {
-            if (imagemCapturada == null) {
-                System.err.println("Nenhuma imagem capturada para salvar");
-                return null;
-            }
-
-            // Cria o diretório se não existir
-            java.io.File diretorioFotos = new java.io.File("fotos-apenados");
-            if (!diretorioFotos.exists()) {
-                diretorioFotos.mkdirs();
-                System.out.println("Diretório fotos-apenados criado");
-            }
-
-            // Gera nome do arquivo: usuario_ID_timestamp.jpg
-            String timestamp = String.valueOf(System.currentTimeMillis());
-            String nomeArquivo = "usuario_" + idUsuario + "_" + timestamp + ".jpg";
-            java.io.File arquivoFoto = new java.io.File(diretorioFotos, nomeArquivo);
-
-            // Salva a imagem
-            boolean salvo = ImageIO.write(imagemCapturada, "jpg", arquivoFoto);
-
-            if (salvo) {
-                String caminhoCompleto = arquivoFoto.getAbsolutePath();
-                System.out.println("Foto salva com sucesso: " + caminhoCompleto);
-                return caminhoCompleto;
-            } else {
-                System.err.println("Erro ao salvar a imagem");
-                return null;
-            }
-
-        } catch (Exception e) {
-            System.err.println("Erro ao salvar foto em arquivo: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     /**
-     * Carrega a foto do usuário do banco de dados (campo imagem_rosto byte[])
-     * Carrega apenas do banco de dados, sem fallback para arquivos
+     * Carrega a foto do banco de dados (BLOB) e exibe no ImageView
      */
-    private void carregarFotoDoArquivo(int idUsuario) {
+    private void carregarFotoDoBanco(int idUsuario) {
         try {
-            System.out.println("=== CARREGANDO FOTO PARA USUÁRIO ID: " + idUsuario + " ===");
+            if (foto == null) {
+                System.out.println("ImageView 'foto' não disponível");
+                return;
+            }
+
+            System.out.println("Carregando foto do banco de dados para o usuário ID: " + idUsuario);
             
-            // Carrega do banco de dados (campo imagem_rosto byte[])
-            System.out.println("Carregando foto do banco de dados (campo imagem_rosto)...");
             DadosFaciais dadosFaciais = dadosFaciaisDAO.buscarPorUsuario(idUsuario);
-            if (dadosFaciais != null && dadosFaciais.getImagemRosto() != null && dadosFaciais.getImagemRosto().length > 0) {
+            if (dadosFaciais != null && dadosFaciais.getImagemRosto() != null) {
                 try {
-                    // Converte byte[] para BufferedImage
-                    byte[] imagemBytes = dadosFaciais.getImagemRosto();
-                    System.out.println("✅ Bytes encontrados no banco: " + imagemBytes.length + " bytes");
-                    
-                    BufferedImage imagemDoBanco = bytesParaBufferedImage(imagemBytes);
+                    // Converte o blob para BufferedImage
+                    BufferedImage imagemDoBanco = reconhecimentoFacial.blobParaImagem(dadosFaciais.getImagemRosto());
                     if (imagemDoBanco != null) {
-                        System.out.println("✅ Foto convertida do banco de dados (byte[])");
-                        System.out.println("  - Dimensões: " + imagemDoBanco.getWidth() + "x" + imagemDoBanco.getHeight());
-                        
-                        // Converte e exibe na ImageView
+                        // Converte e exibe
                         Image imagePreview = converterBufferedImageParaImage(imagemDoBanco);
-                        
                         if (imagePreview != null && !imagePreview.isError()) {
-                            Platform.runLater(() -> {
-                                foto.setImage(imagePreview);
-                                foto.setFitWidth(120.0);
-                                foto.setFitHeight(120.0);
-                                foto.setPreserveRatio(true);
-                                foto.setSmooth(true);
-                                foto.setCache(true);
-                                foto.setVisible(true);
-                                
-                                System.out.println("✅ Foto exibida no ImageView do banco de dados");
-                            });
+                            foto.setImage(imagePreview);
+                            foto.setFitWidth(120);
+                            foto.setFitHeight(120);
+                            foto.setPreserveRatio(true);
+                            foto.setSmooth(true);
 
                             // Armazena para possível atualização
                             this.imagemCapturada = imagemDoBanco;
-                            return; // Sucesso ao carregar do banco
+
+                            System.out.println("Foto carregada do banco de dados (blob) para o usuário ID: " + idUsuario);
                         } else {
-                            System.err.println("❌ Erro ao converter BufferedImage para Image JavaFX");
+                            System.err.println("Erro ao converter imagem do banco para Image JavaFX");
                         }
                     } else {
-                        System.err.println("❌ Erro ao converter bytes para BufferedImage");
+                        System.err.println("Erro ao converter blob para BufferedImage");
                     }
                 } catch (Exception e) {
-                    System.err.println("❌ Erro ao carregar foto do banco de dados: " + e.getMessage());
+                    System.err.println("Erro ao carregar foto do banco de dados: " + e.getMessage());
                     e.printStackTrace();
                 }
             } else {
-                System.out.println("⚠️ Nenhuma foto encontrada no banco de dados (campo imagem_rosto está NULL ou vazio) para o usuário ID: " + idUsuario);
+                System.out.println("Nenhuma foto encontrada no banco de dados para o usuário ID: " + idUsuario);
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Erro ao carregar foto: " + e.getMessage());
+            System.err.println("Erro ao carregar foto do banco: " + e.getMessage());
             e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Converte byte[] para BufferedImage
-     * 
-     * @param imagemBytes Array de bytes da imagem
-     * @return BufferedImage ou null se houver erro
-     */
-    private BufferedImage bytesParaBufferedImage(byte[] imagemBytes) {
-        if (imagemBytes == null || imagemBytes.length == 0) {
-            return null;
-        }
-        
-        try {
-            // Cria um ByteArrayInputStream a partir dos bytes
-            java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(imagemBytes);
-            
-            // Lê a imagem usando ImageIO
-            BufferedImage imagem = ImageIO.read(bais);
-            bais.close();
-            
-            if (imagem != null) {
-                System.out.println("✅ BufferedImage criada com sucesso: " + imagem.getWidth() + "x" + imagem.getHeight());
-                return imagem;
-            } else {
-                System.err.println("❌ ImageIO.read() retornou null - bytes podem estar corrompidos ou formato inválido");
-                return null;
-            }
-        } catch (Exception e) {
-            System.err.println("❌ Erro ao converter bytes para BufferedImage: " + e.getMessage());
-            e.printStackTrace();
-            return null;
         }
     }
 }

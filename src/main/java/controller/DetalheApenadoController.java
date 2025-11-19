@@ -22,6 +22,7 @@ import model.Pena;
 import model.RegistroDeTrabalho;
 import model.Usuario;
 import util.CodigoPenaUtil;
+import util.ReconhecimentoFacial;
 import java.util.List;
 import javafx.print.PrinterJob;
 import javafx.scene.Node;
@@ -37,8 +38,6 @@ import javafx.scene.shape.Line;
 import javafx.print.PageOrientation;
 import javafx.stage.FileChooser;
 import javafx.print.Printer;
-
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -69,6 +68,7 @@ public class DetalheApenadoController {
     private Usuario usuario;
     private List<Pena> todasPenas;
     private DadosFaciaisDAO dadosFaciaisDAO;
+    private ReconhecimentoFacial reconhecimentoFacial;
     
     /**
      * Classe interna para representar um item do ComboBox de penas
@@ -418,6 +418,7 @@ public class DetalheApenadoController {
         
         // Inicializa DAOs para carregar foto
         dadosFaciaisDAO = new DadosFaciaisDAO();
+        reconhecimentoFacial = new ReconhecimentoFacial();
         
         // Configura os botões
         btnVoltar.setOnAction(e -> ((Stage) btnVoltar.getScene().getWindow()).close());
@@ -684,6 +685,7 @@ public class DetalheApenadoController {
                 float tableMargin = margin;
                 float col1Width = 100;
                 float col2Width = 120;
+                float col3Width = 120;
                 
                 yPosition = adicionarTexto(contentStream, "Data", fontBold, 11, tableMargin, yPosition);
                 yPosition = adicionarTexto(contentStream, "Horas Cumpridas", fontBold, 11, tableMargin + col1Width, yPosition);
@@ -1090,87 +1092,82 @@ public class DetalheApenadoController {
         grid.add(val, 1, linha);
     }
 
+    /**
+     * Carrega a foto do apenado do banco de dados (BLOB) e exibe no ImageView
+     */
     private void carregarFoto() {
         if (usuario == null || imgFoto == null) {
+            System.out.println("Usuário ou ImageView não disponível para carregar foto");
             return;
         }
-    
+
         try {
             int idUsuario = usuario.getIdUsuario();
-            System.out.println("=== CARREGANDO FOTO PARA USUÁRIO ID: " + idUsuario + " ===");
+            System.out.println("Carregando foto do banco de dados para o usuário ID: " + idUsuario);
             
-            // PRIORIDADE 1: Tenta carregar da pasta "fotos-apenados" (arquivo local)
-            System.out.println("Tentando carregar foto da pasta 'fotos-apenados'...");
-            java.io.File diretorioFotos = new java.io.File("fotos-apenados");
-            if (diretorioFotos.exists()) {
-                java.io.File[] arquivos = diretorioFotos.listFiles((dir, name)
-                        -> name.startsWith("usuario_" + idUsuario + "_") 
-                        && name.endsWith(".jpg"));
-
-                if (arquivos != null && arquivos.length > 0) {
-                    // Pega o arquivo mais recente
-                    java.util.Arrays.sort(arquivos, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
-                    java.io.File arquivoFoto = arquivos[0];
-
-                    // Carrega a imagem
-                    try {
-                        Image image = new Image(arquivoFoto.toURI().toString());
-                        if (image != null && !image.isError()) {
-                            imgFoto.setImage(image);
-                            imgFoto.setFitWidth(140.0);
-                            imgFoto.setFitHeight(140.0);
-                            imgFoto.setPreserveRatio(true);
-                            imgFoto.setSmooth(true);
-                            System.out.println("✅ Foto carregada da pasta 'fotos-apenados': " + arquivoFoto.getName());
-                            return; // Sucesso ao carregar do arquivo
-                        }
-                    } catch (Exception e) {
-                        System.err.println("❌ Erro ao carregar foto do arquivo: " + e.getMessage());
-                    }
-                }
-            }
-            System.out.println("Nenhuma foto encontrada na pasta 'fotos-apenados' para o usuário ID: " + idUsuario);
-            
-            // PRIORIDADE 2: Tenta carregar do banco de dados (byte[])
-            System.out.println("Tentando carregar do banco de dados (campo imagem_rosto)...");
             DadosFaciais dadosFaciais = dadosFaciaisDAO.buscarPorUsuario(idUsuario);
-            
-            // Verifica se os dados existem E se o array de bytes não é nulo E se não está vazio
-            if (dadosFaciais != null && dadosFaciais.getImagemRosto() != null && dadosFaciais.getImagemRosto().length > 0) {
+            if (dadosFaciais != null && dadosFaciais.getImagemRosto() != null) {
                 try {
-                    // Cria um InputStream a partir do array de bytes
-                    // Cria a imagem JavaFX diretamente a partir do stream
-                    try (ByteArrayInputStream is = new ByteArrayInputStream(dadosFaciais.getImagemRosto())) {
-                        Image imagePreview = new Image(is);
-                        
-                        // Verifica se a imagem não deu erro
+                    // Converte o blob para BufferedImage
+                    java.awt.image.BufferedImage imagemDoBanco = reconhecimentoFacial.blobParaImagem(dadosFaciais.getImagemRosto());
+                    if (imagemDoBanco != null) {
+                        // Converte BufferedImage para Image JavaFX
+                        Image imagePreview = converterBufferedImageParaImage(imagemDoBanco);
                         if (imagePreview != null && !imagePreview.isError()) {
                             imgFoto.setImage(imagePreview);
                             imgFoto.setFitWidth(140.0);
                             imgFoto.setFitHeight(140.0);
                             imgFoto.setPreserveRatio(true);
                             imgFoto.setSmooth(true);
-                            System.out.println("✅ Foto carregada do banco de dados (byte[]) para o usuário ID: " + idUsuario);
-                            System.out.println("  - Tamanho dos bytes: " + dadosFaciais.getImagemRosto().length + " bytes");
-                            return; // Sucesso ao carregar do banco
+                            System.out.println("Foto carregada do banco de dados (blob) para o usuário ID: " + idUsuario);
                         } else {
-                            System.err.println("❌ Erro ao decodificar imagem do banco (bytes podem estar corrompidos).");
+                            System.err.println("Erro ao converter imagem do banco para Image JavaFX");
                         }
+                    } else {
+                        System.err.println("Erro ao converter blob para BufferedImage");
                     }
                 } catch (Exception e) {
-                    System.err.println("❌ Erro ao criar imagem a partir dos bytes: " + e.getMessage());
+                    System.err.println("Erro ao carregar foto do banco de dados: " + e.getMessage());
                     e.printStackTrace();
                 }
             } else {
-                System.out.println("⚠️ Nenhuma foto encontrada no banco de dados para o usuário ID: " + idUsuario);
+                System.out.println("Nenhuma foto encontrada no banco de dados para o usuário ID: " + idUsuario);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar foto: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Converte BufferedImage para Image JavaFX
+     */
+    private Image converterBufferedImageParaImage(java.awt.image.BufferedImage bufferedImage) {
+        if (bufferedImage == null) {
+            return null;
+        }
+        try {
+            java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+            // Tenta salvar como PNG
+            boolean written = javax.imageio.ImageIO.write(bufferedImage, "png", outputStream);
+            if (!written) {
+                // Se PNG falhar, tenta JPG
+                outputStream.reset();
+                written = javax.imageio.ImageIO.write(bufferedImage, "jpg", outputStream);
             }
             
-            // Se chegou aqui, não encontrou foto em nenhum lugar
-            System.out.println("❌ Nenhuma foto encontrada para o usuário ID: " + idUsuario);
-    
+            if (!written) {
+                System.err.println("Falha ao converter BufferedImage para Image");
+                return null;
+            }
+            
+            byte[] bytes = outputStream.toByteArray();
+            return new Image(new java.io.ByteArrayInputStream(bytes));
         } catch (Exception e) {
-            System.err.println("❌ Erro geral ao carregar foto: " + e.getMessage());
+            System.err.println("Erro na conversão BufferedImage para Image: " + e.getMessage());
             e.printStackTrace();
+            return null;
         }
     }
 
