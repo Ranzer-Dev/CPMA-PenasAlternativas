@@ -153,7 +153,7 @@ private void capturarImagem() {
             String descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagemAtual);
 
             // Busca usuário por similaridade facial
-            usuarioIdentificado = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, 0.7);
+            usuarioIdentificado = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, 0.75);
 
             if (usuarioIdentificado != null) {
                 exibirDadosUsuario(usuarioIdentificado);

@@ -65,11 +65,21 @@ public class LoginController {
     @FXML
     private void autenticarUsuario(javafx.event.ActionEvent event) {
         String cpf = campoUsuario.getText();
-        System.out.println("CPF: " + cpf);
         String senha = campoSenha.getText();
-        System.out.println("Senha: " + senha);
 
-        if (autenticar(cpf, senha)) {
+        if (cpf == null || cpf.trim().isEmpty()) {
+            mostrarErroLogin();
+            return;
+        }
+        
+        if (senha == null || senha.trim().isEmpty()) {
+            mostrarErroLogin();
+            return;
+        }
+
+        boolean autenticado = autenticar(cpf, senha);
+        
+        if (autenticado) {
             SessaoUsuario.setAdminLogado(adminAutenticado);
             limparErros();
             trocarCena("/com/mycompany/cpma/buscaCadastroView.fxml", event);
@@ -79,15 +89,42 @@ public class LoginController {
     }
 
     private boolean autenticar(String cpf, String senhaDigitada) {
+        // Busca o admin no banco
         Administrador admin = adminDAO.buscarPorCpf(cpf);
-        if (admin != null) {
-            String senhaHash = HashUtil.gerarHash(senhaDigitada);
-            if (senhaHash.equals(admin.getSenha())) {
-                this.adminAutenticado = admin;
-                return true;
-            }
+        
+        if (admin == null) {
+            System.err.println("   ❌ Administrador não encontrado no banco de dados");
+            System.err.println("   💡 Verifique se o CPF está correto e se existe um admin cadastrado");
+            return false;
         }
-        return false;
+        
+        System.out.println("   ✅ Administrador encontrado:");
+        System.out.println("      ID: " + admin.getIdAdministrador());
+        System.out.println("      Nome: " + admin.getNome());
+        System.out.println("      CPF: " + admin.getCpf());
+        System.out.println("      Senha no banco (hash): " + (admin.getSenha() != null ? admin.getSenha().substring(0, Math.min(20, admin.getSenha().length())) + "..." : "NULL"));
+        
+        // Gera hash da senha digitada
+        System.out.println("   Gerando hash da senha digitada...");
+        String senhaHash = HashUtil.gerarHash(senhaDigitada);
+        System.out.println("   Hash gerado: " + senhaHash.substring(0, Math.min(20, senhaHash.length())) + "...");
+        
+        // Compara os hashes
+        System.out.println("   Comparando hashes...");
+        boolean senhaCorreta = senhaHash.equals(admin.getSenha());
+        System.out.println("   Resultado da comparação: " + (senhaCorreta ? "✅ CORRETO" : "❌ INCORRETO"));
+        
+        if (!senhaCorreta) {
+            System.err.println("   ❌ Senha incorreta");
+            System.err.println("   💡 Verifique se a senha está correta");
+            System.err.println("   💡 Hash esperado: " + (admin.getSenha() != null ? admin.getSenha() : "NULL"));
+            System.err.println("   💡 Hash recebido: " + senhaHash);
+            return false;
+        }
+        
+        this.adminAutenticado = admin;
+        System.out.println("   ✅ Autenticação bem-sucedida!");
+        return true;
     }
 
     private void abrirRedefinirSenha(javafx.event.ActionEvent event) {

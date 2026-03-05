@@ -241,16 +241,16 @@ public class RegistroDeTrabalhoDAO {
         String sql = "SELECT * FROM RegistroDeTrabalho WHERE fk_pena_id_pena = ? " +
                      "AND CAST(strftime('%m', data_trabalho) AS INTEGER) = ? AND CAST(strftime('%Y', data_trabalho) AS INTEGER) = ? " +
                      "ORDER BY data_trabalho";
-        
+
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
             stmt.setInt(1, idPena);
             stmt.setInt(2, mes);
             stmt.setInt(3, ano);
             
             ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
+                while (rs.next()) {
                 RegistroDeTrabalho r = new RegistroDeTrabalho();
                 r.setIdRegistro(rs.getInt("id_registro"));
                 r.setFkPenaId(rs.getInt("fk_pena_id_pena"));
@@ -262,7 +262,7 @@ public class RegistroDeTrabalhoDAO {
                 r.setHorarioVolta(SQLiteTimeUtil.getTime(rs, "horario_volta"));
                 r.setHorarioSaida(SQLiteTimeUtil.getTime(rs, "horario_saida"));
                 lista.add(r);
-            }
+                }
         } catch (SQLException e) {
             e.printStackTrace();
         }

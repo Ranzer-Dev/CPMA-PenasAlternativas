@@ -275,8 +275,6 @@ public class DetalheApenadoController {
      * @param idPena ID da pena para buscar os registros
      */
     private void carregarRegistrosPorPena(int idPena) {
-        System.out.println("=== Carregando registros de trabalho ===");
-        System.out.println("ID do usuário: " + usuario.getIdUsuario());
         System.out.println("ID da pena selecionada: " + idPena);
         
         if (tblRegistros == null) {
@@ -409,12 +407,6 @@ public class DetalheApenadoController {
 
     @FXML
     private void initialize() {
-        System.out.println("=== Initialize DetalheApenadoController ===");
-        System.out.println("tblRegistros é null? " + (tblRegistros == null));
-        System.out.println("colData é null? " + (colData == null));
-        System.out.println("colCumprida é null? " + (colCumprida == null));
-        System.out.println("colFalta é null? " + (colFalta == null));
-        System.out.println("colInst é null? " + (colInst == null));
         
         // Inicializa DAOs para carregar foto
         dadosFaciaisDAO = new DadosFaciaisDAO();
@@ -1106,10 +1098,13 @@ public class DetalheApenadoController {
             System.out.println("Carregando foto do banco de dados para o usuário ID: " + idUsuario);
             
             DadosFaciais dadosFaciais = dadosFaciaisDAO.buscarPorUsuario(idUsuario);
-            if (dadosFaciais != null && dadosFaciais.getImagemRosto() != null) {
+            if (dadosFaciais != null && dadosFaciais.getImagemRosto() != null && dadosFaciais.getImagemRosto().length > 0) {
                 try {
-                    // Converte o blob para BufferedImage
-                    java.awt.image.BufferedImage imagemDoBanco = reconhecimentoFacial.blobParaImagem(dadosFaciais.getImagemRosto());
+                    // Converte o byte[] para BufferedImage
+                    byte[] imagemBytes = dadosFaciais.getImagemRosto();
+                    java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(imagemBytes);
+                    java.awt.image.BufferedImage imagemDoBanco = javax.imageio.ImageIO.read(bais);
+                    bais.close();
                     if (imagemDoBanco != null) {
                         // Converte BufferedImage para Image JavaFX
                         Image imagePreview = converterBufferedImageParaImage(imagemDoBanco);
