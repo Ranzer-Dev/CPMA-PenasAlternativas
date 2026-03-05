@@ -2,6 +2,7 @@ package controller;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.List;
 
 import dao.DadosFaciaisDAO;
 import dao.InstituicaoDAO;
@@ -115,6 +116,10 @@ public class ConsultaApenadoController {
 
     @FXML
     private void iniciarCaptura() {
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("🔔 [ConsultaApenadoController] iniciarCaptura() chamado");
+        System.out.println("=".repeat(80));
+        
         try {
             btnCapturar.setDisable(true);
             progressReconhecimento.setVisible(true);
@@ -136,6 +141,7 @@ public class ConsultaApenadoController {
             cameraStage.setOnHidden(e -> {
                 // Pega a imagem capturada do CameraController
                 BufferedImage imagemCapturada = cameraController.getImagemCapturada();
+                
                 if (imagemCapturada != null) {
                     Platform.runLater(() -> {
                         identificarUsuario(imagemCapturada);
@@ -149,7 +155,13 @@ public class ConsultaApenadoController {
                 }
             });
             
-            cameraStage.showAndWait(); // Mostra a janela da câmera e espera ela ser fechada
+            cameraStage.showAndWait();
+            
+            // Fallback: tenta pegar a imagem diretamente após showAndWait retornar
+            BufferedImage imagemFallback = cameraController.getImagemCapturada();
+            if (imagemFallback != null) {
+                identificarUsuario(imagemFallback);
+            }
             
         } catch (IOException e) {
             mostrarErro("Erro", "Não foi possível abrir a câmera: " + e.getMessage());
@@ -163,31 +175,157 @@ public class ConsultaApenadoController {
      * Identifica o usuário pela imagem capturada
      */
     private void identificarUsuario(BufferedImage imagem) {
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("=".repeat(80));
+        
         try {
+            // ETAPA 1: Validação da imagem capturada
+            System.out.println("\n[ETAPA 1] Validando imagem capturada...");
+            if (imagem == null) {
+                System.err.println("❌ ERRO: Imagem é NULL");
+                lblStatusReconhecimento.setText("Erro: Imagem não capturada.");
+                btnCapturar.setDisable(false);
+                progressReconhecimento.setVisible(false);
+                return;
+            }
+            System.out.println("✅ Imagem válida: " + imagem.getWidth() + "x" + imagem.getHeight() + 
+                             " (tipo: " + imagem.getType() + ")");
+            
             lblStatusReconhecimento.setText("Processando reconhecimento facial...");
             
-            // Extrai descritores faciais da imagem
+            // ETAPA 2: Extração de descritores faciais
+            System.out.println("\n[ETAPA 2] Extraindo descritores faciais da imagem...");
             String descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagem);
             
             if (descritores == null || descritores.isEmpty() || descritores.equals("[]")) {
-                lblStatusReconhecimento.setText("Não foi possível extrair descritores faciais. Tente novamente.");
+                System.err.println("❌ ERRO: Não foi possível extrair descritores faciais");
+                System.err.println("   Descritores retornados: " + (descritores == null ? "NULL" : 
+                                 (descritores.isEmpty() ? "VAZIO" : descritores)));
+                mostrarErro("Rosto não detectado", 
+                    "Não foi possível detectar um rosto na imagem capturada.\n\n" +
+                    "Possíveis causas:\n" +
+                    "• Rosto não está visível ou está muito pequeno\n" +
+                    "• Iluminação inadequada\n" +
+                    "• Ângulo inadequado do rosto\n" +
+                    "• Múltiplos rostos na imagem\n\n" +
+                    "Sugestões:\n" +
+                    "• Certifique-se de que o rosto está centralizado\n" +
+                    "• Use boa iluminação\n" +
+                    "• Mantenha uma distância adequada da câmera\n" +
+                    "• Tente novamente");
+                lblStatusReconhecimento.setText("Rosto não detectado. Tente novamente.");
                 btnCapturar.setDisable(false);
                 progressReconhecimento.setVisible(false);
                 return;
             }
             
-            // Busca usuário por similaridade facial (threshold de 0.7 = 70% de similaridade)
-            usuario = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, 0.7);
+            System.out.println("✅ Descritores extraídos com sucesso!");
+            System.out.println("   Tamanho: " + descritores.length() + " caracteres");
+            System.out.println("   Primeiros 100 chars: " + descritores.substring(0, Math.min(100, descritores.length())));
             
+            // Verifica se é um array JSON válido
+            if (!descritores.trim().startsWith("[")) {
+                System.err.println("⚠️ AVISO: Descritores não começam com '[' - pode não ser JSON válido");
+            }
+            
+            // Conta quantos valores tem no array
+            String valores = descritores.replaceAll("[\\[\\]\\s]", "");
+            String[] valoresArray = valores.isEmpty() ? new String[0] : valores.split(",");
+            System.out.println("   Número de dimensões: " + valoresArray.length);
+            if (valoresArray.length > 0) {
+                System.out.println("   Primeiro valor: " + valoresArray[0]);
+                System.out.println("   Último valor: " + valoresArray[valoresArray.length - 1]);
+            }
+            
+            // ETAPA 3: Busca no banco de dados
+            System.out.println("\n[ETAPA 3] Buscando usuário no banco de dados por similaridade facial...");
+            System.out.println("   Threshold configurado: 0.35 (35%) - mais restritivo para evitar falsos positivos");
+            // Threshold aumentado para 0.35 (35%) para ser mais restritivo e evitar matches incorretos
+            usuario = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, 0.75);
+            
+            // ETAPA 4: Resultado da busca
+            System.out.println("\n[ETAPA 4] Processando resultado da busca...");
             if (usuario != null) {
                 // Usuário identificado com sucesso
+                System.out.println("✅ SUCESSO: Usuário identificado!");
+                System.out.println("   ID: " + usuario.getIdUsuario());
+                System.out.println("   Nome: " + usuario.getNome());
+                System.out.println("   CPF: " + usuario.getCpf());
+                
+                // VALIDAÇÃO CRÍTICA: Verifica se o usuário tem dados faciais correspondentes
+                System.out.println("\n[VALIDAÇÃO] Verificando correspondência entre usuário e foto...");
+                DadosFaciais dadosFaciaisVerificacao = dadosFaciaisDAO.buscarPorUsuario(usuario.getIdUsuario());
+                if (dadosFaciaisVerificacao != null) {
+                    System.out.println("   ✅ DadosFaciais encontrado para o usuário ID: " + usuario.getIdUsuario());
+                    System.out.println("   ID DadosFaciais: " + dadosFaciaisVerificacao.getIdDadosFaciais());
+                    System.out.println("   ID Usuário no DadosFaciais: " + dadosFaciaisVerificacao.getFkUsuarioIdUsuario());
+                    
+                    // Valida se os IDs correspondem
+                    if (dadosFaciaisVerificacao.getFkUsuarioIdUsuario() != usuario.getIdUsuario()) {
+                        System.err.println("   ❌ ERRO CRÍTICO: ID do usuário não corresponde!");
+                        System.err.println("      Esperado: " + usuario.getIdUsuario());
+                        System.err.println("      Encontrado: " + dadosFaciaisVerificacao.getFkUsuarioIdUsuario());
+                    } else {
+                        System.out.println("   ✅ IDs correspondem corretamente!");
+                    }
+                    
+                    // Verifica se tem imagem
+                    if (dadosFaciaisVerificacao.getImagemRosto() != null && dadosFaciaisVerificacao.getImagemRosto().length > 0) {
+                        System.out.println("   ✅ Foto encontrada: " + dadosFaciaisVerificacao.getImagemRosto().length + 
+                                         " bytes (" + String.format("%.1f", dadosFaciaisVerificacao.getImagemRosto().length / 1024.0) + " KB)");
+                    } else {
+                        System.err.println("   ⚠️ AVISO: Usuário não tem foto cadastrada!");
+                    }
+                } else {
+                    System.err.println("   ❌ ERRO: Nenhum DadosFaciais encontrado para o usuário ID: " + usuario.getIdUsuario());
+                }
+                
+                System.out.println("\n" + "=".repeat(80));
+                System.out.println("✅ RECONHECIMENTO FACIAL CONCLUÍDO COM SUCESSO");
+                System.out.println("=".repeat(80) + "\n");
+                
                 lblStatusReconhecimento.setText("Usuário identificado com sucesso!");
                 exibirDadosUsuario();
             } else {
                 // Usuário não encontrado
-                mostrarErro("Usuário não encontrado", 
-                    "Não foi possível identificar um usuário com base na imagem capturada.\n" +
-                    "Verifique se você está cadastrado no sistema e tente novamente.");
+                System.out.println("❌ FALHA: Nenhum usuário encontrado com similaridade suficiente");
+                System.out.println("\n📋 DIAGNÓSTICO:");
+                System.out.println("   Possíveis causas:");
+                System.out.println("   1. Usuário não está cadastrado no sistema");
+                System.out.println("   2. Usuário não tem foto cadastrada com descritores faciais");
+                System.out.println("   3. Descritores faciais estão vazios ou inválidos no banco");
+                System.out.println("   4. Similaridade calculada está abaixo do threshold (0.75)");
+                System.out.println("   5. A foto capturada não tem qualidade suficiente");
+                System.out.println("   6. Iluminação ou posicionamento inadequados");
+                System.out.println("\n" + "=".repeat(80));
+                System.out.println("❌ RECONHECIMENTO FACIAL FALHOU");
+                System.out.println("=".repeat(80) + "\n");
+                
+                // Verifica se há usuários cadastrados no banco
+                boolean temUsuariosCadastrados = verificarSeTemUsuariosCadastrados();
+                
+                if (!temUsuariosCadastrados) {
+                    mostrarErro("Nenhum cadastro encontrado", 
+                        "Não há nenhum usuário cadastrado no sistema com foto facial.\n\n" +
+                        "Para usar esta funcionalidade, é necessário:\n" +
+                        "• Ter um cadastro no sistema\n" +
+                        "• Ter uma foto facial cadastrada\n\n" +
+                        "Entre em contato com o administrador para realizar seu cadastro.");
+                } else {
+                    mostrarErro("Usuário não encontrado", 
+                        "Não foi possível identificar um usuário com base na imagem capturada.\n\n" +
+                        "Você não está cadastrado no sistema ou não possui foto facial cadastrada.\n\n" +
+                        "Possíveis causas:\n" +
+                        "• Você não está cadastrado no sistema\n" +
+                        "• Não há foto cadastrada com descritores faciais\n" +
+                        "• A foto capturada não tem qualidade suficiente\n" +
+                        "• Iluminação ou posicionamento inadequados\n\n" +
+                        "Sugestões:\n" +
+                        "• Entre em contato com o administrador para realizar seu cadastro\n" +
+                        "• Se já possui cadastro, verifique se há foto facial cadastrada\n" +
+                        "• Tente novamente com melhor iluminação\n" +
+                        "• Posicione o rosto centralizado na câmera");
+                }
                 btnCapturar.setDisable(false);
                 progressReconhecimento.setVisible(false);
             }
@@ -199,27 +337,51 @@ public class ConsultaApenadoController {
             e.printStackTrace();
         }
     }
+    
+    /**
+     * Verifica se existem usuários cadastrados com dados faciais no banco
+     */
+    private boolean verificarSeTemUsuariosCadastrados() {
+        try {
+            List<DadosFaciais> todosDadosFaciais = dadosFaciaisDAO.listarTodos();
+            return todosDadosFaciais != null && !todosDadosFaciais.isEmpty();
+        } catch (Exception e) {
+            System.err.println("Erro ao verificar usuários cadastrados: " + e.getMessage());
+            return false;
+        }
+    }
 
     /**
      * Exibe os dados do usuário identificado
      */
     private void exibirDadosUsuario() {
+        
         if (usuario == null) {
+            System.err.println("  ❌ Usuário é NULL");
             return;
         }
         
+        System.out.println("  Usuário identificado:");
+        System.out.println("    ID: " + usuario.getIdUsuario());
+        System.out.println("    Nome: " + usuario.getNome());
+        System.out.println("    CPF: " + usuario.getCpf());
+        
         // Preenche os campos
+        System.out.println("  Preenchendo campos...");
         preencherCampos();
         
-        // Carrega a foto
+        // Carrega a foto (garantindo que é do usuário correto)
+        System.out.println("  Carregando foto do usuário ID: " + usuario.getIdUsuario());
         carregarFoto();
         
         // Carrega os registros
+        System.out.println("  Carregando registros...");
         carregarRegistros();
         
         // Alterna para a tela de dados
         paneReconhecimento.setVisible(false);
         paneDados.setVisible(true);
+        System.out.println("  ✅ Dados exibidos com sucesso!");
     }
 
     /**
@@ -402,35 +564,90 @@ public class ConsultaApenadoController {
      * Carrega a foto do apenado do banco de dados (BLOB)
      */
     private void carregarFoto() {
-        if (usuario == null || imgFoto == null) {
+        
+        if (usuario == null) {
+            System.err.println("  ❌ Usuário é NULL");
+            return;
+        }
+        
+        if (imgFoto == null) {
+            System.err.println("  ❌ ImageView imgFoto é NULL");
             return;
         }
 
         try {
             int idUsuario = usuario.getIdUsuario();
+            System.out.println("  Buscando foto para usuário ID: " + idUsuario);
+            System.out.println("  Nome do usuário: " + usuario.getNome());
             
             DadosFaciais dadosFaciais = dadosFaciaisDAO.buscarPorUsuario(idUsuario);
-            if (dadosFaciais != null && dadosFaciais.getImagemRosto() != null) {
-                try {
-                    // Converte o blob para BufferedImage
-                    BufferedImage imagemDoBanco = reconhecimentoFacial.blobParaImagem(dadosFaciais.getImagemRosto());
-                    if (imagemDoBanco != null) {
-                        // Converte BufferedImage para Image JavaFX
-                        Image imagePreview = converterBufferedImageParaImage(imagemDoBanco);
-                        if (imagePreview != null && !imagePreview.isError()) {
-                            imgFoto.setImage(imagePreview);
-                            imgFoto.setFitWidth(140.0);
-                            imgFoto.setFitHeight(140.0);
-                            imgFoto.setPreserveRatio(true);
-                            imgFoto.setSmooth(true);
-                        }
-                    }
-                } catch (Exception e) {
-                    System.err.println("Erro ao carregar foto do banco de dados: " + e.getMessage());
+            
+            if (dadosFaciais == null) {
+                System.err.println("  ❌ Nenhum registro de DadosFaciais encontrado para o usuário ID: " + idUsuario);
+                return;
+            }
+            
+            System.out.println("  ✅ DadosFaciais encontrado (ID: " + dadosFaciais.getIdDadosFaciais() + ")");
+            
+            if (dadosFaciais.getImagemRosto() == null) {
+                System.err.println("  ❌ Campo imagem_rosto é NULL");
+                return;
+            }
+            
+            if (dadosFaciais.getImagemRosto().length == 0) {
+                System.err.println("  ❌ Campo imagem_rosto está vazio (0 bytes)");
+                return;
+            }
+            
+            System.out.println("  ✅ Imagem encontrada: " + dadosFaciais.getImagemRosto().length + 
+                             " bytes (" + String.format("%.1f", dadosFaciais.getImagemRosto().length / 1024.0) + " KB)");
+            
+            try {
+                // Converte o byte[] para BufferedImage usando o método do ReconhecimentoFacial
+                System.out.println("  Convertendo byte[] para BufferedImage...");
+                util.ReconhecimentoFacial reconhecimentoFacial = new util.ReconhecimentoFacial();
+                BufferedImage imagemDoBanco = reconhecimentoFacial.bytesParaImagem(dadosFaciais.getImagemRosto());
+                
+                if (imagemDoBanco == null) {
+                    System.err.println("  ❌ Falha ao converter byte[] para BufferedImage");
+                    return;
                 }
+                
+                System.out.println("  ✅ BufferedImage criado: " + imagemDoBanco.getWidth() + "x" + imagemDoBanco.getHeight());
+                
+                // Converte BufferedImage para Image JavaFX
+                System.out.println("  Convertendo BufferedImage para Image JavaFX...");
+                Image imagePreview = converterBufferedImageParaImage(imagemDoBanco);
+                
+                if (imagePreview == null) {
+                    System.err.println("  ❌ Falha ao converter BufferedImage para Image JavaFX");
+                    return;
+                }
+                
+                if (imagePreview.isError()) {
+                    System.err.println("  ❌ Image JavaFX está com erro");
+                    return;
+                }
+                
+                System.out.println("  ✅ Image JavaFX criada: " + imagePreview.getWidth() + "x" + imagePreview.getHeight());
+                
+                // Atualiza a ImageView na thread do JavaFX
+                Platform.runLater(() -> {
+                    imgFoto.setImage(imagePreview);
+                    imgFoto.setFitWidth(140.0);
+                    imgFoto.setFitHeight(140.0);
+                    imgFoto.setPreserveRatio(true);
+                    imgFoto.setSmooth(true);
+                    System.out.println("  ✅ Foto exibida no ImageView com sucesso!");
+                });
+                
+            } catch (Exception e) {
+                System.err.println("  ❌ Erro ao processar foto do banco de dados: " + e.getMessage());
+                e.printStackTrace();
             }
         } catch (Exception e) {
-            System.err.println("Erro ao carregar foto: " + e.getMessage());
+            System.err.println("  ❌ Erro ao carregar foto: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

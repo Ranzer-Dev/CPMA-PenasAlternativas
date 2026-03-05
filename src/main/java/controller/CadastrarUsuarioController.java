@@ -238,37 +238,26 @@ public class CadastrarUsuarioController {
 
     @FXML
     private void iniciarCamera(ActionEvent event) {
-        System.out.println("=== INICIANDO CÂMERA ===");
-        System.out.println("Evento recebido: " + event);
-        System.out.println("Botão clicado: " + (event.getSource() != null ? event.getSource().getClass().getSimpleName() : "NULL"));
-
         try {
-            System.out.println("Carregando FXML da câmera...");
             // Carrega o FXML da janela da câmera
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/mycompany/cpma/cameraView.fxml"));
             Parent root = loader.load();
-            System.out.println("FXML carregado com sucesso!");
 
             // Pega o controller da janela da câmera
             CameraController cameraController = loader.getController();
-            System.out.println("Controller da câmera obtido: " + (cameraController != null ? "OK" : "NULL"));
 
             // Cria uma nova janela (Stage)
             Stage cameraStage = new Stage();
             cameraStage.setTitle("Capturar Foto");
             cameraStage.setScene(new Scene(root));
-            System.out.println("Stage da câmera criado!");
 
             // Configura para ser uma janela modal (bloqueia a janela de cadastro)
             cameraStage.initModality(Modality.APPLICATION_MODAL);
 
             // Mostra a janela e espera ela ser fechada
-            System.out.println("Mostrando janela da câmera...");
             cameraStage.showAndWait();
-            System.out.println("Janela da câmera fechada!");
 
             // Processa a imagem após a janela ser fechada
-            // Isso garante que estamos na thread correta e a imagem foi capturada
             processarImagemCapturada(cameraController);
 
         } catch (IOException e) {
@@ -291,16 +280,12 @@ public class CadastrarUsuarioController {
             return;
         }
 
-        // Pega a imagem que foi capturada do controller
-        BufferedImage imagemCapturada = cameraController.getImagemCapturada();
-        System.out.println("Imagem capturada do controller: " + (imagemCapturada != null ? "OK" : "NULL"));
+                // Pega a imagem que foi capturada do controller
+                BufferedImage imagemCapturada = cameraController.getImagemCapturada();
 
-        if (imagemCapturada != null) {
-            System.out.println("Dimensões da imagem: " + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight());
-
+                if (imagemCapturada != null) {
             // Guarda a imagem para salvar no banco e arquivo
-            this.imagemCapturada = imagemCapturada;
-            System.out.println("Imagem armazenada para salvamento no banco e arquivo");
+                    this.imagemCapturada = imagemCapturada;
 
             // Usa Platform.runLater para garantir que estamos na thread da UI
             Platform.runLater(() -> {
@@ -310,14 +295,11 @@ public class CadastrarUsuarioController {
                 }
 
                 try {
-                    System.out.println("Convertendo BufferedImage para Image JavaFX...");
-                    
                     // Tenta converter usando o método do controller
                     Image imagePreviewTemp = converterBufferedImageParaImage(imagemCapturada);
                     
                     // Se falhar, tenta método alternativo
                     if (imagePreviewTemp == null) {
-                        System.out.println("Tentando método alternativo de conversão...");
                         imagePreviewTemp = converterBufferedImageParaImageAlternativo(imagemCapturada);
                     }
                     
@@ -325,18 +307,16 @@ public class CadastrarUsuarioController {
                     final Image imagePreview = imagePreviewTemp;
                     
                     if (imagePreview != null && !imagePreview.isError()) {
-                        System.out.println("Image JavaFX criada com sucesso: " + imagePreview.getWidth() + "x" + imagePreview.getHeight());
-                        
                         // Limpa qualquer imagem anterior para forçar atualização
                         foto.setImage(null);
                         
                         // Define a nova imagem no ImageView diretamente (já estamos na thread da UI)
-                        foto.setImage(imagePreview);
+                                            foto.setImage(imagePreview);
                         foto.setFitWidth(120.0);
                         foto.setFitHeight(120.0);
-                        foto.setPreserveRatio(true);
-                        foto.setSmooth(true);
-                        foto.setCache(true);
+                                            foto.setPreserveRatio(true);
+                                            foto.setSmooth(true);
+                                            foto.setCache(true);
                         foto.setVisible(true);
                         
                         // Força a atualização do parent (VBox) se existir
@@ -346,11 +326,6 @@ public class CadastrarUsuarioController {
                                 ((javafx.scene.layout.Region) parent).requestLayout();
                             }
                         }
-                        
-                        System.out.println("✅ Foto exibida no ImageView com sucesso!");
-                        System.out.println("  - ImageView visível: " + foto.isVisible());
-                        System.out.println("  - ImageView imagem: " + (foto.getImage() != null ? "OK" : "NULL"));
-                        System.out.println("  - ImageView parent: " + (foto.getParent() != null ? foto.getParent().getClass().getSimpleName() : "NULL"));
                     } else {
                         System.err.println("❌ Falha ao converter BufferedImage para Image JavaFX");
                         if (imagePreview != null && imagePreview.isError()) {
@@ -359,14 +334,14 @@ public class CadastrarUsuarioController {
                                 System.err.println("  - Erro na imagem: " + exception.getMessage());
                             }
                         }
-                    }
-                } catch (Exception ex) {
+                        }
+                    } catch (Exception ex) {
                     System.err.println("❌ Erro ao exibir foto: " + ex.getMessage());
-                    ex.printStackTrace();
-                }
+                        ex.printStackTrace();
+                    }
             });
-        } else {
-            System.out.println("❌ Nenhuma imagem foi capturada");
+                } else {
+            System.err.println("❌ Nenhuma imagem foi capturada");
         }
     }
 
@@ -498,36 +473,8 @@ public class CadastrarUsuarioController {
             return result;
         } catch (IOException e) {
             System.err.println("❌ Erro na conversão alternativa: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-    }
-// ... outras importações ...
-
-    @FXML
-    private void capturarFoto(ActionEvent event) {
-        if (frameCapturado != null && !frameCapturado.empty()) {
-            try {
-                // Converte o frame capturado para uma imagem e exibe no ImageView
-                Image fotoCapturada = matToImage(frameCapturado);
-                foto.setImage(fotoCapturada);
-
-                // Converte o Mat do Bytedeco para um BufferedImage para processamento facial
-                imagemCapturada = matToBufferedImage(frameCapturado);
-
-                // Para a câmera após a captura
-                pararCamera();
-                System.out.println("Foto capturada com sucesso!");
-
-                // Mostra mensagem de sucesso
-                mostrarAlerta("Sucesso", "Foto capturada com sucesso! Os dados faciais serão salvos junto com o cadastro.");
-
-            } catch (Exception e) {
-                mostrarAlerta("Erro", "Erro ao processar a foto: " + e.getMessage());
                 e.printStackTrace();
-            }
-        } else {
-            mostrarAlerta("Aviso", "Nenhuma imagem foi capturada pela câmera. Tente novamente.");
+            return null;
         }
     }
 
@@ -652,6 +599,35 @@ public class CadastrarUsuarioController {
             if (!validarCpf(cpf.getText())) {
                 return;
             }
+            
+            // VALIDAÇÃO: Foto é obrigatória no cadastro (apenas em modo cadastro, não em edição)
+            if (!modoEdicao && imagemCapturada == null) {
+                mostrarAlerta("Erro", 
+                    "Foto obrigatória!\n\n" +
+                    "É necessário capturar uma foto do rosto para realizar o cadastro.\n" +
+                    "A foto é utilizada para reconhecimento facial.\n\n" +
+                    "Por favor, clique no botão 'Tirar Foto' e capture uma imagem do rosto.");
+                return;
+            }
+            
+            // Se houver foto (cadastro novo ou edição com nova foto), valida se tem face detectada
+            if (imagemCapturada != null) {
+                System.out.println("Validando foto capturada antes do cadastro...");
+                String descritoresTeste = reconhecimentoFacial.extrairDescritoresFaciais(imagemCapturada);
+                if (descritoresTeste == null || descritoresTeste.isEmpty() || descritoresTeste.equals("[]")) {
+                    mostrarAlerta("Erro", 
+                        "Foto inválida!\n\n" +
+                        "Não foi possível detectar um rosto na foto capturada.\n\n" +
+                        "Por favor, tire uma nova foto seguindo estas orientações:\n" +
+                        "• Certifique-se de que o rosto está visível\n" +
+                        "• Use boa iluminação\n" +
+                        "• Posicione o rosto centralizado na câmera\n" +
+                        "• Mantenha uma distância adequada da câmera");
+                    return;
+                }
+                
+                System.out.println("✅ Foto validada com sucesso - descritores extraídos: " + descritoresTeste.length() + " caracteres");
+            }
 
             idUsuarioInserido = cadastrarUsuario(
                     nome.getText(), cpf.getText(), nacionalidade.getText(),
@@ -659,7 +635,7 @@ public class CadastrarUsuarioController {
                     bairro.getText(), cidade.getText(), uf.getText(), observacao.getText(),
                     telefone.getText().trim(), cep.getText());
 
-            // Se uma foto foi capturada, salvar os dados faciais
+            // Salva os dados faciais se houver foto (obrigatória no cadastro, opcional na edição)
             if (imagemCapturada != null) {
                 salvarDadosFaciais(idUsuarioInserido);
             }
@@ -671,6 +647,10 @@ public class CadastrarUsuarioController {
 
         } catch (IllegalArgumentException e) {
             mostrarAlerta("Erro", e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Erro inesperado ao cadastrar usuário: " + e.getMessage());
+            e.printStackTrace();
+            mostrarAlerta("Erro", "Erro inesperado ao cadastrar usuário: " + e.getMessage());
         }
     }
 
@@ -880,41 +860,6 @@ public class CadastrarUsuarioController {
         uf.textProperty().addListener((o, ov, nv) -> limparErro(uf));
     }
 
-    private void carregarPenas() {
-        comboTipoPena.getItems().clear();
-        mapNomeParaIdInstituicao.clear();
-
-        List<Pena> penas = PenaDAO.buscarTodasPenas();
-        for (Pena p : penas) {
-            comboTipoPena.getItems().add(p.getDescricao());
-            mapNomeParaIdInstituicao.put(p.getDescricao(), p.getIdPena());
-        }
-        comboTipoPena.getItems().add("Adicionar nova pena...");
-    }
-
-    private void carregarInstituicoes() {
-        comboInstituicao.getItems().clear();
-        mapNomeParaIdInstituicao.clear();
-
-        List<Instituicao> insts = InstituicaoDAO.buscarTodasInstituicoes();
-        for (Instituicao inst : insts) {
-            comboInstituicao.getItems().add(inst.getNome());
-            mapNomeParaIdInstituicao.put(inst.getNome(), inst.getIdInstituicao());
-        }
-        comboInstituicao.getItems().add("Adicionar nova instituicao...");
-    }
-
-    private void abrirCadastroInstituicao() {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/com/mycompany/cpma/cadastroInstituicaoView.fxml"));
-            Stage st = new Stage();
-            st.setTitle("Cadastrar Instituicao");
-            st.setScene(new Scene(root));
-            st.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Configura o listener para buscar CEP automaticamente quando o campo for
@@ -1041,7 +986,7 @@ public class CadastrarUsuarioController {
     }
 
     /**
-     * Salva os dados faciais do usuário no banco de dados (apenas BLOB)
+     * Salva os dados faciais do usuário no banco de dados
      * Se já existir dados faciais para o usuário, atualiza; senão, cria novo registro
      */
     private void salvarDadosFaciais(int idUsuario) {
@@ -1051,27 +996,35 @@ public class CadastrarUsuarioController {
                 return;
             }
 
-            // Converte a imagem para Blob usando OpenCV
-            java.sql.Blob imagemBlob = null;
-            try (java.sql.Connection conn = database.ConnectionFactory.getConnection()) {
-                imagemBlob = reconhecimentoFacial.imagemParaBlob(imagemCapturada, conn);
-                System.out.println("Imagem convertida para Blob: " + (imagemBlob != null ? "OK" : "NULL"));
+            // Converte a imagem para byte[] para salvar no banco
+            byte[] imagemBytes = null;
+            try {
+                imagemBytes = reconhecimentoFacial.imagemParaBytes(imagemCapturada);
+                System.out.println("Imagem convertida para byte[]: " + (imagemBytes != null ? imagemBytes.length + " bytes" : "NULL"));
             } catch (Exception e) {
-                System.err.println("Erro ao converter imagem para Blob: " + e.getMessage());
+                System.err.println("Erro ao converter imagem para byte[]: " + e.getMessage());
                 e.printStackTrace();
-                mostrarAlerta("Erro", "Erro ao converter imagem para Blob: " + e.getMessage());
+                mostrarAlerta("Erro", "Erro ao converter imagem: " + e.getMessage());
                 return;
             }
 
-            if (imagemBlob == null) {
-                System.err.println("Falha ao converter imagem para Blob");
-                mostrarAlerta("Erro", "Falha ao converter imagem para Blob.");
+            if (imagemBytes == null || imagemBytes.length == 0) {
+                System.err.println("Falha ao converter imagem para byte[]");
+                mostrarAlerta("Erro", "Falha ao converter imagem.");
                 return;
             }
 
-            // Extrai descritores faciais da imagem capturada
-            String descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagemCapturada);
-            System.out.println("Descritores faciais extraídos: " + (descritores != null && !descritores.isEmpty() ? "OK" : "VAZIO"));
+                // Extrai descritores faciais da imagem capturada
+                String descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagemCapturada);
+            System.out.println("Descritores extraídos: " + (descritores != null && !descritores.isEmpty() ? "OK" : "VAZIO"));
+                if (descritores != null && !descritores.isEmpty()) {
+                System.out.println("Tamanho dos descritores: " + descritores.length() + " caracteres");
+                System.out.println("Primeiros 200 caracteres: " + descritores.substring(0, Math.min(200, descritores.length())));
+            } else {
+                System.err.println("⚠️ ATENÇÃO: Descritores faciais não foram extraídos! O reconhecimento facial não funcionará.");
+                mostrarAlerta("Aviso", "Não foi possível extrair descritores faciais da imagem. O reconhecimento facial pode não funcionar corretamente.");
+                // Continua mesmo assim para salvar a imagem
+            }
 
             // Verifica se já existe dados faciais para este usuário
             DadosFaciais dadosFaciaisExistentes = dadosFaciaisDAO.buscarPorUsuario(idUsuario);
@@ -1083,7 +1036,7 @@ public class CadastrarUsuarioController {
                 // Atualiza registro existente
                 System.out.println("Atualizando dados faciais existentes para o usuário ID: " + idUsuario);
                 dadosFaciais = dadosFaciaisExistentes;
-                dadosFaciais.setImagemRosto(imagemBlob);
+                dadosFaciais.setImagemRosto(imagemBytes);
                 dadosFaciais.setDescritoresFaciais(descritores != null ? descritores : "");
                 dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
                 dadosFaciais.setAtivo(true);
@@ -1092,22 +1045,22 @@ public class CadastrarUsuarioController {
                 // Cria novo registro
                 System.out.println("Criando novos dados faciais para o usuário ID: " + idUsuario);
                 dadosFaciais = new DadosFaciais();
-                dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
-                dadosFaciais.setImagemRosto(imagemBlob);
+                    dadosFaciais.setFkUsuarioIdUsuario(idUsuario);
+                dadosFaciais.setImagemRosto(imagemBytes);
                 dadosFaciais.setDescritoresFaciais(descritores != null ? descritores : "");
-                dadosFaciais.setCriadoEm(new java.sql.Date(System.currentTimeMillis()));
-                dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
-                dadosFaciais.setAtivo(true);
+                    dadosFaciais.setCriadoEm(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setDataAtualizacao(new java.sql.Date(System.currentTimeMillis()));
+                    dadosFaciais.setAtivo(true);
                 sucesso = dadosFaciaisDAO.cadastrar(dadosFaciais);
             }
 
             if (sucesso) {
-                System.out.println("Dados faciais salvos com sucesso para o usuário ID: " + idUsuario);
-                System.out.println("  - Blob salvo no banco: " + (imagemBlob != null ? "SIM" : "NÃO"));
+                        System.out.println("Dados faciais salvos com sucesso para o usuário ID: " + idUsuario);
+                System.out.println("  - Imagem salva no banco: " + (imagemBytes != null ? imagemBytes.length + " bytes" : "NÃO"));
                 System.out.println("  - Descritores salvos: " + (descritores != null && !descritores.isEmpty() ? "SIM" : "NÃO"));
-            } else {
-                System.err.println("Erro ao salvar dados faciais para o usuário ID: " + idUsuario);
-                mostrarAlerta("Erro", "Erro ao salvar dados faciais no banco de dados.");
+                    } else {
+                        System.err.println("Erro ao salvar dados faciais para o usuário ID: " + idUsuario);
+                        mostrarAlerta("Erro", "Erro ao salvar dados faciais no banco de dados.");
             }
 
         } catch (Exception e) {
@@ -1131,24 +1084,26 @@ public class CadastrarUsuarioController {
             System.out.println("Carregando foto do banco de dados para o usuário ID: " + idUsuario);
             
             DadosFaciais dadosFaciais = dadosFaciaisDAO.buscarPorUsuario(idUsuario);
-            if (dadosFaciais != null && dadosFaciais.getImagemRosto() != null) {
+            if (dadosFaciais != null && dadosFaciais.getImagemRosto() != null && dadosFaciais.getImagemRosto().length > 0) {
                 try {
-                    // Converte o blob para BufferedImage
-                    BufferedImage imagemDoBanco = reconhecimentoFacial.blobParaImagem(dadosFaciais.getImagemRosto());
+                    // Converte o byte[] para BufferedImage
+                    byte[] imagemBytes = dadosFaciais.getImagemRosto();
+                    java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(imagemBytes);
+                    BufferedImage imagemDoBanco = javax.imageio.ImageIO.read(bais);
+                    bais.close();
                     if (imagemDoBanco != null) {
-                        // Converte e exibe
+                    // Converte e exibe
                         Image imagePreview = converterBufferedImageParaImage(imagemDoBanco);
                         if (imagePreview != null && !imagePreview.isError()) {
-                            foto.setImage(imagePreview);
-                            foto.setFitWidth(120);
-                            foto.setFitHeight(120);
-                            foto.setPreserveRatio(true);
-                            foto.setSmooth(true);
+                        foto.setImage(imagePreview);
+                        foto.setFitWidth(120);
+                        foto.setFitHeight(120);
+                        foto.setPreserveRatio(true);
+                        foto.setSmooth(true);
 
-                            // Armazena para possível atualização
+                        // Armazena para possível atualização
                             this.imagemCapturada = imagemDoBanco;
 
-                            System.out.println("Foto carregada do banco de dados (blob) para o usuário ID: " + idUsuario);
                         } else {
                             System.err.println("Erro ao converter imagem do banco para Image JavaFX");
                         }
@@ -1160,7 +1115,6 @@ public class CadastrarUsuarioController {
                     e.printStackTrace();
                 }
             } else {
-                System.out.println("Nenhuma foto encontrada no banco de dados para o usuário ID: " + idUsuario);
             }
 
         } catch (Exception e) {

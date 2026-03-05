@@ -179,8 +179,6 @@ public class CameraController {
 
     @FXML
     void capturarFoto(ActionEvent event) {
-        System.out.println("=== CAPTURANDO FOTO ===");
-        System.out.println("Frame capturado: " + (frameCapturado != null ? "OK" : "NULL"));
         
         if (frameCapturado != null && !frameCapturado.empty()) {
             System.out.println("Dimensões do frame: " + frameCapturado.rows() + "x" + frameCapturado.cols());
@@ -208,18 +206,29 @@ public class CameraController {
 
             // Fecha a janela após um pequeno delay para o usuário ver a confirmação
             // IMPORTANTE: A imagem já foi capturada e armazenada antes de fechar
+            System.out.println("Agendando fechamento da janela após delay...");
             Platform.runLater(() -> {
                 javafx.concurrent.Task<Void> delayTask = new javafx.concurrent.Task<Void>() {
                     @Override
                     protected Void call() throws Exception {
+                        System.out.println("[Task] Iniciando delay de 300ms...");
                         Thread.sleep(300); // 300ms de delay (reduzido para resposta mais rápida)
                         return null;
                     }
 
                     @Override
                     protected void succeeded() {
-                        System.out.println("Fechando janela da câmera...");
-                        System.out.println("  - Verificando se imagem ainda existe antes de fechar: " + (imagemCapturada != null ? "SIM (" + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight() + ")" : "NÃO"));
+                        System.out.println("\n" + "=".repeat(80));
+                        System.out.println("🔔 [CameraController] Fechando janela da câmera...");
+                        System.out.println("=".repeat(80));
+                        System.out.println("  - Verificando se imagem ainda existe antes de fechar: " + 
+                                         (imagemCapturada != null ? "SIM (" + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight() + ")" : "NÃO"));
+                        if (imagemCapturada != null) {
+                            System.out.println("  - Tipo da imagem: " + imagemCapturada.getType());
+                            System.out.println("  - ✅ Imagem será mantida para retorno ao controller pai");
+                        } else {
+                            System.err.println("  - ❌ ERRO: Imagem é NULL - não será possível retornar ao controller pai");
+                        }
                         // NÃO limpa a imagem aqui - ela precisa ser retornada ao controller pai
                         fecharJanelaSemLimparImagem();
                     }
@@ -269,9 +278,18 @@ public class CameraController {
             Stage stage = (Stage) btnCancelar.getScene().getWindow();
             if (stage != null) {
                 System.out.println("  - Fechando Stage da câmera...");
+                System.out.println("  - Imagem antes de fechar: " + (imagemCapturada != null ? 
+                                 "SIM (" + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight() + ")" : "NÃO"));
                 stage.close();
-                System.out.println("  - Stage fechado. Imagem ainda disponível: " + (imagemCapturada != null ? "SIM" : "NÃO"));
+                System.out.println("  - Stage fechado.");
+                System.out.println("  - Imagem após fechar: " + (imagemCapturada != null ? 
+                                 "SIM (" + imagemCapturada.getWidth() + "x" + imagemCapturada.getHeight() + ")" : "NÃO"));
+                System.out.println("  - ✅ Imagem mantida para retorno ao controller pai");
+            } else {
+                System.err.println("  - ❌ ERRO: Stage é NULL - não foi possível fechar a janela");
             }
+        } else {
+            System.err.println("  - ❌ ERRO: btnCancelar ou Scene é NULL - não foi possível fechar a janela");
         }
     }
 
@@ -283,6 +301,12 @@ public class CameraController {
     }
 
     public BufferedImage getImagemCapturada() {
+        System.out.println("[CameraController.getImagemCapturada()] Chamado");
+        System.out.println("  - imagemCapturada é: " + (this.imagemCapturada != null ? "NÃO NULL" : "NULL"));
+        if (this.imagemCapturada != null) {
+            System.out.println("  - Dimensões: " + this.imagemCapturada.getWidth() + "x" + this.imagemCapturada.getHeight());
+            System.out.println("  - Tipo: " + this.imagemCapturada.getType());
+        }
         return this.imagemCapturada;
     }
 

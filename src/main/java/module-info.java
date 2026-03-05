@@ -16,9 +16,13 @@ module com.mycompany.cpma {
     opens controller to javafx.fxml;
     opens model to javafx.base, javafx.fxml;
     opens dao to javafx.fxml;
+    opens util to javafx.fxml;
+    opens database to javafx.fxml;
     
     exports com.mycompany.cpma;
     exports controller;
     exports model;
     exports dao;
+    exports util;
+    exports database;
 }

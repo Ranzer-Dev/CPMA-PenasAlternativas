@@ -32,12 +32,10 @@ public class AdminDAO {
                 admin.setNivelPermissao(rs.getInt("nivel_permissao"));
                 admin.setPerguntaSecreta(rs.getString("pergunta_secreta"));
                 admin.setRespostaSecreta(rs.getString("resposta_secreta"));
-            } else {
-                System.out.println("Nenhum admin encontrado com o CPF: " + cpf);
             }
 
         } catch (Exception e) {
-            System.err.println("Erro ao buscar admin por CPF: " + e.getMessage());
+            System.err.println("   ❌ Erro ao buscar admin por CPF: " + e.getMessage());
             e.printStackTrace();
         }
 
