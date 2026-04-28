@@ -58,6 +58,7 @@ import model.DadosFaciais;
 import model.Instituicao;
 import model.Pena;
 import model.Usuario;
+import utils.FormatacaoUtils;
  import util.ReconhecimentoFacial;
 import util.ValidadorCPF;
 
@@ -599,6 +600,8 @@ public class CadastrarUsuarioController {
             if (!validarCpf(cpf.getText())) {
                 return;
             }
+
+            LocalDate dataNascimentoInformada = obterDataNascimentoValida();
             
             // VALIDAÇÃO: Foto é obrigatória no cadastro (apenas em modo cadastro, não em edição)
             if (!modoEdicao && imagemCapturada == null) {
@@ -631,7 +634,7 @@ public class CadastrarUsuarioController {
 
             idUsuarioInserido = cadastrarUsuario(
                     nome.getText(), cpf.getText(), nacionalidade.getText(),
-                    dataNascimento.getValue(), endereco.getText(),
+                    dataNascimentoInformada, endereco.getText(),
                     bairro.getText(), cidade.getText(), uf.getText(), observacao.getText(),
                     telefone.getText().trim(), cep.getText());
 
@@ -696,11 +699,13 @@ public class CadastrarUsuarioController {
         }
 
         try {
+            LocalDate dataNascimentoInformada = obterDataNascimentoValida();
+
             usuarioEditando.setNome(nome.getText());
             usuarioEditando.setCpf(cpf.getText().replaceAll("\\D", ""));
 
             usuarioEditando.setNacionalidade(nacionalidade.getText());
-            usuarioEditando.setDataNascimento(Date.valueOf(dataNascimento.getValue()));
+            usuarioEditando.setDataNascimento(Date.valueOf(dataNascimentoInformada));
             // criadoEm não é editável, mantém o valor original
             // usuarioEditando.setCriadoEm(Date.valueOf(criadoEm.getValue()));
             usuarioEditando.setEndereco(endereco.getText());
@@ -818,29 +823,15 @@ public class CadastrarUsuarioController {
     }
 
     private void configurarFormatoBrasileiro() {
-        // Configurar formato brasileiro para DatePicker
-        dataNascimento.setConverter(new javafx.util.StringConverter<java.time.LocalDate>() {
-            private final java.time.format.DateTimeFormatter dateFormatter = 
-                java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        FormatacaoUtils.configurarDatePickerBrasileiro(dataNascimento);
+    }
 
-            @Override
-            public String toString(java.time.LocalDate date) {
-                if (date != null) {
-                    return dateFormatter.format(date);
-                } else {
-                    return "";
-                }
-            }
-
-            @Override
-            public java.time.LocalDate fromString(String string) {
-                if (string != null && !string.isEmpty()) {
-                    return java.time.LocalDate.parse(string, dateFormatter);
-                } else {
-                    return null;
-                }
-            }
-        });
+    private LocalDate obterDataNascimentoValida() {
+        LocalDate data = FormatacaoUtils.obterDataValida(dataNascimento);
+        if (data == null) {
+            throw new IllegalArgumentException("Data de nascimento inválida. Use o formato dd/MM/aaaa.");
+        }
+        return data;
     }
 
     private void limparErro(Control c) {

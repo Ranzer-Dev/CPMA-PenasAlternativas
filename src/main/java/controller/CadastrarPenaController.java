@@ -2,7 +2,6 @@ package controller;
 
 import java.sql.Date;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 
@@ -230,12 +229,12 @@ public class CadastrarPenaController {
             double tempo = Double.parseDouble(tempoStr.replace(",", "."));
             int horasSem = Integer.parseInt(horasSemStr);
             double horasTot = Double.parseDouble(horasTotStr);
-            LocalDate ini = dataInicio.getValue();
+            LocalDate ini = FormatacaoUtils.obterDataValida(dataInicio);
             if (ini == null) {
                 alert("Data de início é obrigatória.");
                 return null;
             }
-            LocalDate fim = dataTermino.getValue();
+            LocalDate fim = FormatacaoUtils.obterDataValida(dataTermino);
 
             Pena pena = new Pena();
             pena.setFkUsuarioIdUsuario(u.getIdUsuario());
@@ -393,49 +392,8 @@ public class CadastrarPenaController {
      * Configura a formatação de data em formato brasileiro (dd/MM/yyyy)
      */
     private void configurarFormatacaoData() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        
-        // Configuração para dataInicio
-        dataInicio.setConverter(new StringConverter<LocalDate>() {
-            @Override
-            public String toString(LocalDate date) {
-                if (date != null) {
-                    return formatter.format(date);
-                } else {
-                    return "";
-                }
-            }
-
-            @Override
-            public LocalDate fromString(String string) {
-                if (string != null && !string.isEmpty()) {
-                    return LocalDate.parse(string, formatter);
-                } else {
-                    return null;
-                }
-            }
-        });
-
-        // Configuração para dataTermino
-        dataTermino.setConverter(new StringConverter<LocalDate>() {
-            @Override
-            public String toString(LocalDate date) {
-                if (date != null) {
-                    return formatter.format(date);
-                } else {
-                    return "";
-                }
-            }
-
-            @Override
-            public LocalDate fromString(String string) {
-                if (string != null && !string.isEmpty()) {
-                    return LocalDate.parse(string, formatter);
-                } else {
-                    return null;
-                }
-            }
-        });
+        FormatacaoUtils.configurarDatePickerBrasileiro(dataInicio);
+        FormatacaoUtils.configurarDatePickerBrasileiro(dataTermino);
     }
 
     /**

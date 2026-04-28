@@ -1,10 +1,15 @@
 package utils;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
+import java.util.Locale;
 
 import javafx.application.Platform;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
@@ -15,6 +20,12 @@ import java.util.function.UnaryOperator;
  * Classe utilitária para formatação de campos de texto
  */
 public class FormatacaoUtils {
+    private static final DateTimeFormatter DATE_BR_FORMATTER =
+            new DateTimeFormatterBuilder()
+                    .parseCaseInsensitive()
+                    .appendPattern("dd/MM/uuuu")
+                    .toFormatter(new Locale("pt", "BR"))
+                    .withResolverStyle(ResolverStyle.STRICT);
     
 
 /**
@@ -243,5 +254,125 @@ public class FormatacaoUtils {
             return (LocalTime) campo.getTextFormatter().getValue();
         }
         return parseHora(campo.getText());
+    }
+
+    /**
+     * Configura DatePicker para formato brasileiro com máscara manual (dd/MM/aaaa).
+     */
+    public static void configurarDatePickerBrasileiro(DatePicker datePicker) {
+        if (datePicker == null) {
+            return;
+        }
+
+        datePicker.setEditable(true);
+        datePicker.getEditor().setPromptText("dd/MM/aaaa");
+
+        datePicker.setConverter(new StringConverter<LocalDate>() {
+            @Override
+            public String toString(LocalDate date) {
+                return date == null ? "" : DATE_BR_FORMATTER.format(date);
+            }
+
+            @Override
+            public LocalDate fromString(String string) {
+                return parseDataBrasileira(string);
+            }
+        });
+
+        // Permite somente dígitos e "/" com tamanho máximo de dd/MM/aaaa.
+        datePicker.getEditor().setTextFormatter(new TextFormatter<>(change -> {
+            String novoTexto = change.getControlNewText();
+            if (novoTexto.length() > 10) {
+                return null;
+            }
+            if (!novoTexto.matches("[0-9/]*")) {
+                return null;
+            }
+            return change;
+        }));
+
+        datePicker.getEditor().textProperty().addListener((obs, oldText, newText) -> {
+            if (newText == null || newText.equals(oldText)) {
+                return;
+            }
+
+            String mascarado = aplicarMascaraData(newText);
+            if (!mascarado.equals(newText)) {
+                Platform.runLater(() -> {
+                    datePicker.getEditor().setText(mascarado);
+                    datePicker.getEditor().positionCaret(mascarado.length());
+                });
+            }
+        });
+
+        datePicker.getEditor().focusedProperty().addListener((obs, oldFocused, focused) -> {
+            if (!focused) {
+                sincronizarTextoDataNoDatePicker(datePicker);
+            }
+        });
+
+        datePicker.setOnAction(event -> sincronizarTextoDataNoDatePicker(datePicker));
+        datePicker.getEditor().setOnAction(event -> sincronizarTextoDataNoDatePicker(datePicker));
+    }
+
+    /**
+     * Converte texto no formato brasileiro para LocalDate. Retorna null para inválido.
+     */
+    public static LocalDate parseDataBrasileira(String texto) {
+        if (texto == null || texto.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(texto.trim(), DATE_BR_FORMATTER);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Retorna data do DatePicker considerando valor digitado manualmente.
+     */
+    public static LocalDate obterDataValida(DatePicker datePicker) {
+        if (datePicker == null) {
+            return null;
+        }
+
+        LocalDate digitada = parseDataBrasileira(datePicker.getEditor().getText());
+        if (digitada != null) {
+            datePicker.setValue(digitada);
+            return digitada;
+        }
+
+        return datePicker.getValue();
+    }
+
+    private static String aplicarMascaraData(String texto) {
+        String digits = texto.replaceAll("\\D", "");
+
+        if (digits.length() > 8) {
+            digits = digits.substring(0, 8);
+        }
+
+        if (digits.length() <= 2) {
+            return digits;
+        }
+        if (digits.length() <= 4) {
+            return digits.substring(0, 2) + "/" + digits.substring(2);
+        }
+        return digits.substring(0, 2) + "/" + digits.substring(2, 4) + "/" + digits.substring(4);
+    }
+
+    private static void sincronizarTextoDataNoDatePicker(DatePicker datePicker) {
+        String texto = datePicker.getEditor().getText();
+        if (texto == null || texto.trim().isEmpty()) {
+            datePicker.setValue(null);
+            return;
+        }
+
+        LocalDate data = parseDataBrasileira(texto);
+        if (data != null) {
+            datePicker.setValue(data);
+        }
     }
 }

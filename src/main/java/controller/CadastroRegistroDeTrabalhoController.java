@@ -4,7 +4,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +28,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import javafx.util.converter.LocalDateStringConverter;
 import model.Instituicao;
 import model.Pena;
 import model.RegistroDeTrabalho;
@@ -59,13 +57,13 @@ public class CadastroRegistroDeTrabalhoController {
     @FXML private TableColumn<RegistroTrabalhoTemp, Void> colAcao;
 
     private ObservableList<RegistroTrabalhoTemp> listaRegistros;
-    private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
 
     @FXML
     public void initialize() {
         try {
             listaRegistros = FXCollections.observableArrayList();
+            instituicao.setEditable(false); // Somente seleção da lista (sem digitação manual)
             
             if (tabelaRegistros == null) {
                 System.err.println("ERRO: tabelaRegistros é null!");
@@ -290,10 +288,10 @@ public class CadastroRegistroDeTrabalhoController {
             private DatePicker datePicker = new DatePicker();
 
             {
-                datePicker.setConverter(new LocalDateStringConverter(dateFormatter, dateFormatter));
+                FormatacaoUtils.configurarDatePickerBrasileiro(datePicker);
                 datePicker.setOnAction(e -> {
                     if (getTableRow() != null && getTableRow().getItem() != null) {
-                        getTableRow().getItem().setData(datePicker.getValue());
+                        getTableRow().getItem().setData(FormatacaoUtils.obterDataValida(datePicker));
                         tabelaRegistros.refresh();
                     }
                 });
