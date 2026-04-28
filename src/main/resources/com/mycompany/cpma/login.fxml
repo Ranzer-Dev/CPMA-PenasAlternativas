@@ -45,7 +45,7 @@
                               </VBox>
                               
                               <!-- Descrição do sistema -->
-                               <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Sistema de gestão para controle e acompanhamento de penas alternativas" textAlignment="CENTER" wrappingWidth="450.0">
+                               <Text fill="BLACK" strokeType="OUTSIDE" strokeWidth="0.0" text="Sistema de Gestão para Controle e Acompanhamento de Penas Alternativas" textAlignment="CENTER" wrappingWidth="450.0">
                                    <font>
                                        <Font name="Nunito" size="16.0" />
                                    </font>
@@ -93,7 +93,7 @@
                               <!-- Título da seção de login -->
                               <VBox alignment="CENTER" spacing="10.0">
                                  <children>
-                                    <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Bem-vindo de volta" textAlignment="CENTER">
+                                    <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Bem-vindo" textAlignment="CENTER">
                                        <font>
                                           <Font name="Segoe UI" size="28.0" />
                                        </font>
