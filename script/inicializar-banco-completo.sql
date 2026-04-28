@@ -1,10 +1,8 @@
 -- Script SQLite completo para inicialização do banco de dados PENAS_ALTERNATIVAS
 -- Execute este script usando: sqlite3 penas_alternativas.db < script/inicializar-banco-completo.sql
-
 -- ============================================================================
 -- CRIAÇÃO DAS TABELAS
 -- ============================================================================
-
 -- Tabela Administrador
 CREATE TABLE IF NOT EXISTS Administrador (
     id_admin INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,14 +14,12 @@ CREATE TABLE IF NOT EXISTS Administrador (
     resposta_secreta TEXT,
     criado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
-
 -- Tabela tipoDeInstituição
 CREATE TABLE IF NOT EXISTS tipoDeInstituição (
     id_tipo INTEGER PRIMARY KEY AUTOINCREMENT,
     tipo TEXT,
     criado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
-
 -- Tabela Instituicao
 CREATE TABLE IF NOT EXISTS Instituicao (
     id_instituicao INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +35,6 @@ CREATE TABLE IF NOT EXISTS Instituicao (
     criado_em TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (tipo) REFERENCES tipoDeInstituição(id_tipo)
 );
-
 -- Tabela Usuario
 CREATE TABLE IF NOT EXISTS Usuario (
     id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,7 +55,6 @@ CREATE TABLE IF NOT EXISTS Usuario (
     fk_administrador_id_admin INTEGER NOT NULL,
     FOREIGN KEY (fk_administrador_id_admin) REFERENCES Administrador(id_admin)
 );
-
 -- Tabela Pena
 CREATE TABLE IF NOT EXISTS Pena (
     id_pena INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -79,7 +73,6 @@ CREATE TABLE IF NOT EXISTS Pena (
     FOREIGN KEY (fk_usuario_id_usuario) REFERENCES Usuario(id_usuario),
     FOREIGN KEY (fk_instituicao_id_instituicao) REFERENCES Instituicao(id_instituicao)
 );
-
 -- Tabela RegistroDeTrabalho
 CREATE TABLE IF NOT EXISTS RegistroDeTrabalho (
     id_registro INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,7 +87,6 @@ CREATE TABLE IF NOT EXISTS RegistroDeTrabalho (
     criado_em TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (fk_pena_id_pena) REFERENCES Pena(id_pena) ON DELETE CASCADE
 );
-
 -- Tabela disponibilidade_instituicao
 CREATE TABLE IF NOT EXISTS disponibilidade_instituicao (
     id_disponibilidade INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -107,7 +99,6 @@ CREATE TABLE IF NOT EXISTS disponibilidade_instituicao (
     criado_em TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (fk_instituicao_id_instituicao) REFERENCES Instituicao(id_instituicao)
 );
-
 -- Tabela DadosFaciais
 CREATE TABLE IF NOT EXISTS DadosFaciais (
     id_dados_faciais INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,11 +110,9 @@ CREATE TABLE IF NOT EXISTS DadosFaciais (
     ativo INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY (fk_usuario_id_usuario) REFERENCES Usuario(id_usuario)
 );
-
 -- ============================================================================
 -- CRIAÇÃO DE ÍNDICES
 -- ============================================================================
-
 CREATE INDEX IF NOT EXISTS idx_usuario_cpf ON Usuario(cpf);
 CREATE INDEX IF NOT EXISTS idx_administrador_cpf ON Administrador(cpf);
 CREATE INDEX IF NOT EXISTS idx_pena_usuario ON Pena(fk_usuario_id_usuario);
@@ -132,39 +121,44 @@ CREATE INDEX IF NOT EXISTS idx_registro_pena ON RegistroDeTrabalho(fk_pena_id_pe
 CREATE INDEX IF NOT EXISTS idx_disponibilidade_instituicao ON disponibilidade_instituicao(fk_instituicao_id_instituicao);
 CREATE INDEX IF NOT EXISTS idx_dados_faciais_usuario ON DadosFaciais(fk_usuario_id_usuario);
 CREATE INDEX IF NOT EXISTS idx_dados_faciais_ativo ON DadosFaciais(ativo);
-
 -- ============================================================================
 -- INSERÇÃO DE DADOS INICIAIS
 -- ============================================================================
-
 -- Inserir administrador inicial
 -- CPF: 12345678900
 -- Senha: admin123 (hash SHA-256: 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9)
-INSERT OR IGNORE INTO Administrador (
-    nome, 
-    cpf, 
-    senha, 
-    nivel_permissao, 
-    pergunta_secreta, 
-    resposta_secreta
-) VALUES (
-    'Administrador',
-    '12345678900',
-    '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9',
-    1,
-    NULL,
-    NULL
-);
-
+INSERT
+    OR IGNORE INTO Administrador (
+        nome,
+        cpf,
+        senha,
+        nivel_permissao,
+        pergunta_secreta,
+        resposta_secreta
+    )
+VALUES (
+        'Administrador',
+        '12345678900',
+        '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9',
+        1,
+        'Qual é a cor do seu cavalo branco?',
+        'Branco'
+    );
 -- ============================================================================
 -- VERIFICAÇÃO
 -- ============================================================================
-
 -- Listar todas as tabelas criadas
 SELECT 'Tabelas criadas:' AS resultado;
-SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;
-
+SELECT name
+FROM sqlite_master
+WHERE type = 'table'
+ORDER BY name;
 -- Verificar administrador criado
 SELECT 'Administrador criado:' AS resultado;
-SELECT id_admin, nome, cpf, nivel_permissao, criado_em FROM Administrador WHERE cpf = '12345678900';
-
+SELECT id_admin,
+    nome,
+    cpf,
+    nivel_permissao,
+    criado_em
+FROM Administrador
+WHERE cpf = '12345678900';
