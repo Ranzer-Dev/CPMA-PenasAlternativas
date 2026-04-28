@@ -40,11 +40,16 @@ import javafx.stage.FileChooser;
 import javafx.print.Printer;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 
 public class DetalheApenadoController {
 
@@ -602,6 +607,9 @@ public class DetalheApenadoController {
             document.addPage(page);
             contentStream = new PDPageContentStream(document, page);
             
+            // Logos institucionais no cabeçalho
+            yPosition = adicionarLogosCabecalho(contentStream, document, pageWidth, pageHeight, margin);
+
             // Cabeçalho
             yPosition = adicionarTextoCentrado(contentStream, "CPMA", fontTitle, 20, yPosition, pageWidth);
             yPosition -= lineHeight;
@@ -657,9 +665,6 @@ public class DetalheApenadoController {
             yPosition -= sectionSpacing;
             
             // Registros de Trabalho
-            yPosition = adicionarTexto(contentStream, "REGISTROS DE TRABALHO", fontBold, 14, margin, yPosition);
-            yPosition -= lineHeight;
-            
             List<RegistroDeTrabalho> registros = RegistroDeTrabalhoDAO.buscarPorUsuarioEPena(usuario.getIdUsuario(), penaItem.getIdPena());
             
             if (registros.isEmpty()) {
@@ -677,12 +682,11 @@ public class DetalheApenadoController {
                 float tableMargin = margin;
                 float col1Width = 100;
                 float col2Width = 120;
-                float col3Width = 120;
                 
-                yPosition = adicionarTexto(contentStream, "Data", fontBold, 11, tableMargin, yPosition);
-                yPosition = adicionarTexto(contentStream, "Horas Cumpridas", fontBold, 11, tableMargin + col1Width, yPosition);
-                yPosition = adicionarTexto(contentStream, "Horas Restantes", fontBold, 11, tableMargin + col1Width + col2Width, yPosition);
-                yPosition -= lineHeight;
+                escreverTextoPdf(contentStream, "Data", fontBold, 11, tableMargin, yPosition);
+                escreverTextoPdf(contentStream, "Horas Cumpridas", fontBold, 11, tableMargin + col1Width, yPosition);
+                escreverTextoPdf(contentStream, "Horas Restantes", fontBold, 11, tableMargin + col1Width + col2Width, yPosition);
+                yPosition -= (lineHeight + 5);
                 
                 // Linha separadora
                 contentStream.moveTo(margin, yPosition);
@@ -701,6 +705,18 @@ public class DetalheApenadoController {
                         document.addPage(newPage);
                         contentStream = new PDPageContentStream(document, newPage);
                         yPosition = pageHeight - margin;
+
+                        // Reimprime título da seção e cabeçalho da tabela na nova página
+                        yPosition = adicionarTexto(contentStream, "REGISTROS DE TRABALHO", fontBold, 14, margin, yPosition);
+                        yPosition -= lineHeight;
+                        escreverTextoPdf(contentStream, "Data", fontBold, 11, tableMargin, yPosition);
+                        escreverTextoPdf(contentStream, "Horas Cumpridas", fontBold, 11, tableMargin + col1Width, yPosition);
+                        escreverTextoPdf(contentStream, "Horas Restantes", fontBold, 11, tableMargin + col1Width + col2Width, yPosition);
+                        yPosition -= (lineHeight + 5);
+                        contentStream.moveTo(margin, yPosition);
+                        contentStream.lineTo(pageWidth - margin, yPosition);
+                        contentStream.stroke();
+                        yPosition -= lineHeight;
                     }
                     
                     acumulado += reg.getHorasCumpridas();
@@ -710,9 +726,9 @@ public class DetalheApenadoController {
                     String horas = String.format("%.2f", reg.getHorasCumpridas());
                     String horasFalta = String.format("%.2f", falta);
                     
-                    yPosition = adicionarTexto(contentStream, data, fontNormal, 10, tableMargin, yPosition);
-                    yPosition = adicionarTexto(contentStream, horas, fontNormal, 10, tableMargin + col1Width, yPosition);
-                    yPosition = adicionarTexto(contentStream, horasFalta, fontNormal, 10, tableMargin + col1Width + col2Width, yPosition);
+                    escreverTextoPdf(contentStream, data, fontNormal, 10, tableMargin, yPosition);
+                    escreverTextoPdf(contentStream, horas, fontNormal, 10, tableMargin + col1Width, yPosition);
+                    escreverTextoPdf(contentStream, horasFalta, fontNormal, 10, tableMargin + col1Width + col2Width, yPosition);
                     yPosition -= lineHeight;
                 }
                 
@@ -776,6 +792,65 @@ public class DetalheApenadoController {
         float textWidth = texto.length() * fontSize * 0.6f; // Aproximação: cada caractere ocupa ~0.6 * fontSize
         float x = (pageWidth - textWidth) / 2;
         return adicionarTexto(contentStream, texto, font, fontSize, x, y);
+    }
+
+    private void escreverTextoPdf(PDPageContentStream contentStream, String texto, PDType1Font font, float fontSize, float x, float y) throws IOException {
+        if (texto == null || texto.trim().isEmpty()) {
+            texto = "N/A";
+        }
+        contentStream.setFont(font, fontSize);
+        contentStream.beginText();
+        contentStream.newLineAtOffset(x, y);
+        contentStream.showText(texto);
+        contentStream.endText();
+    }
+
+    private float adicionarLogosCabecalho(PDPageContentStream contentStream, PDDocument document, float pageWidth, float pageHeight, float margin) throws IOException {
+        float headerTop = pageHeight - margin;
+
+        // Brasão à esquerda
+        float leftWidth = 55;
+        float leftHeight = 55;
+        float leftX = margin;
+        float leftY = headerTop - leftHeight;
+
+        // Símbolo do governo à direita
+        float rightWidth = 130;
+        float rightHeight = 100;
+        float rightX = pageWidth - margin - rightWidth;
+        float rightY = headerTop - rightHeight + 12;
+
+        PDImageXObject brasao = carregarImagemPdf(document, "/images/logoSP.png");
+        if (brasao != null) {
+            contentStream.drawImage(brasao, leftX, leftY, leftWidth, leftHeight);
+        }
+
+        PDImageXObject simboloGoverno = carregarImagemPdf(document, "/images/Governo-de-SP-Estado.png");
+        if (simboloGoverno != null) {
+            contentStream.drawImage(simboloGoverno, rightX, rightY, rightWidth, rightHeight);
+        }
+
+        // Retorna a próxima posição vertical livre após as logos
+        return Math.min(leftY, rightY) - 15;
+    }
+
+    private PDImageXObject carregarImagemPdf(PDDocument document, String resourcePath) throws IOException {
+        try (InputStream inputStream = getClass().getResourceAsStream(resourcePath)) {
+            if (inputStream == null) {
+                return null;
+            }
+            byte[] dados = inputStream.readAllBytes();
+            try {
+                return PDImageXObject.createFromByteArray(document, dados, resourcePath);
+            } catch (IllegalArgumentException ex) {
+                // Fallback para casos de extensão incorreta (ex.: arquivo WEBP com nome .png)
+                BufferedImage bufferedImage = ImageIO.read(new java.io.ByteArrayInputStream(dados));
+                if (bufferedImage == null) {
+                    return null;
+                }
+                return LosslessFactory.createFromImage(document, bufferedImage);
+            }
+        }
     }
     
     /**
