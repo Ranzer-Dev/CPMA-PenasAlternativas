@@ -151,21 +151,35 @@ private void capturarImagem() {
         try {
             // Extrai descritores faciais da imagem
             String descritores = reconhecimentoFacial.extrairDescritoresFaciais(imagemAtual);
+            if (descritores == null || descritores.trim().isEmpty() || "[]".equals(descritores.trim())) {
+                lblStatus.setText("Erro: Face não detectada ou sistema de IA offline");
+                lblStatus.setStyle("-fx-text-fill: red;");
+                limparDadosUsuario();
+                btnCadastrar.setDisable(false);
+                return;
+            }
 
-            // Busca usuário por similaridade facial
-            usuarioIdentificado = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, 0.75);
+            // Busca usuário por similaridade facial.
+            // 0.55 é o limiar recomendado para FaceNet (cosine similarity sobre
+            // embeddings L2-normalizados). Valores acima disso são matches confiáveis.
+            usuarioIdentificado = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, 0.55);
 
             if (usuarioIdentificado != null) {
                 exibirDadosUsuario(usuarioIdentificado);
                 lblStatus.setText("Usuário identificado com sucesso!");
+                lblStatus.setStyle("-fx-text-fill: green;");
                 btnCadastrar.setDisable(true); // Usuário já cadastrado
             } else {
-                lblStatus.setText("Usuário não encontrado. Considere cadastrar novos dados faciais.");
+                lblStatus.setText("Usuário não cadastrado");
+                lblStatus.setStyle("-fx-text-fill: orange;");
                 limparDadosUsuario();
                 btnCadastrar.setDisable(false);
             }
 
         } catch (Exception e) {
+            limparDadosUsuario();
+            lblStatus.setText("Erro: Face não detectada ou sistema de IA offline");
+            lblStatus.setStyle("-fx-text-fill: red;");
             mostrarErro("Erro na identificação", e.getMessage());
         }
     }

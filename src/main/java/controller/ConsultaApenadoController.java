@@ -238,10 +238,14 @@ public class ConsultaApenadoController {
             }
             
             // ETAPA 3: Busca no banco de dados
+            // 0.55 é o limiar recomendado para FaceNet (cosine similarity sobre
+            // embeddings L2-normalizados). Valores acima disso são matches confiáveis,
+            // e o DAO ainda exige uma margem de 0.05 sobre o segundo melhor para evitar ambiguidade.
+            final double THRESHOLD_FACENET = 0.55;
             System.out.println("\n[ETAPA 3] Buscando usuário no banco de dados por similaridade facial...");
-            System.out.println("   Threshold configurado: 0.35 (35%) - mais restritivo para evitar falsos positivos");
-            // Threshold aumentado para 0.35 (35%) para ser mais restritivo e evitar matches incorretos
-            usuario = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, 0.75);
+            System.out.println("   Threshold configurado: " + THRESHOLD_FACENET
+                    + " (cosine similarity FaceNet) + margem antiambiguidade de 0.05");
+            usuario = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, THRESHOLD_FACENET);
             
             // ETAPA 4: Resultado da busca
             System.out.println("\n[ETAPA 4] Processando resultado da busca...");
@@ -294,7 +298,7 @@ public class ConsultaApenadoController {
                 System.out.println("   1. Usuário não está cadastrado no sistema");
                 System.out.println("   2. Usuário não tem foto cadastrada com descritores faciais");
                 System.out.println("   3. Descritores faciais estão vazios ou inválidos no banco");
-                System.out.println("   4. Similaridade calculada está abaixo do threshold (0.75)");
+                System.out.println("   4. Similaridade calculada está abaixo do threshold (0.55) ou match foi ambíguo");
                 System.out.println("   5. A foto capturada não tem qualidade suficiente");
                 System.out.println("   6. Iluminação ou posicionamento inadequados");
                 System.out.println("\n" + "=".repeat(80));
