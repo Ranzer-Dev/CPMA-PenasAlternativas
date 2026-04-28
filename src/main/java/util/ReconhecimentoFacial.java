@@ -15,6 +15,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.javacpp.IntPointer;
 import org.bytedeco.opencv.global.opencv_core;
 import org.bytedeco.opencv.global.opencv_dnn;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
@@ -48,21 +49,21 @@ public class ReconhecimentoFacial {
     private int maxSize = 600; // Faces maiores aceitas
     
     // Dimensões esperadas pelo modelo de reconhecimento facial
-    private static final int FACE_INPUT_SIZE = 96; // Tamanho de entrada para modelos OpenFace/FaceNet
+    private static final int FACE_INPUT_SIZE = 160; // Tamanho de entrada para FaceNet Inception
     private static final int EMBEDDING_SIZE = 128; // Tamanho do embedding de saída
     
     // Configurações do modelo DNN de reconhecimento (embeddings)
     private static final String[] RECOGNITION_MODEL_PATHS = {
-        "/models/facenet.onnx",
-        "/models/arcface.onnx",
-        "/models/opencv_face_detector_uint8.onnx",
-        "models/facenet.onnx",
-        "models/arcface.onnx",
-        "models/opencv_face_detector_uint8.onnx"
+        "target/classes/models/faceNet.onnx",
+        "/models/faceNet.onnx",
+        "models/faceNet.onnx",
     };
     
     // Configurações do modelo DNN de detecção de faces (YuNet, MTCNN, etc.)
     private static final String[] DETECTION_MODEL_PATHS = {
+        "target/classes/models/faceNet.onnx",
+        "/models/faceNet.onnx",
+        "models/faceNet.onnx",
         "/models/yunet.onnx",
         "/models/face_detection_yunet_2023mar.onnx",
         "/models/opencv_face_detector_uint8.onnx",
@@ -76,9 +77,10 @@ public class ReconhecimentoFacial {
     // Tamanho de entrada para detector DNN de faces (YuNet usa 320x320 ou 640x640)
     private static final int DETECTION_INPUT_SIZE = 320;
     
-    // Nomes das camadas de entrada e saída (variam por modelo)
-    private String inputLayerName = "data";
-    private String outputLayerName = "fc1"; // Para OpenFace/FaceNet
+    // Nomes das camadas de entrada e saída (detectados em runtime;
+    // null = deixar o OpenCV usar a entrada/saída padrão do grafo)
+    private String inputLayerName = null;
+    private String outputLayerName = null;
 
     /**
      * Inicializa o detector de faces, detector de olhos e o modelo DNN de reconhecimento facial
@@ -197,17 +199,24 @@ public class ReconhecimentoFacial {
      */
     private void inicializarDetectorOlhos() {
         try {
-            // Tenta carregar detector de olhos
-            String eyeCascadePath = getClass().getResource("/opencv/haarcascades/haarcascade_eye.xml").getPath();
-            eyeCascadePath = corrigirCaminhoArquivo(eyeCascadePath);
-            
+            // Tenta carregar detector de olhos com validação de recurso para evitar NPE
+            java.net.URL eyeCascadeUrl = getClass().getResource("/opencv/haarcascades/haarcascade_eye.xml");
+            if (eyeCascadeUrl == null) {
+                System.out.println("⚠️ Arquivo haarcascade_eye.xml não encontrado em /opencv/haarcascades/");
+                eyeDetector = null;
+                return;
+            }
+
+            String eyeCascadePath = corrigirCaminhoArquivo(eyeCascadeUrl.getPath());
             eyeDetector = new CascadeClassifier(eyeCascadePath);
             
             if (eyeDetector.empty()) {
                 // Tenta arquivo alternativo
-                String altEyePath = getClass().getResource("/opencv/haarcascades/haarcascade_eye_tree_eyeglasses.xml").getPath();
-                altEyePath = corrigirCaminhoArquivo(altEyePath);
-                eyeDetector = new CascadeClassifier(altEyePath);
+                java.net.URL altEyeUrl = getClass().getResource("/opencv/haarcascades/haarcascade_eye_tree_eyeglasses.xml");
+                if (altEyeUrl != null) {
+                    String altEyePath = corrigirCaminhoArquivo(altEyeUrl.getPath());
+                    eyeDetector = new CascadeClassifier(altEyePath);
+                }
                 
                 if (eyeDetector.empty()) {
                     System.out.println("⚠️ Detector de olhos não disponível - alinhamento será baseado em estimativas");
@@ -260,8 +269,8 @@ public class ReconhecimentoFacial {
                 if (finalPath != null && new java.io.File(finalPath).exists()) {
                     System.out.println("   ✅ Arquivo encontrado: " + finalPath);
                     
-                    // Detecta tipo de modelo pelo nome do arquivo
-                    if (modelPath.contains("facenet") || modelPath.contains("arcface") || modelPath.contains("opencv_face_detector")) {
+                    // Usa estritamente FaceNet no reconhecimento
+                    if (modelPath.toLowerCase().contains("facenet")) {
                         // Carrega modelo ONNX
                         faceRecognitionNet = opencv_dnn.readNetFromONNX(finalPath);
                         
@@ -293,44 +302,63 @@ public class ReconhecimentoFacial {
         }
         
         // Se chegou aqui, nenhum modelo DNN foi carregado
-        System.out.println("   ⚠️ Nenhum modelo DNN encontrado nos caminhos configurados");
-        System.out.println("   💡 Usando método baseado em características (fallback)");
-        System.out.println("   📝 Para usar modelo DNN:");
-        System.out.println("      1. Baixe um modelo ONNX (ex: OpenFace, FaceNet, ArcFace)");
-        System.out.println("      2. Coloque em: src/main/resources/models/");
-        System.out.println("      3. Reinicie a aplicação");
+        System.out.println("   ⚠️ Nenhum modelo FaceNet compatível encontrado.");
+        System.out.println("   📝 Caminho esperado: target/classes/models/faceNet.onnx");
         dnnInicializado = false;
     }
     
     /**
-     * Detecta os nomes das camadas de entrada e saída baseado no modelo
+     * Detecta os nomes reais das camadas de entrada e saída do modelo carregado.
+     * Em vez de adivinhar pelo nome do arquivo (que pode ter caixa diferente ou
+     * variar entre exports), consulta o grafo via {@code getLayerNames()} e
+     * {@code getUnconnectedOutLayersNames()}. Se a consulta falhar, deixa
+     * {@code inputLayerName}/{@code outputLayerName} como {@code null}, o que faz
+     * o {@link #extrairEmbeddingComDNN(Mat)} cair para {@code setInput(blob)} e
+     * {@code forward()} sem nome de camada — usando a entrada/saída padrão.
      */
     private void detectarNomesCamadas(String modelPath) {
-        try {
-            // Tenta obter nomes das camadas do modelo
-            // Para OpenFace/FaceNet, geralmente são:
-            if (modelPath.contains("facenet")) {
-                inputLayerName = "input";
-                outputLayerName = "embeddings"; // ou "Bottleneck_BatchNorm"
-            } else if (modelPath.contains("arcface")) {
-                inputLayerName = "data";
-                outputLayerName = "fc1";
-            } else if (modelPath.contains("opencv_face_detector")) {
-                // Este é um detector, não um reconhecedor
-                inputLayerName = "data";
-                outputLayerName = "fc1";
-            } else {
-                // Padrão para OpenFace
-                inputLayerName = "data";
-                outputLayerName = "fc1";
-            }
-            
-            System.out.println("   Nomes das camadas detectados:");
-            System.out.println("      Entrada: " + inputLayerName);
-            System.out.println("      Saída: " + outputLayerName);
-        } catch (Exception e) {
-            System.out.println("   ⚠️ Não foi possível detectar nomes das camadas, usando padrão");
+        inputLayerName = null;
+        outputLayerName = null;
+
+        if (faceRecognitionNet == null || faceRecognitionNet.empty()) {
+            return;
         }
+
+        try {
+            org.bytedeco.opencv.opencv_core.StringVector outNames =
+                    faceRecognitionNet.getUnconnectedOutLayersNames();
+            if (outNames != null && outNames.size() > 0) {
+                BytePointer first = outNames.get(0);
+                if (first != null && !first.isNull()) {
+                    String detected = first.getString();
+                    if (detected != null && !detected.isEmpty()) {
+                        outputLayerName = detected;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            // Mantém outputLayerName = null; forward() usará a saída padrão.
+        }
+
+        try {
+            org.bytedeco.opencv.opencv_core.StringVector layerNames =
+                    faceRecognitionNet.getLayerNames();
+            if (layerNames != null && layerNames.size() > 0) {
+                BytePointer first = layerNames.get(0);
+                if (first != null && !first.isNull()) {
+                    String detected = first.getString();
+                    if (detected != null && !detected.isEmpty()) {
+                        inputLayerName = detected;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            // Mantém inputLayerName = null; setInput(blob) usará a entrada padrão.
+        }
+
+        System.out.println("   Nomes das camadas detectados (modelo: " + modelPath + "):");
+        System.out.println("      Entrada: " + (inputLayerName != null ? inputLayerName : "<padrão>"));
+        System.out.println("      Saída:   " + (outputLayerName != null ? outputLayerName : "<padrão>"));
     }
 
     /**
@@ -882,32 +910,31 @@ public class ReconhecimentoFacial {
     public String extrairDescritoresFaciais(BufferedImage imagem) {
         if (imagem == null) {
             System.err.println("❌ ERRO: Imagem é NULL ao extrair descritores faciais");
-            return "[]";
+            return null;
         }
         
-        System.out.println("   Imagem recebida: " + imagem.getWidth() + "x" + imagem.getHeight() + 
-                         " (tipo: " + imagem.getType() + ")");
-
         try {
             // Converte BufferedImage para Mat do OpenCV
-            System.out.println("   Convertendo BufferedImage para Mat do OpenCV...");
             Mat matImagem = bufferedImageToMat(imagem);
             if (matImagem.empty()) {
                 System.err.println("❌ ERRO: Falha ao converter imagem para Mat - Mat está vazio");
-                return "[]";
+                return null;
             }
-            System.out.println("   ✅ Mat criado: " + matImagem.rows() + "x" + matImagem.cols() + 
-                            " (canais: " + matImagem.channels() + ")");
 
             // Detecta faces na imagem
-            System.out.println("   Detectando faces na imagem...");
             if (!inicializado) {
-                System.out.println("   ⚠️ Detector não inicializado - inicializando agora...");
                 inicializar();
+            }
+
+            // DNN de reconhecimento é obrigatório para garantir embeddings consistentes
+            if (!dnnInicializado || faceRecognitionNet == null || faceRecognitionNet.empty()) {
+                System.err.println("❌ ERRO CRÍTICO: Modelo DNN de reconhecimento facial indisponível.");
+                System.err.println("   O sistema não pode usar fallback manual para evitar vetores incompatíveis.");
+                matImagem.close();
+                return null;
             }
             
             List<Rectangle> faces = detectarFacesComCoordenadas(imagem);
-            System.out.println("   Faces detectadas (antes da validação): " + faces.size());
             
             if (faces.isEmpty()) {
                 System.err.println("❌ ERRO CRÍTICO: Nenhuma face detectada na imagem!");
@@ -917,13 +944,12 @@ public class ReconhecimentoFacial {
                 System.err.println("     • Iluminação inadequada");
                 System.err.println("     • Rosto muito pequeno ou muito grande");
                 System.err.println("     • Ângulo inadequado do rosto");
-                System.err.println("   AÇÃO: Retornando array vazio - não é possível fazer reconhecimento sem face detectada.");
+                System.err.println("   AÇÃO: Retornando NULL - não é possível fazer reconhecimento sem face detectada.");
                 matImagem.close();
-                return "[]"; // Retorna vazio ao invés de processar imagem completa
+                return null;
             }
             
             // Valida qualidade das faces detectadas
-            System.out.println("   Validando qualidade das faces detectadas...");
             List<Rectangle> facesValidas = new ArrayList<>();
             for (int i = 0; i < faces.size(); i++) {
                 Rectangle face = faces.get(i);
@@ -936,66 +962,31 @@ public class ReconhecimentoFacial {
             if (facesValidas.isEmpty()) {
                 System.err.println("❌ ERRO: Faces detectadas mas nenhuma passou na validação de qualidade!");
                 System.err.println("   As faces detectadas não atendem aos critérios de qualidade necessários.");
-                System.err.println("   AÇÃO: Retornando array vazio - não é possível fazer reconhecimento com faces de baixa qualidade.");
+                System.err.println("   AÇÃO: Retornando NULL - não é possível fazer reconhecimento com faces de baixa qualidade.");
                 matImagem.close();
-                return "[]";
+                return null;
             }
             
-            System.out.println("   ✅ Faces válidas após validação: " + facesValidas.size());
-            
-            // Mostra informações sobre as faces válidas
-            for (int i = 0; i < facesValidas.size(); i++) {
-                Rectangle face = facesValidas.get(i);
-                double area = face.width * face.height;
-                double aspectRatio = (double) face.width / face.height;
-                System.out.println("   Face válida " + (i+1) + ": x=" + face.x + ", y=" + face.y + 
-                                 ", w=" + face.width + ", h=" + face.height +
-                                 ", área=" + String.format("%.0f", area) +
-                                 ", proporção=" + String.format("%.2f", aspectRatio));
-            }
-
             // Pega a melhor face válida (maior ou mais central)
             Rectangle faceRect = selecionarMelhorFace(facesValidas, imagem.getWidth(), imagem.getHeight());
-            System.out.println("   Face selecionada: x=" + faceRect.x + ", y=" + faceRect.y + 
-                             ", w=" + faceRect.width + ", h=" + faceRect.height);
             
             // Extrai a região da face
             Rect faceRectCV = new Rect(faceRect.x, faceRect.y, faceRect.width, faceRect.height);
             Mat faceRoi = new Mat(matImagem, faceRectCV);
-            System.out.println("   ROI da face extraído: " + faceRoi.rows() + "x" + faceRoi.cols());
 
             // Extrai características da face
-            System.out.println("   Extraindo embedding facial da região da face...");
             List<Double> embedding = extrairEmbeddingFacial(faceRoi);
-            System.out.println("   ✅ Embedding extraído: " + embedding.size() + " dimensões");
             
             if (embedding.isEmpty()) {
                 System.err.println("❌ ERRO: Embedding está vazio!");
                 matImagem.close();
                 faceRoi.close();
                 faceRectCV.close();
-                return "[]";
+                return null;
             }
             
-            // Mostra algumas estatísticas do embedding
-            double soma = 0.0;
-            double min = Double.MAX_VALUE;
-            double max = Double.MIN_VALUE;
-            for (Double val : embedding) {
-                soma += val;
-                min = Math.min(min, val);
-                max = Math.max(max, val);
-            }
-            double media = soma / embedding.size();
-            System.out.println("   Estatísticas do embedding:");
-            System.out.println("      Média: " + String.format("%.6f", media));
-            System.out.println("      Min: " + String.format("%.6f", min));
-            System.out.println("      Max: " + String.format("%.6f", max));
-
             // Serializa o embedding em JSON (equivalente a json.dumps(embedding))
-            System.out.println("   Serializando embedding para JSON...");
             String embeddingJson = serializarEmbedding(embedding);
-            System.out.println("   ✅ Embedding serializado: " + embeddingJson.length() + " caracteres");
             
             // Limpa recursos
             matImagem.close();
@@ -1007,7 +998,7 @@ public class ReconhecimentoFacial {
         } catch (Exception e) {
             System.err.println("❌ Erro ao extrair descritores faciais: " + e.getMessage());
             e.printStackTrace();
-            return "[]";
+            return null;
         }
     }
 
@@ -1020,27 +1011,16 @@ public class ReconhecimentoFacial {
      * @return Lista de doubles representando o embedding (exatamente 128 dimensões)
      */
     private List<Double> extrairEmbeddingFacial(Mat faceRoi) {
-        List<Double> embedding = new ArrayList<>();
-
         try {
-            // Tenta usar modelo DNN se disponível
-            if (dnnInicializado && faceRecognitionNet != null && !faceRecognitionNet.empty()) {
-                return extrairEmbeddingComDNN(faceRoi);
+            if (!dnnInicializado || faceRecognitionNet == null || faceRecognitionNet.empty()) {
+                throw new IllegalStateException("Modelo DNN não está carregado");
             }
-            
-            // Caso contrário, usa método melhorado baseado em características robustas
-            return extrairEmbeddingMelhorado(faceRoi);
-
+            return extrairEmbeddingComDNN(faceRoi);
         } catch (Exception e) {
             System.err.println("❌ Erro ao extrair embedding facial: " + e.getMessage());
             e.printStackTrace();
-            // Em caso de erro, retorna embedding vazio de 128 zeros
-            while (embedding.size() < EMBEDDING_SIZE) {
-                embedding.add(0.0);
-            }
         }
-
-        return embedding;
+        return new ArrayList<>();
     }
     
     /**
@@ -1054,105 +1034,107 @@ public class ReconhecimentoFacial {
         List<Double> embedding = new ArrayList<>();
         
         try {
-            System.out.println("      [DNN] Extraindo embedding usando modelo de Deep Learning...");
-            
             if (faceRecognitionNet == null || faceRecognitionNet.empty()) {
-                System.err.println("      ❌ Modelo DNN não está disponível, usando fallback");
-                return extrairEmbeddingMelhorado(faceRoi);
+                System.err.println("      ❌ Modelo DNN não está disponível");
+                return embedding;
             }
             
             // ETAPA 1: Alinhamento facial baseado em landmarks ANTES do redimensionamento
-            System.out.println("      [DNN - Alinhamento] Alinhando face baseado em landmarks...");
             Mat faceAligned = alinharFacePorLandmarks(faceRoi);
             if (faceAligned == null || faceAligned.empty()) {
-                System.out.println("         ⚠️ Alinhamento falhou, usando face original");
                 faceAligned = faceRoi.clone();
-            } else {
-                System.out.println("         ✅ Face alinhada: " + faceAligned.rows() + "x" + faceAligned.cols());
             }
             
-            // ETAPA 2: Pré-processamento da imagem para o modelo DNN
-            System.out.println("      [DNN - Pré-processamento] Preparando imagem...");
-            
-            // Redimensiona para o tamanho esperado pelo modelo (geralmente 96x96 ou 112x112)
-            Mat faceResized = new Mat();
-            opencv_imgproc.resize(faceAligned, faceResized, new Size(FACE_INPUT_SIZE, FACE_INPUT_SIZE));
-            System.out.println("         ✅ Redimensionado para: " + FACE_INPUT_SIZE + "x" + FACE_INPUT_SIZE);
-            
-            // Limpa faceAligned se foi criado
+            // ETAPA 2: Pré-processamento NHWC para FaceNet
+            // O faceNet.onnx usado foi exportado em NHWC (TensorFlow). O OpenCV
+            // sempre gera blob em NCHW via blobFromImage, e isso causa o erro
+            // "Number of input channels should be multiple of 3 but got 160"
+            // pois o Transpose [0,3,1,2] interno do modelo lê o blob como
+            // [1,160,3,160]. Construímos o blob manualmente em [1,160,160,3].
+            Mat faceBase = new Mat();
+            opencv_imgproc.resize(faceAligned, faceBase, new Size(160, 160));
+
             if (faceAligned != faceRoi) {
                 faceAligned.close();
             }
-            
-            // Converte BGR para RGB (alguns modelos esperam RGB)
-            Mat faceRGB = new Mat();
-            if (faceResized.channels() == 1) {
-                // Se já está em grayscale, converte para BGR primeiro
-                opencv_imgproc.cvtColor(faceResized, faceRGB, opencv_imgproc.COLOR_GRAY2BGR);
+
+            // FaceNet foi treinado em RGB; OpenCV lê em BGR.
+            Mat faceRgb = new Mat();
+            if (faceBase.channels() == 1) {
+                opencv_imgproc.cvtColor(faceBase, faceRgb, opencv_imgproc.COLOR_GRAY2RGB);
             } else {
-                faceRGB = faceResized.clone();
+                opencv_imgproc.cvtColor(faceBase, faceRgb, opencv_imgproc.COLOR_BGR2RGB);
             }
-            opencv_imgproc.cvtColor(faceRGB, faceRGB, opencv_imgproc.COLOR_BGR2RGB);
-            System.out.println("         ✅ Convertido para RGB");
-            
-            // Normaliza valores de pixel para [0, 1] ou [-1, 1] dependendo do modelo
-            // A maioria dos modelos espera valores normalizados
-            Mat faceNormalized = new Mat();
-            faceRGB.convertTo(faceNormalized, opencv_core.CV_32F, 1.0 / 255.0, 0.0); // Normaliza para [0, 1]
-            System.out.println("         ✅ Normalizado para [0, 1]");
-            
-            // ETAPA 2: Cria blob a partir da imagem (formato esperado pelo DNN)
-            System.out.println("      [DNN] Criando blob para inferência...");
-            Mat blob = opencv_dnn.blobFromImage(
-                faceNormalized,           // Imagem de entrada
-                1.0,                      // Scale factor (já normalizado)
-                new Size(FACE_INPUT_SIZE, FACE_INPUT_SIZE), // Tamanho esperado
-                new Scalar(0.0, 0.0, 0.0, 0.0), // Mean (já normalizado, então 0)
-                true,                     // Swap RB (já convertido para RGB)
-                false,                    // Crop (não cortar)
-                opencv_core.CV_32F        // Tipo de dados
-            );
-            
-            if (blob.empty()) {
-                System.err.println("      ❌ Erro ao criar blob");
-                faceResized.close();
-                faceRGB.close();
-                faceNormalized.close();
-                return extrairEmbeddingMelhorado(faceRoi);
+
+            // Normalização FaceNet: (pixel - 127.5) / 128
+            Mat faceFloat = new Mat();
+            faceRgb.convertTo(faceFloat, opencv_core.CV_32F, 1.0 / 128.0, -127.5 / 128.0);
+
+            if (faceFloat.empty()
+                    || faceFloat.channels() != 3
+                    || faceFloat.rows() != 160
+                    || faceFloat.cols() != 160) {
+                faceBase.close();
+                faceRgb.close();
+                faceFloat.close();
+                throw new IllegalStateException(
+                        "Pré-processamento inválido para FaceNet: esperado HxWxC = 160x160x3");
             }
-            
-            System.out.println("         ✅ Blob criado: " + blob.size(0) + "x" + blob.size(1) + 
-                             "x" + blob.size(2) + "x" + blob.size(3));
-            
-            // ETAPA 3: Define entrada do modelo
-            System.out.println("      [DNN] Executando inferência...");
-            // Usa BytePointer para o nome da camada ou null para usar a primeira camada de entrada
-            BytePointer layerName = inputLayerName != null ? new BytePointer(inputLayerName) : null;
-            if (layerName != null) {
-                faceRecognitionNet.setInput(blob, layerName, 1.0, new Scalar(0.0, 0.0, 0.0, 0.0));
-            } else {
-                faceRecognitionNet.setInput(blob);
+
+            // O Mat HWC interleaved (160x160 com 3 canais float) tem o mesmo
+            // layout de memória de um blob NHWC [1, 160, 160, 3], então só
+            // precisamos reinterpretar a forma — sem cópia nem transpose.
+            IntPointer nhwcShape = new IntPointer(new int[]{1, 160, 160, 3});
+            Mat blob = faceFloat.reshape(1, 4, nhwcShape);
+
+            if (blob.empty()
+                    || blob.dims() != 4
+                    || blob.size(0) != 1
+                    || blob.size(1) != 160
+                    || blob.size(2) != 160
+                    || blob.size(3) != 3) {
+                faceBase.close();
+                faceRgb.close();
+                faceFloat.close();
+                nhwcShape.close();
+                throw new IllegalStateException(
+                        "Blob NHWC fora do formato esperado [1,160,160,3]");
             }
+
+            // ETAPA 3: Define entrada do modelo (NHWC).
+            faceRecognitionNet.setInput(blob);
             
-            // ETAPA 4: Executa inferência (forward pass)
+            // ETAPA 4: Executa inferência (forward pass).
+            // Se há um nome de saída detectado, tenta usá-lo; em caso de erro
+            // (camada inexistente etc.), cai para forward() padrão antes de
+            // declarar incompatibilidade de modelo.
             BytePointer outputLayerNamePtr = outputLayerName != null ? new BytePointer(outputLayerName) : null;
-            Mat output = outputLayerNamePtr != null 
-                ? faceRecognitionNet.forward(outputLayerNamePtr)
-                : faceRecognitionNet.forward();
+            Mat output;
+            if (outputLayerNamePtr != null) {
+                try {
+                    output = faceRecognitionNet.forward(outputLayerNamePtr);
+                } catch (Throwable forwardErr) {
+                    System.err.println("      ⚠️ forward(\"" + outputLayerName
+                            + "\") falhou (" + forwardErr.getMessage()
+                            + "). Usando saída padrão do modelo.");
+                    outputLayerNamePtr.close();
+                    outputLayerNamePtr = null;
+                    outputLayerName = null; // não tenta de novo nas próximas chamadas
+                    output = faceRecognitionNet.forward();
+                }
+            } else {
+                output = faceRecognitionNet.forward();
+            }
             
             if (output.empty()) {
                 System.err.println("      ❌ Erro: Saída do modelo está vazia");
-                blob.close();
-                faceResized.close();
-                faceRGB.close();
-                faceNormalized.close();
+                faceBase.close();
+                faceRgb.close();
+                faceFloat.close();
+                nhwcShape.close();
                 if (outputLayerNamePtr != null) outputLayerNamePtr.close();
-                return extrairEmbeddingMelhorado(faceRoi);
+                throw new IllegalStateException("Erro: Arquivo de modelo incompatível com a estrutura de dados esperada");
             }
-            
-            System.out.println("         ✅ Inferência concluída");
-            System.out.println("         Dimensões da saída: " + output.rows() + "x" + output.cols() + 
-                             " (channels: " + output.channels() + ")");
             
             // ETAPA 5: Extrai valores do embedding
             // A saída pode estar em diferentes formatos dependendo do modelo
@@ -1170,8 +1152,6 @@ public class ReconhecimentoFacial {
                 // Tenta achatamento
                 embeddingSize = (int) output.total();
             }
-            
-            System.out.println("         Tamanho do embedding detectado: " + embeddingSize + " dimensões");
             
             // Converte Mat para array de doubles usando BytePointer
             double[] embeddingArray = new double[embeddingSize];
@@ -1210,7 +1190,6 @@ public class ReconhecimentoFacial {
                 for (int i = 0; i < embeddingArray.length; i++) {
                     embeddingArray[i] = embeddingArray[i] / norm;
                 }
-                System.out.println("         ✅ Embedding normalizado (L2)");
             }
             
             // Converte para lista
@@ -1220,48 +1199,29 @@ public class ReconhecimentoFacial {
             
             // Se o embedding não tiver 128 dimensões, ajusta ou trunca
             if (embedding.size() != EMBEDDING_SIZE) {
-                System.out.println("         ⚠️ Embedding tem " + embedding.size() + " dimensões, esperado " + EMBEDDING_SIZE);
                 if (embedding.size() > EMBEDDING_SIZE) {
                     // Trunca para 128
                     embedding = embedding.subList(0, EMBEDDING_SIZE);
-                    System.out.println("         ✅ Embedding truncado para " + EMBEDDING_SIZE + " dimensões");
                 } else {
                     // Preenche com zeros (não ideal, mas mantém compatibilidade)
                     while (embedding.size() < EMBEDDING_SIZE) {
                         embedding.add(0.0);
                     }
-                    System.out.println("         ⚠️ Embedding preenchido com zeros para " + EMBEDDING_SIZE + " dimensões");
                 }
             }
             
             // Limpa recursos
-            blob.close();
-            faceResized.close();
-            faceRGB.close();
-            faceNormalized.close();
+            faceBase.close();
+            faceRgb.close();
+            faceFloat.close();
+            nhwcShape.close();
             output.close();
-            
-            System.out.println("      ✅✅✅ Embedding DNN extraído com sucesso! (" + embedding.size() + " dimensões)");
-            
-            // Mostra estatísticas
-            double soma = 0.0;
-            double min = Double.MAX_VALUE;
-            double max = Double.MIN_VALUE;
-            for (Double val : embedding) {
-                soma += val;
-                min = Math.min(min, val);
-                max = Math.max(max, val);
-            }
-            System.out.println("         Estatísticas: média=" + String.format("%.6f", soma/embedding.size()) + 
-                             ", min=" + String.format("%.6f", min) + ", max=" + String.format("%.6f", max));
-            
+
             return embedding;
             
         } catch (Exception e) {
             System.err.println("      ❌ Erro ao extrair embedding com DNN: " + e.getMessage());
-            e.printStackTrace();
-            System.out.println("      💡 Usando método fallback (baseado em características)");
-            return extrairEmbeddingMelhorado(faceRoi);
+            throw new IllegalStateException("Erro: Arquivo de modelo incompatível com a estrutura de dados esperada", e);
         }
     }
     

@@ -196,9 +196,10 @@ public class DadosFaciaisDAO {
             int totalRegistros = 0;
             int usuariosComDescritoresValidos = 0;
             double maiorSimilaridadeGlobal = 0.0;
+            double segundaMaiorSimilaridadeGlobal = 0.0;
+            int idMelhorUsuario = -1;
             Usuario melhorMatch = null;
             
-            // Mapa para rastrear a melhor similaridade de cada usuário
             Map<Integer, Double> melhorSimilaridadePorUsuario = new HashMap<>();
             Map<Integer, Usuario> usuariosProcessados = new HashMap<>();
 
@@ -238,16 +239,23 @@ public class DadosFaciaisDAO {
                 
                 // Calcula similaridade com esta foto específica
                 double similaridade = calcularSimilaridade(descritoresFaciais, descritoresArmazenados);
+                System.out.println("Comparando com Usuário " + idUsuario + ": Similaridade = "
+                        + String.format("%.4f", similaridade));
                 
-                // Atualiza a melhor similaridade para este usuário (pode ter múltiplas fotos)
                 double melhorSimilaridadeUsuario = melhorSimilaridadePorUsuario.get(idUsuario);
                 if (similaridade > melhorSimilaridadeUsuario) {
                     melhorSimilaridadePorUsuario.put(idUsuario, similaridade);
-                    
-                    // Atualiza o melhor match global se necessário
+
+                    // Atualiza o ranking global mantendo o segundo melhor de outro usuário
                     if (similaridade > maiorSimilaridadeGlobal) {
+                        if (idMelhorUsuario != -1 && idMelhorUsuario != idUsuario) {
+                            segundaMaiorSimilaridadeGlobal = maiorSimilaridadeGlobal;
+                        }
                         maiorSimilaridadeGlobal = similaridade;
+                        idMelhorUsuario = idUsuario;
                         melhorMatch = usuariosProcessados.get(idUsuario);
+                    } else if (similaridade > segundaMaiorSimilaridadeGlobal && idUsuario != idMelhorUsuario) {
+                        segundaMaiorSimilaridadeGlobal = similaridade;
                     }
                 }
             }
@@ -258,6 +266,22 @@ public class DadosFaciaisDAO {
                 return null;
             }
             
+            // Match ambíguo: dois usuários distintos com similaridades muito próximas.
+            // Margem de 0.05 evita aceitar pessoas parecidas como o usuário errado.
+            final double MARGEM_AMBIGUIDADE = 0.05;
+            if (melhorMatch != null
+                    && maiorSimilaridadeGlobal >= threshold
+                    && segundaMaiorSimilaridadeGlobal > 0.0
+                    && (maiorSimilaridadeGlobal - segundaMaiorSimilaridadeGlobal) < MARGEM_AMBIGUIDADE) {
+                System.out.println("      ⚠️ Match AMBÍGUO rejeitado:");
+                System.out.println("         1º (Usuário " + idMelhorUsuario + "): "
+                        + String.format("%.4f", maiorSimilaridadeGlobal));
+                System.out.println("         2º (outro usuário): "
+                        + String.format("%.4f", segundaMaiorSimilaridadeGlobal));
+                System.out.println("         Margem mínima exigida: " + MARGEM_AMBIGUIDADE);
+                return null;
+            }
+
             // CORREÇÃO CRÍTICA: Retorna o MELHOR match (maior similaridade entre todas as fotos) apenas se >= threshold
             if (melhorMatch != null && maiorSimilaridadeGlobal >= threshold) {
                 System.out.println("\n      ✅✅✅ MELHOR MATCH ENCONTRADO! ✅✅✅");
@@ -287,16 +311,8 @@ public class DadosFaciaisDAO {
                 System.out.println("      ⚠️ Similaridade mais alta (" + String.format("%.4f", maiorSimilaridadeGlobal) + 
                                  ") está abaixo do threshold (" + threshold + ")");
                 System.out.println("      💡 Diferença: " + String.format("%.4f", threshold - maiorSimilaridadeGlobal));
-                
-                if (maiorSimilaridadeGlobal > 0.2) {
-                    System.out.println("      💡 Similaridade > 0.2 - pode ser a mesma pessoa, threshold muito restritivo");
-                    // Retorna mesmo assim se for > 0.2 (fallback)
-                    if (melhorMatch != null) {
-                        System.out.println("\n      ⚠️ Retornando melhor match mesmo abaixo do threshold (similaridade > 0.2)");
-                        System.out.println("      Usuário: ID " + melhorMatch.getIdUsuario() + " - " + melhorMatch.getNome());
-                        return melhorMatch;
-                    }
-                } else if (maiorSimilaridadeGlobal > 0.1) {
+
+                if (maiorSimilaridadeGlobal > 0.1) {
                     System.out.println("      💡 Similaridade > 0.1 - possível match, mas baixa confiança");
                 } else {
                     System.out.println("      💡 Similaridade muito baixa - provavelmente não é a mesma pessoa");
@@ -409,8 +425,13 @@ public class DadosFaciaisDAO {
     }
 
     /**
-     * Calcula similaridade entre dois vetores de descritores faciais usando cosseno similarity
-     * Embeddings faciais normalizados funcionam melhor com cosseno similarity
+     * Calcula similaridade entre dois vetores de descritores faciais usando cosseno similarity.
+     * Embeddings faciais normalizados (L2) funcionam melhor com cosseno similarity.
+     *
+     * Importante: se as dimensões dos dois vetores diferirem, retorna 0.0.
+     * Vetores com tamanhos diferentes vêm de modelos/pipelines distintos (ex.: 66 dim do
+     * pipeline antigo HOG/LBP vs 128 dim do FaceNet) e não podem ser comparados —
+     * a "comparação parcial" usada antes gerava scores enganosos.
      */
     private double calcularSimilaridade(String descritores1, String descritores2) {
         try {
@@ -421,8 +442,6 @@ public class DadosFaciaisDAO {
                 return 0.0;
             }
 
-            // Converte strings JSON para arrays de double
-            // Remove colchetes e espaços, depois divide por vírgula
             String clean1 = descritores1.trim().replaceAll("^\\[|\\]$", "").trim();
             String clean2 = descritores2.trim().replaceAll("^\\[|\\]$", "").trim();
             
@@ -430,32 +449,15 @@ public class DadosFaciaisDAO {
             String[] valores2 = clean2.isEmpty() ? new String[0] : clean2.split(",\\s*");
 
             if (valores1.length != valores2.length) {
-                System.out.println("⚠️ Dimensões diferentes: " + valores1.length + " vs " + valores2.length);
-                System.out.println("   Primeiros valores 1: " + (valores1.length > 0 ? valores1[0] : "vazio"));
-                System.out.println("   Primeiros valores 2: " + (valores2.length > 0 ? valores2[0] : "vazio"));
-                // Tenta usar a menor dimensão para comparação parcial
-                int minLen = Math.min(valores1.length, valores2.length);
-                if (minLen > 0) {
-                    System.out.println("   Usando apenas as primeiras " + minLen + " dimensões para comparação");
-                    String[] temp1 = new String[minLen];
-                    String[] temp2 = new String[minLen];
-                    System.arraycopy(valores1, 0, temp1, 0, minLen);
-                    System.arraycopy(valores2, 0, temp2, 0, minLen);
-                    valores1 = temp1;
-                    valores2 = temp2;
-                } else {
-                    return 0.0;
-                }
+                System.out.println("⚠️ Dimensões incompatíveis: " + valores1.length + " vs " + valores2.length
+                        + " — descritor armazenado vem de outro modelo. Recadastre a foto deste usuário. (similaridade=0)");
+                return 0.0;
             }
 
             if (valores1.length == 0) {
                 System.out.println("⚠️ Arrays vazios após parsing");
-                System.out.println("   Descritores1 original: " + descritores1.substring(0, Math.min(100, descritores1.length())));
-                System.out.println("   Descritores2 original: " + descritores2.substring(0, Math.min(100, descritores2.length())));
                 return 0.0;
             }
-            
-            System.out.println("   Comparando " + valores1.length + " dimensões");
 
             // Calcula cosseno similarity (melhor para embeddings normalizados)
             double produtoEscalar = 0.0;
