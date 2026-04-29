@@ -13,6 +13,7 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
@@ -71,9 +72,9 @@
       </VBox>
       
       <!-- Tela de dados do apenado (após reconhecimento) -->
-      <ScrollPane fx:id="paneDados" fitToWidth="true" styleClass="scroll-pane" visible="false">
+      <ScrollPane fx:id="paneDados" fitToHeight="true" fitToWidth="true" styleClass="scroll-pane" visible="false">
          <content>
-            <VBox alignment="CENTER" spacing="20.0" styleClass="content-container">
+            <VBox alignment="TOP_CENTER" fillWidth="true" spacing="16.0" styleClass="content-container totem-mode">
                <padding>
                   <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
                </padding>
@@ -91,11 +92,6 @@
                               <Font name="Segoe UI" size="14.0" />
                            </font>
                         </Text>
-                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Meus Dados" textAlignment="CENTER">
-                           <font>
-                              <Font name="Segoe UI Bold" size="24.0" />
-                           </font>
-                        </Text>
                      </children>
                   </VBox>
                   
@@ -104,7 +100,7 @@
                      <children>
                         <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="👤 Informações Pessoais" textAlignment="CENTER">
                            <font>
-                              <Font name="Segoe UI Bold" size="20.0" />
+                              <Font name="Segoe UI Bold" size="24.0" />
                            </font>
                         </Text>
                         
@@ -167,105 +163,22 @@
                      </children>
                   </VBox>
                   
-                  <!-- Seção de endereço -->
-                  <VBox spacing="20.0" styleClass="section-container">
-                     <children>
-                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="🏠 Informações de Endereço" textAlignment="CENTER">
-                           <font>
-                              <Font name="Segoe UI Bold" size="20.0" />
-                           </font>
-                        </Text>
-                        
-                        <!-- Endereço -->
-                        <VBox spacing="8.0">
-                           <children>
-                              <Label text="📍 Endereço Completo" styleClass="label-primary" />
-                              <TextField fx:id="txtEndereco" editable="false" styleClass="input-field readonly" />
-                           </children>
-                        </VBox>
-                        
-                        <!-- Bairro, Cidade, UF, Nacionalidade -->
-                        <GridPane hgap="20.0" vgap="15.0">
-                           <columnConstraints>
-                              <ColumnConstraints hgrow="ALWAYS" minWidth="120.0" prefWidth="150.0" />
-                              <ColumnConstraints hgrow="ALWAYS" minWidth="120.0" prefWidth="150.0" />
-                              <ColumnConstraints hgrow="ALWAYS" minWidth="80.0" prefWidth="100.0" />
-                              <ColumnConstraints hgrow="ALWAYS" minWidth="120.0" prefWidth="150.0" />
-                           </columnConstraints>
-                           <rowConstraints>
-                              <RowConstraints minHeight="60.0" prefHeight="60.0" vgrow="NEVER" />
-                           </rowConstraints>
-                           <children>
-                              <VBox spacing="8.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                 <children>
-                                    <Label text="🏘️ Bairro" styleClass="label-primary" />
-                                    <TextField fx:id="txtBairro" editable="false" styleClass="input-field readonly" />
-                                 </children>
-                              </VBox>
-                              <VBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                 <children>
-                                    <Label text="🏙️ Cidade" styleClass="label-primary" />
-                                    <TextField fx:id="txtCidade" editable="false" styleClass="input-field readonly" />
-                                 </children>
-                              </VBox>
-                              <VBox spacing="8.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                 <children>
-                                    <Label text="🗺️ UF" styleClass="label-primary" />
-                                    <TextField fx:id="txtUf" editable="false" styleClass="input-field readonly" />
-                                 </children>
-                              </VBox>
-                              <VBox spacing="8.0" GridPane.columnIndex="3" GridPane.rowIndex="0">
-                                 <children>
-                                    <Label text="🌍 Nacionalidade" styleClass="label-primary" />
-                                    <TextField fx:id="txtNac" editable="false" styleClass="input-field readonly" />
-                                 </children>
-                              </VBox>
-                           </children>
-                        </GridPane>
-                        
-                        <!-- Data de cadastro e Telefone -->
-                        <GridPane hgap="20.0" vgap="15.0">
-                           <columnConstraints>
-                              <ColumnConstraints hgrow="ALWAYS" minWidth="150.0" prefWidth="250.0" />
-                              <ColumnConstraints hgrow="ALWAYS" minWidth="150.0" prefWidth="250.0" />
-                           </columnConstraints>
-                           <rowConstraints>
-                              <RowConstraints minHeight="60.0" prefHeight="60.0" vgrow="NEVER" />
-                           </rowConstraints>
-                           <children>
-                              <VBox spacing="8.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                 <children>
-                                    <Label text="📅 Data de Cadastro" styleClass="label-primary" />
-                                    <TextField fx:id="txtDataCad" editable="false" styleClass="input-field readonly" />
-                                 </children>
-                              </VBox>
-                              <VBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                 <children>
-                                    <Label text="📞 Telefone" styleClass="label-primary" />
-                                    <TextField fx:id="txtFone" editable="false" styleClass="input-field readonly" />
-                                 </children>
-                              </VBox>
-                           </children>
-                        </GridPane>
-                     </children>
-                  </VBox>
-                  
                   <!-- Seção de registros de trabalho -->
-                  <VBox spacing="20.0" styleClass="section-container">
+                  <VBox spacing="20.0" styleClass="section-container destaque-registros" VBox.vgrow="ALWAYS">
                      <children>
                         <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="💼 Registros de Trabalho" textAlignment="CENTER">
                            <font>
-                              <Font name="Segoe UI Bold" size="20.0" />
+                              <Font name="Segoe UI Bold" size="28.0" />
                            </font>
                         </Text>
                         
                         <!-- Tabela de registros -->
-                        <TableView fx:id="tblRegistros" prefHeight="250.0" styleClass="responsive-table">
+                        <TableView fx:id="tblRegistros" prefHeight="760.0" styleClass="responsive-table destaque-registros-tabela" VBox.vgrow="ALWAYS">
                            <columns>
-                              <TableColumn fx:id="colData" prefWidth="120.0" minWidth="100.0" text="📅 Data" />
-                              <TableColumn fx:id="colCumprida" prefWidth="130.0" minWidth="120.0" text="✅ Horas Cumpridas" />
-                              <TableColumn fx:id="colFalta" prefWidth="130.0" minWidth="120.0" text="⏳ Horas a Cumprir" />
-                              <TableColumn fx:id="colInst" prefWidth="250.0" minWidth="200.0" text="🏢 Instituição" />
+                              <TableColumn fx:id="colData" prefWidth="150.0" minWidth="130.0" text="📅 Data" />
+                              <TableColumn fx:id="colCumprida" prefWidth="180.0" minWidth="160.0" text="✅ Horas Cumpridas" />
+                              <TableColumn fx:id="colFalta" prefWidth="180.0" minWidth="160.0" text="⏳ Horas a Cumprir" />
+                              <TableColumn fx:id="colInst" prefWidth="300.0" minWidth="240.0" text="🏢 Instituição" />
                            </columns>
                         </TableView>
                      </children>

@@ -761,6 +761,62 @@
   -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.3), 4, 0, 0, 2);
 }
 
+/* ===== MODO TOTEM (leitura à distância) ===== */
+.totem-mode .label-primary {
+  -fx-font-size: 22px;
+}
+
+.totem-mode .label-secondary {
+  -fx-font-size: 20px;
+}
+
+.totem-mode .input-field,
+.totem-mode .combo-box {
+  -fx-font-size: 22px;
+  -fx-padding: 16 20 16 20;
+}
+
+.totem-mode .btn-primary,
+.totem-mode .btn-secondary,
+.totem-mode .btn-info {
+  -fx-font-size: 22px;
+  -fx-padding: 14 26 14 26;
+}
+
+.totem-mode .responsive-table .column-header {
+  -fx-font-size: 22px;
+  -fx-padding: 16px 12px;
+}
+
+.totem-mode .responsive-table .table-cell {
+  -fx-font-size: 22px;
+  -fx-padding: 14px 12px;
+}
+
+.totem-mode .responsive-table .table-row-cell {
+  -fx-cell-size: 70px;
+}
+
+.totem-mode .destaque-registros {
+  -fx-border-color: #2563eb;
+  -fx-border-width: 3px;
+  -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.22), 14, 0, 0, 3);
+}
+
+.totem-mode .destaque-registros-tabela .column-header {
+  -fx-font-size: 24px;
+  -fx-font-weight: 800;
+}
+
+.totem-mode .destaque-registros-tabela .table-cell {
+  -fx-font-size: 24px;
+  -fx-font-weight: 600;
+}
+
+.totem-mode .destaque-registros-tabela .table-row-cell {
+  -fx-cell-size: 78px;
+}
+
 .btn-success {
   -fx-background-color: #10b981;
   -fx-text-fill: white;

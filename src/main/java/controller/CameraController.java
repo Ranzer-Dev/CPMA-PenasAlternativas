@@ -27,6 +27,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Ellipse;
 import javafx.stage.Stage;
 import util.ReconhecimentoFacial;
 
@@ -42,6 +44,10 @@ public class CameraController {
     private Button btnCancelar;
     @FXML
     private Label lblStatus;
+    @FXML
+    private Ellipse guiaFace;
+    @FXML
+    private Label lblOrientacao;
 
     private FrameGrabber camera;
     private ScheduledExecutorService timer;
@@ -55,6 +61,23 @@ public class CameraController {
     private static final int SKIP_FRAMES = 1; // Processar detecção a cada 2 frames
     private boolean ultimaFaceDetectada = false; // Para manter estado entre frames
     private List<Rectangle> ultimasFacesDetectadas = new ArrayList<>(); // Para manter coordenadas das faces
+
+    // Largura/altura do frame e parâmetros do guia oval (em pixels da imagem 640x480)
+    private static final int FRAME_W = 640;
+    private static final int FRAME_H = 480;
+    // Tamanho relativo aceitável da face em relação à área do frame
+    private static final double AREA_MIN = 0.08; // muito pequena → aproxime-se
+    private static final double AREA_MAX = 0.45; // muito grande → afaste-se
+    // Tolerância de centralização em pixels
+    private static final int TOLERANCIA_X = 90;
+    private static final int TOLERANCIA_Y = 70;
+    // Quantidade de frames consecutivos com posicionamento OK para liberar captura
+    private static final int FRAMES_PARA_OK = 5;
+    private int framesAlinhados = 0;
+
+    private enum EstadoPosicionamento {
+        SEM_FACE, LONGE, PERTO, DESCENTRADO, OK
+    }
 
     @FXML
     public void initialize() {
@@ -101,14 +124,17 @@ public class CameraController {
         try {
             camera.start();
             cameraAtiva = true;
+            framesAlinhados = 0;
 
             // Mostra o botão de capturar e atualiza o status
             btnIniciarCamera.setText("Parar Câmera");
             btnCapturar.setVisible(true);
+            btnCapturar.setDisable(true);
             if (lblStatus != null) {
                 lblStatus.setText("Câmera ativa - Posicione-se na frente da câmera");
                 lblStatus.setStyle("-fx-text-fill: green;");
             }
+            atualizarOverlay(EstadoPosicionamento.SEM_FACE);
 
             Runnable frameGrabber = () -> {
                 try {
@@ -131,17 +157,9 @@ public class CameraController {
                                     // Desenha retângulos com as coordenadas reais
                                     BufferedImage imagemComDetecao = reconhecimentoFacial.desenharRetangulosFaces(bufferedImage);
                                     imageToShow = bufferedImageToImage(imagemComDetecao);
-                                    Platform.runLater(() -> {
-                                        if (lblStatus != null) {
-                                            if (ultimaFaceDetectada) {
-                                                lblStatus.setText("Face detectada ✓");
-                                                lblStatus.setStyle("-fx-text-fill: green;");
-                                            } else {
-                                                lblStatus.setText("Procurando faces...");
-                                                lblStatus.setStyle("-fx-text-fill: orange;");
-                                            }
-                                        }
-                                    });
+
+                                    EstadoPosicionamento estado = avaliarPosicionamento(ultimasFacesDetectadas);
+                                    Platform.runLater(() -> atualizarOverlay(estado));
                                 } else {
                                     imageToShow = matToImage(frameCapturado);
                                 }
@@ -184,7 +202,10 @@ public class CameraController {
             System.out.println("Dimensões do frame: " + frameCapturado.rows() + "x" + frameCapturado.cols());
             
             // Captura a imagem diretamente do frame atual
-            this.imagemCapturada = matToBufferedImage(frameCapturado);
+            BufferedImage imagemBruta = matToBufferedImage(frameCapturado);
+
+            // Recorta a região facial para reduzir ruído de fundo antes de armazenar
+            this.imagemCapturada = recortarRegiaoFacial(imagemBruta, ultimasFacesDetectadas);
             System.out.println("Imagem capturada: " + (this.imagemCapturada != null ? "OK" : "NULL"));
             
             if (this.imagemCapturada != null) {
@@ -249,8 +270,10 @@ public class CameraController {
         // Para a câmera mas NÃO limpa a imagem
         if (cameraAtiva) {
             cameraAtiva = false;
+            framesAlinhados = 0;
             btnIniciarCamera.setText("Iniciar Câmera");
             btnCapturar.setVisible(false);
+            btnCapturar.setDisable(true);
             
             // Para o timer
             if (timer != null && !timer.isShutdown()) {
@@ -375,12 +398,20 @@ public class CameraController {
 
     private void pararCamera() {
         cameraAtiva = false;
+        framesAlinhados = 0;
         btnIniciarCamera.setText("Iniciar Câmera");
         btnCapturar.setVisible(false);
+        btnCapturar.setDisable(true);
 
         if (lblStatus != null) {
             lblStatus.setText("Câmera parada - Clique em 'Iniciar Câmera' para começar");
             lblStatus.setStyle("-fx-text-fill: orange;");
+        }
+        if (lblOrientacao != null) {
+            lblOrientacao.setText("Posicione seu rosto dentro do oval");
+        }
+        if (guiaFace != null) {
+            guiaFace.setStroke(Color.web("#facc15"));
         }
 
         // Para o timer
@@ -412,6 +443,154 @@ public class CameraController {
         if (btnCancelar != null && btnCancelar.getScene() != null) {
             Stage stage = (Stage) btnCancelar.getScene().getWindow();
             stage.close();
+        }
+    }
+
+    /**
+     * Avalia se a face está bem posicionada dentro do oval guia.
+     * Atualiza contador de frames alinhados para liberar a captura.
+     */
+    private EstadoPosicionamento avaliarPosicionamento(List<Rectangle> faces) {
+        if (faces == null || faces.isEmpty()) {
+            framesAlinhados = 0;
+            return EstadoPosicionamento.SEM_FACE;
+        }
+
+        // Usa a maior face detectada (mais próxima/relevante)
+        Rectangle face = faces.get(0);
+        int areaMaior = face.width * face.height;
+        for (Rectangle r : faces) {
+            int a = r.width * r.height;
+            if (a > areaMaior) {
+                areaMaior = a;
+                face = r;
+            }
+        }
+
+        double areaFrame = (double) FRAME_W * FRAME_H;
+        double razaoArea = (face.width * face.height) / areaFrame;
+
+        int centroFx = face.x + face.width / 2;
+        int centroFy = face.y + face.height / 2;
+        int dx = centroFx - FRAME_W / 2;
+        int dy = centroFy - FRAME_H / 2;
+
+        if (razaoArea < AREA_MIN) {
+            framesAlinhados = 0;
+            return EstadoPosicionamento.LONGE;
+        }
+        if (razaoArea > AREA_MAX) {
+            framesAlinhados = 0;
+            return EstadoPosicionamento.PERTO;
+        }
+        if (Math.abs(dx) > TOLERANCIA_X || Math.abs(dy) > TOLERANCIA_Y) {
+            framesAlinhados = 0;
+            return EstadoPosicionamento.DESCENTRADO;
+        }
+
+        framesAlinhados++;
+        return EstadoPosicionamento.OK;
+    }
+
+    /**
+     * Atualiza cor do oval guia, mensagem de orientação e estado do botão de captura.
+     */
+    private void atualizarOverlay(EstadoPosicionamento estado) {
+        String texto;
+        Color cor;
+        switch (estado) {
+            case OK:
+                texto = "Pronto! Mantenha-se parado e clique em Capturar";
+                cor = Color.web("#22c55e");
+                break;
+            case LONGE:
+                texto = "Aproxime-se um pouco da câmera";
+                cor = Color.web("#fb923c");
+                break;
+            case PERTO:
+                texto = "Afaste-se um pouco da câmera";
+                cor = Color.web("#fb923c");
+                break;
+            case DESCENTRADO:
+                texto = "Centralize seu rosto dentro do oval";
+                cor = Color.web("#fb923c");
+                break;
+            case SEM_FACE:
+            default:
+                texto = "Posicione seu rosto dentro do oval";
+                cor = Color.web("#facc15");
+                break;
+        }
+
+        if (guiaFace != null) {
+            guiaFace.setStroke(cor);
+        }
+        if (lblOrientacao != null) {
+            lblOrientacao.setText(texto);
+        }
+        if (lblStatus != null) {
+            lblStatus.setText(texto);
+            lblStatus.setStyle(estado == EstadoPosicionamento.OK
+                    ? "-fx-text-fill: green;"
+                    : (estado == EstadoPosicionamento.SEM_FACE
+                            ? "-fx-text-fill: #b45309;"
+                            : "-fx-text-fill: orange;"));
+        }
+
+        boolean libera = estado == EstadoPosicionamento.OK && framesAlinhados >= FRAMES_PARA_OK;
+        if (btnCapturar != null) {
+            btnCapturar.setDisable(!libera);
+        }
+    }
+
+    /**
+     * Recorta a região facial central com padding, eliminando o fundo desnecessário.
+     * Caso não exista face detectada, faz um crop central padrão (zona do oval guia).
+     */
+    private BufferedImage recortarRegiaoFacial(BufferedImage src, List<Rectangle> faces) {
+        if (src == null) return null;
+        int w = src.getWidth();
+        int h = src.getHeight();
+
+        Rectangle alvo = null;
+        if (faces != null && !faces.isEmpty()) {
+            alvo = faces.get(0);
+            int areaMaior = alvo.width * alvo.height;
+            for (Rectangle r : faces) {
+                int a = r.width * r.height;
+                if (a > areaMaior) {
+                    areaMaior = a;
+                    alvo = r;
+                }
+            }
+        }
+
+        int x1, y1, x2, y2;
+        if (alvo != null) {
+            // Padding generoso para incluir testa, queixo e laterais (importante para descritores)
+            int padX = (int) (alvo.width * 0.30);
+            int padY = (int) (alvo.height * 0.40);
+            x1 = Math.max(0, alvo.x - padX);
+            y1 = Math.max(0, alvo.y - (int) (alvo.height * 0.50)); // mais espaço acima (cabelo)
+            x2 = Math.min(w, alvo.x + alvo.width + padX);
+            y2 = Math.min(h, alvo.y + alvo.height + padY);
+        } else {
+            // Fallback: crop central proporcional ao oval guia
+            int cropW = (int) (w * 0.55);
+            int cropH = (int) (h * 0.85);
+            x1 = (w - cropW) / 2;
+            y1 = (h - cropH) / 2;
+            x2 = x1 + cropW;
+            y2 = y1 + cropH;
+        }
+
+        int subW = Math.max(1, x2 - x1);
+        int subH = Math.max(1, y2 - y1);
+        try {
+            return src.getSubimage(x1, y1, subW, subH);
+        } catch (Exception e) {
+            System.err.println("Falha ao recortar região facial, usando imagem original: " + e.getMessage());
+            return src;
         }
     }
 

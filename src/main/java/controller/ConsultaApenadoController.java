@@ -50,9 +50,7 @@ public class ConsultaApenadoController {
     
     // Campos de dados
     @FXML
-    private TextField txtNome, txtCpf, txtDataNasc,
-            txtEndereco, txtBairro, txtCidade, txtUf,
-            txtNac, txtDataCad, txtFone;
+    private TextField txtNome, txtCpf, txtDataNasc;
     @FXML
     private ComboBox<PenaItem> cmbCodigoPena;
     @FXML
@@ -112,6 +110,23 @@ public class ConsultaApenadoController {
         
         // Configura colunas da tabela
         configurarColunasTabela();
+
+        // Modo totem: abre em tela cheia para maximizar legibilidade dos registros.
+        configurarTelaCheiaTotem();
+    }
+
+    private void configurarTelaCheiaTotem() {
+        Platform.runLater(() -> {
+            if (paneReconhecimento == null || paneReconhecimento.getScene() == null) {
+                return;
+            }
+            Stage stage = (Stage) paneReconhecimento.getScene().getWindow();
+            if (stage != null) {
+                stage.setMaximized(true);
+                stage.setFullScreen(true);
+                stage.setFullScreenExitHint("");
+            }
+        });
     }
 
     @FXML
@@ -238,10 +253,11 @@ public class ConsultaApenadoController {
             }
             
             // ETAPA 3: Busca no banco de dados
-            // 0.55 é o limiar recomendado para FaceNet (cosine similarity sobre
+            // 0.54 reduz falso negativo em cenário de borda sem abrir tanto o critério.
+            // A margem antiambiguidade de 0.05 no DAO continua protegendo contra match errado.
             // embeddings L2-normalizados). Valores acima disso são matches confiáveis,
             // e o DAO ainda exige uma margem de 0.05 sobre o segundo melhor para evitar ambiguidade.
-            final double THRESHOLD_FACENET = 0.55;
+            final double THRESHOLD_FACENET = 0.54;
             System.out.println("\n[ETAPA 3] Buscando usuário no banco de dados por similaridade facial...");
             System.out.println("   Threshold configurado: " + THRESHOLD_FACENET
                     + " (cosine similarity FaceNet) + margem antiambiguidade de 0.05");
@@ -298,7 +314,7 @@ public class ConsultaApenadoController {
                 System.out.println("   1. Usuário não está cadastrado no sistema");
                 System.out.println("   2. Usuário não tem foto cadastrada com descritores faciais");
                 System.out.println("   3. Descritores faciais estão vazios ou inválidos no banco");
-                System.out.println("   4. Similaridade calculada está abaixo do threshold (0.55) ou match foi ambíguo");
+                System.out.println("   4. Similaridade calculada está abaixo do threshold (" + THRESHOLD_FACENET + ") ou match foi ambíguo");
                 System.out.println("   5. A foto capturada não tem qualidade suficiente");
                 System.out.println("   6. Iluminação ou posicionamento inadequados");
                 System.out.println("\n" + "=".repeat(80));
@@ -409,17 +425,7 @@ public class ConsultaApenadoController {
         // Preenche o ComboBox de códigos de penas
         preencherComboBoxCodigoPenas();
         
-        txtEndereco.setText(usuario.getEndereco() != null ? usuario.getEndereco() : "");
-        txtBairro.setText(usuario.getBairro() != null ? usuario.getBairro() : "");
-        txtCidade.setText(usuario.getCidade() != null ? usuario.getCidade() : "");
-        txtUf.setText(usuario.getUf() != null ? usuario.getUf() : "");
-        txtNac.setText(usuario.getNacionalidade() != null ? usuario.getNacionalidade() : "");
-        
-        // Formata a data de cadastro
-        String dataCad = formatarData(usuario.getCriadoEm());
-        txtDataCad.setText(dataCad);
-        
-        txtFone.setText(usuario.getTelefone() != null ? usuario.getTelefone() : "");
+        // Campos complementares removidos da tela
     }
 
     /**
@@ -502,6 +508,14 @@ public class ConsultaApenadoController {
         if (tblRegistros == null || usuario == null) {
             return;
         }
+
+        // Segurança adicional para totem: só permite visualizar penas do próprio usuário identificado.
+        boolean penaPertenceAoUsuario = todasPenas != null
+                && todasPenas.stream().anyMatch(p -> p != null && p.getIdPena() == idPena);
+        if (!penaPertenceAoUsuario) {
+            tblRegistros.setItems(FXCollections.observableArrayList());
+            return;
+        }
         
         // Busca a pena selecionada
         Pena pena = PenaDAO.buscarPorId(idPena);
@@ -512,6 +526,7 @@ public class ConsultaApenadoController {
         
         // Busca registros da pena selecionada
         var lista = RegistroDeTrabalhoDAO.buscarPorUsuarioEPena(usuario.getIdUsuario(), idPena);
+        lista.removeIf(registro -> registro == null || registro.getFkPenaId() != idPena);
         
         if (lista.isEmpty()) {
             tblRegistros.setItems(FXCollections.observableArrayList());

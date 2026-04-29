@@ -105,19 +105,21 @@ public class RegistroDeTrabalhoDAO {
     }
 
     public static List<RegistroDeTrabalho> buscarPorUsuarioEPena(int idUsuario, int idPena) {
-        // Observação: a tabela RegistroDeTrabalho não possui coluna fk_usuario_id_usuario.
-        // Filtramos pelos registros da pena informada (idPena). O parâmetro idUsuario é ignorado.
+        // Segurança: retorna registros apenas quando a pena pertence ao usuário informado.
         List<RegistroDeTrabalho> lista = new ArrayList<>();
         final String sql = """
-        SELECT *
-          FROM RegistroDeTrabalho
-         WHERE fk_pena_id_pena = ?
+        SELECT rt.*
+          FROM RegistroDeTrabalho rt
+          JOIN Pena p ON p.id_pena = rt.fk_pena_id_pena
+         WHERE rt.fk_pena_id_pena = ?
+           AND p.fk_usuario_id_usuario = ?
          ORDER BY data_trabalho
         """;
 
         try (Connection c = ConnectionFactory.getConnection(); PreparedStatement st = c.prepareStatement(sql)) {
 
             st.setInt(1, idPena);
+            st.setInt(2, idUsuario);
 
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
