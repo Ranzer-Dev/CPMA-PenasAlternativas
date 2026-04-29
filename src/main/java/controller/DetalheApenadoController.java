@@ -678,21 +678,11 @@ public class DetalheApenadoController {
                     return r1.getDataTrabalho().compareTo(r2.getDataTrabalho());
                 });
                 
-                // Cabeçalho da tabela
+                // Colunas da tabela (sem cabeçalho textual)
                 float tableMargin = margin;
                 float col1Width = 100;
                 float col2Width = 120;
-                
-                escreverTextoPdf(contentStream, "Data", fontBold, 11, tableMargin, yPosition);
-                escreverTextoPdf(contentStream, "Horas Cumpridas", fontBold, 11, tableMargin + col1Width, yPosition);
-                escreverTextoPdf(contentStream, "Horas Restantes", fontBold, 11, tableMargin + col1Width + col2Width, yPosition);
-                yPosition -= (lineHeight + 5);
-                
-                // Linha separadora
-                contentStream.moveTo(margin, yPosition);
-                contentStream.lineTo(pageWidth - margin, yPosition);
-                contentStream.stroke();
-                yPosition -= lineHeight;
+                yPosition -= 5;
                 
                 double totPena = pena.getHorasTotais();
                 double acumulado = 0;
@@ -706,17 +696,9 @@ public class DetalheApenadoController {
                         contentStream = new PDPageContentStream(document, newPage);
                         yPosition = pageHeight - margin;
 
-                        // Reimprime título da seção e cabeçalho da tabela na nova página
+                        // Reimprime título da seção na nova página
                         yPosition = adicionarTexto(contentStream, "REGISTROS DE TRABALHO", fontBold, 14, margin, yPosition);
-                        yPosition -= lineHeight;
-                        escreverTextoPdf(contentStream, "Data", fontBold, 11, tableMargin, yPosition);
-                        escreverTextoPdf(contentStream, "Horas Cumpridas", fontBold, 11, tableMargin + col1Width, yPosition);
-                        escreverTextoPdf(contentStream, "Horas Restantes", fontBold, 11, tableMargin + col1Width + col2Width, yPosition);
-                        yPosition -= (lineHeight + 5);
-                        contentStream.moveTo(margin, yPosition);
-                        contentStream.lineTo(pageWidth - margin, yPosition);
-                        contentStream.stroke();
-                        yPosition -= lineHeight;
+                        yPosition -= 5;
                     }
                     
                     acumulado += reg.getHorasCumpridas();

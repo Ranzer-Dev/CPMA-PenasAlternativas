@@ -160,9 +160,9 @@ private void capturarImagem() {
             }
 
             // Busca usuário por similaridade facial.
-            // 0.55 é o limiar recomendado para FaceNet (cosine similarity sobre
-            // embeddings L2-normalizados). Valores acima disso são matches confiáveis.
-            usuarioIdentificado = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, 0.55);
+            // 0.54 reduz falso negativo em cenário de borda sem abrir tanto o critério.
+            // A margem antiambiguidade de 0.05 no DAO continua protegendo contra match errado.
+            usuarioIdentificado = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, 0.54);
 
             if (usuarioIdentificado != null) {
                 exibirDadosUsuario(usuarioIdentificado);
