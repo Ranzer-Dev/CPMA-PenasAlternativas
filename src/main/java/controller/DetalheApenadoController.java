@@ -16,6 +16,7 @@ import javafx.util.StringConverter;
 import dao.DadosFaciaisDAO;
 import dao.InstituicaoDAO;
 import dao.PenaDAO;
+import dao.PenaInstituicaoDAO;
 import dao.RegistroDeTrabalhoDAO;
 import model.DadosFaciais;
 import model.Pena;
@@ -321,11 +322,6 @@ public class DetalheApenadoController {
             return r1.getDataTrabalho().compareTo(r2.getDataTrabalho());
         });
         
-        // Busca o nome da instituição
-        String inst = InstituicaoDAO.buscarNomePorId(pena.getFkInstituicaoIdInstituicao());
-        String instituicao = inst != null ? inst : "";
-        System.out.println("Instituição: " + instituicao);
-        
         // Calcula o total acumulado de horas
         double acumulado = 0;
         for (RegistroDeTrabalho r : lista) {
@@ -359,11 +355,12 @@ public class DetalheApenadoController {
                     dataTrabalho = formatarData(dataUtil);
                 }
                 
+                String nomeInst = InstituicaoDAO.nomeInstituicaoDoRegistro(r, pena);
                 RegistroDTO dto = new RegistroDTO(
                         dataTrabalho,
                         String.format("%.2f", r.getHorasCumpridas()),
                         String.format("%.2f", falta),
-                        instituicao);
+                        nomeInst);
                 
                 tabela.add(dto);
                 System.out.println("DTO criado: Data=" + dto.data + ", Cumprida=" + dto.cumprida + ", Falta=" + dto.falta + ", Inst=" + dto.inst);
@@ -645,7 +642,7 @@ public class DetalheApenadoController {
             
             // Informações da Pena
             Pena pena = penaItem.getPena();
-            String nomeInstituicao = InstituicaoDAO.buscarNomePorId(pena.getFkInstituicaoIdInstituicao());
+            String nomesInstituicoes = PenaInstituicaoDAO.buscarNomesConcatenadosPorPena(pena.getIdPena());
             String codigoPena = penaItem.getCodigo();
             if (codigoPena.contains(" (")) {
                 codigoPena = codigoPena.substring(0, codigoPena.indexOf(" ("));
@@ -654,14 +651,10 @@ public class DetalheApenadoController {
             yPosition = adicionarTexto(contentStream, "INFORMAÇÕES DA PENA", fontBold, 14, margin, yPosition);
             yPosition -= lineHeight;
             yPosition = adicionarLinhaPDF(contentStream, "Código da Pena:", codigoPena, fontBold, fontNormal, margin, yPosition);
-            yPosition = adicionarLinhaPDF(contentStream, "Tipo:", pena.getTipoPena() != null ? pena.getTipoPena() : "N/A", fontBold, fontNormal, margin, yPosition);
             yPosition = adicionarLinhaPDF(contentStream, "Data de Início:", formatarData(pena.getDataInicio()), fontBold, fontNormal, margin, yPosition);
             yPosition = adicionarLinhaPDF(contentStream, "Data de Término:", formatarData(pena.getDataTermino()), fontBold, fontNormal, margin, yPosition);
             yPosition = adicionarLinhaPDF(contentStream, "Horas Totais:", String.format("%.2f", pena.getHorasTotais()), fontBold, fontNormal, margin, yPosition);
-            yPosition = adicionarLinhaPDF(contentStream, "Instituição:", nomeInstituicao != null ? nomeInstituicao : "N/A", fontBold, fontNormal, margin, yPosition);
-            if (pena.getDescricao() != null && !pena.getDescricao().trim().isEmpty()) {
-                yPosition = adicionarLinhaPDF(contentStream, "Descrição:", pena.getDescricao(), fontBold, fontNormal, margin, yPosition);
-            }
+            yPosition = adicionarLinhaPDF(contentStream, "Instituições:", nomesInstituicoes.isBlank() ? "N/A" : nomesInstituicoes, fontBold, fontNormal, margin, yPosition);
             yPosition -= sectionSpacing;
             
             // Registros de Trabalho
@@ -680,8 +673,10 @@ public class DetalheApenadoController {
                 
                 // Colunas da tabela (sem cabeçalho textual)
                 float tableMargin = margin;
-                float col1Width = 100;
-                float col2Width = 120;
+                float col1Width = 80;
+                float col2Width = 70;
+                float col3Width = 70;
+                float col4Width = 120;
                 yPosition -= 5;
                 
                 double totPena = pena.getHorasTotais();
@@ -707,10 +702,12 @@ public class DetalheApenadoController {
                     String data = formatarData(reg.getDataTrabalho());
                     String horas = String.format("%.2f", reg.getHorasCumpridas());
                     String horasFalta = String.format("%.2f", falta);
+                    String nomeInst = InstituicaoDAO.nomeInstituicaoDoRegistro(reg, pena);
                     
                     escreverTextoPdf(contentStream, data, fontNormal, 10, tableMargin, yPosition);
                     escreverTextoPdf(contentStream, horas, fontNormal, 10, tableMargin + col1Width, yPosition);
                     escreverTextoPdf(contentStream, horasFalta, fontNormal, 10, tableMargin + col1Width + col2Width, yPosition);
+                    escreverTextoPdf(contentStream, nomeInst, fontNormal, 10, tableMargin + col1Width + col2Width + col3Width, yPosition);
                     yPosition -= lineHeight;
                 }
                 
@@ -986,7 +983,7 @@ public class DetalheApenadoController {
         titulo.setUnderline(true);
         
         Pena pena = penaItem.getPena();
-        String nomeInstituicao = InstituicaoDAO.buscarNomePorId(pena.getFkInstituicaoIdInstituicao());
+        String nomesInstituicoes = PenaInstituicaoDAO.buscarNomesConcatenadosPorPena(pena.getIdPena());
         
         GridPane grid = new GridPane();
         grid.setHgap(20);
@@ -1008,12 +1005,8 @@ public class DetalheApenadoController {
         adicionarLinhaGrid(grid, 3, "Data de Término:", formatarData(pena.getDataTermino()));
         // Horas Totais
         adicionarLinhaGrid(grid, 4, "Horas Totais:", String.format("%.2f", pena.getHorasTotais()));
-        // Instituição
-        adicionarLinhaGrid(grid, 5, "Instituição:", nomeInstituicao != null ? nomeInstituicao : "N/A");
-        // Descrição
-        if (pena.getDescricao() != null && !pena.getDescricao().trim().isEmpty()) {
-            adicionarLinhaGrid(grid, 6, "Descrição:", pena.getDescricao());
-        }
+        // Instituições
+        adicionarLinhaGrid(grid, 5, "Instituições:", nomesInstituicoes.isBlank() ? "N/A" : nomesInstituicoes);
         
         secao.getChildren().addAll(titulo, grid);
         return secao;

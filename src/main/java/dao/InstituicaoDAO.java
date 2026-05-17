@@ -2,6 +2,8 @@ package dao;
 
 import database.ConnectionFactory;
 import model.Instituicao;
+import model.Pena;
+import model.RegistroDeTrabalho;
 import util.SQLiteDateUtil;
 
 import java.sql.*;
@@ -169,6 +171,18 @@ public final class InstituicaoDAO {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static String nomeInstituicaoDoRegistro(RegistroDeTrabalho registro, Pena pena) {
+        Integer idInst = registro != null ? registro.getFkInstituicaoIdInstituicao() : null;
+        if (idInst == null || idInst <= 0) {
+            idInst = pena != null ? pena.getFkInstituicaoIdInstituicao() : null;
+        }
+        if (idInst == null || idInst <= 0) {
+            return "";
+        }
+        String nome = buscarNomePorId(idInst);
+        return nome != null ? nome : "";
     }
 
     public static String buscarNomePorId(int id) {

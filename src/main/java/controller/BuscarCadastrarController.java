@@ -139,7 +139,14 @@ public class BuscarCadastrarController {
 
             Stage st = new Stage();
             st.setTitle(titulo);
-            st.setScene(new Scene(root));
+            if (fxml.contains("cadastroRegistroDeTrabalhoView")) {
+                Scene scene = new Scene(root, 1280, 900);
+                st.setScene(scene);
+                st.setMinWidth(1100);
+                st.setMinHeight(750);
+            } else {
+                st.setScene(new Scene(root));
+            }
             st.show();
         } catch (Exception ex) {
             ex.printStackTrace();

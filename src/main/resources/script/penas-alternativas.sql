@@ -87,8 +87,18 @@ CREATE TABLE IF NOT EXISTS RegistroDeTrabalho (
     horario_volta TEXT,
     horario_saida TEXT,
     fk_pena_id_pena INTEGER NOT NULL,
+    fk_instituicao_id_instituicao INTEGER,
     criado_em TEXT NOT NULL DEFAULT (datetime('now')),
-    FOREIGN KEY (fk_pena_id_pena) REFERENCES Pena(id_pena) ON DELETE CASCADE
+    FOREIGN KEY (fk_pena_id_pena) REFERENCES Pena(id_pena) ON DELETE CASCADE,
+    FOREIGN KEY (fk_instituicao_id_instituicao) REFERENCES Instituicao(id_instituicao)
+);
+-- Vínculo N:N entre pena e instituições
+CREATE TABLE IF NOT EXISTS pena_instituicao (
+    fk_pena_id_pena INTEGER NOT NULL,
+    fk_instituicao_id_instituicao INTEGER NOT NULL,
+    PRIMARY KEY (fk_pena_id_pena, fk_instituicao_id_instituicao),
+    FOREIGN KEY (fk_pena_id_pena) REFERENCES Pena(id_pena) ON DELETE CASCADE,
+    FOREIGN KEY (fk_instituicao_id_instituicao) REFERENCES Instituicao(id_instituicao)
 );
 
 -- Tabela disponibilidade_instituicao
@@ -110,4 +120,6 @@ CREATE INDEX IF NOT EXISTS idx_administrador_cpf ON Administrador(cpf);
 CREATE INDEX IF NOT EXISTS idx_pena_usuario ON Pena(fk_usuario_id_usuario);
 CREATE INDEX IF NOT EXISTS idx_pena_instituicao ON Pena(fk_instituicao_id_instituicao);
 CREATE INDEX IF NOT EXISTS idx_registro_pena ON RegistroDeTrabalho(fk_pena_id_pena);
+CREATE INDEX IF NOT EXISTS idx_pena_instituicao_pena ON pena_instituicao(fk_pena_id_pena);
+CREATE INDEX IF NOT EXISTS idx_registro_instituicao ON RegistroDeTrabalho(fk_instituicao_id_instituicao);
 CREATE INDEX IF NOT EXISTS idx_disponibilidade_instituicao ON disponibilidade_instituicao(fk_instituicao_id_instituicao);

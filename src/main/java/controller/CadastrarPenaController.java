@@ -2,11 +2,16 @@ package controller;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 import dao.InstituicaoDAO;
 import dao.PenaDAO;
+import dao.PenaInstituicaoDAO;
 import dao.UsuarioDAO;
 import utils.FormatacaoUtils;
 import util.CodigoPenaUtil;
@@ -30,7 +35,9 @@ import model.Usuario;
 public class CadastrarPenaController {
 
     @FXML private ComboBox<Usuario> usuario;
-    @FXML private ComboBox<Instituicao> instituicao;
+    @FXML private VBox boxInstituicoes;
+
+    private final Map<Integer, CheckBox> checkboxesInstituicao = new LinkedHashMap<>();
     @FXML private ComboBox<Pena> comboPenas;
     @FXML private VBox vboxComboPenas;
     @FXML private TextField tipoPena, tempoPena, horasSemanais, horasTotais;
@@ -106,18 +113,17 @@ public class CadastrarPenaController {
     }
 
     private void carregarInstituicoes() {
-        List<Instituicao> instituicoes = InstituicaoDAO.buscarTodasInstituicoes();
-        instituicao.setItems(FXCollections.observableArrayList(instituicoes));
-        instituicao.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Instituicao i) {
-                return i == null ? "" : i.getNome();
-            }
-            @Override
-            public Instituicao fromString(String s) {
-                return null;
-            }
-        });
+        boxInstituicoes.getChildren().clear();
+        checkboxesInstituicao.clear();
+
+        for (Instituicao inst : InstituicaoDAO.buscarTodasInstituicoes()) {
+            CheckBox cb = new CheckBox(inst.getNome());
+            cb.setUserData(inst);
+            cb.setWrapText(true);
+            cb.setMaxWidth(Double.MAX_VALUE);
+            checkboxesInstituicao.put(inst.getIdInstituicao(), cb);
+            boxInstituicoes.getChildren().add(cb);
+        }
     }
 
     private void carregarPenasDoUsuario() {
@@ -136,7 +142,7 @@ public class CadastrarPenaController {
     private void preencherCampos(Pena p) {
         penaAtual = p;
         usuario.getSelectionModel().select(buscarUsuarioPorId(p.getFkUsuarioIdUsuario()));
-        instituicao.getSelectionModel().select(buscarInstituicaoPorId(p.getFkInstituicaoIdInstituicao()));
+        selecionarInstituicoesDaPena(p.getIdPena());
         tipoPena.setText(p.getTipoPena());
         tempoPena.setText(String.valueOf(p.getTempoPena()));
         horasSemanais.setText(String.valueOf(p.getHorasSemanais()));
@@ -155,8 +161,24 @@ public class CadastrarPenaController {
         return usuario.getItems().stream().filter(u -> u.getIdUsuario() == id).findFirst().orElse(null);
     }
 
-    private Instituicao buscarInstituicaoPorId(int id) {
-        return instituicao.getItems().stream().filter(i -> i.getIdInstituicao() == id).findFirst().orElse(null);
+    private void selecionarInstituicoesDaPena(int idPena) {
+        checkboxesInstituicao.values().forEach(cb -> cb.setSelected(false));
+        for (int idInst : PenaInstituicaoDAO.buscarIdsPorPena(idPena)) {
+            CheckBox cb = checkboxesInstituicao.get(idInst);
+            if (cb != null) {
+                cb.setSelected(true);
+            }
+        }
+    }
+
+    private List<Instituicao> obterInstituicoesSelecionadas() {
+        List<Instituicao> selecionadas = new ArrayList<>();
+        for (CheckBox cb : checkboxesInstituicao.values()) {
+            if (cb.isSelected() && cb.getUserData() instanceof Instituicao inst) {
+                selecionadas.add(inst);
+            }
+        }
+        return selecionadas;
     }
 
     private void cadastrar() {
@@ -175,8 +197,9 @@ public class CadastrarPenaController {
         // Calcula o próximo código
         String novoCodigo = CodigoPenaUtil.calcularProximoCodigo(numeroPenasAtuais);
 
-        boolean sucesso = PenaDAO.inserirPena(novaPena) > 0;
-        if (sucesso) {
+        int idPena = PenaDAO.inserirPena(novaPena);
+        if (idPena > 0) {
+            salvarInstituicoesDaPena(idPena, obterInstituicoesSelecionadas());
             // Atualiza o código do usuário no banco
             UsuarioDAO.atualizarCodigo(u.getIdUsuario(), novoCodigo);
             alert("Pena cadastrada com sucesso! Código atualizado para: " + novoCodigo);
@@ -193,6 +216,9 @@ public class CadastrarPenaController {
 
         p.setIdPena(penaAtual.getIdPena());
         boolean ok = PenaDAO.atualizar(p);
+        if (ok) {
+            salvarInstituicoesDaPena(p.getIdPena(), obterInstituicoesSelecionadas());
+        }
 
         alert(ok ? "Pena atualizada com sucesso!" : "Erro ao atualizar pena.");
 
@@ -206,12 +232,14 @@ public class CadastrarPenaController {
 
     private Pena construirPena() {
         Usuario u = usuario.getValue();
-        Instituicao i = instituicao.getValue();
+        List<Instituicao> instituicoesSelecionadas = obterInstituicoesSelecionadas();
 
-        if (u == null || i == null) {
-            alert("Selecione usuário e instituição.");
+        if (u == null || instituicoesSelecionadas.isEmpty()) {
+            alert("Selecione o usuário e ao menos uma instituição.");
             return null;
         }
+
+        Instituicao i = instituicoesSelecionadas.get(0);
 
         try {
             String tipo = tipoPena.getText().trim();
@@ -379,7 +407,7 @@ public class CadastrarPenaController {
 
     private void limparCampos() {
         usuario.getSelectionModel().clearSelection();
-        instituicao.getSelectionModel().clearSelection();
+        checkboxesInstituicao.values().forEach(cb -> cb.setSelected(false));
         tipoPena.clear(); tempoPena.clear();
         horasSemanais.clear(); horasTotais.clear();
         dataInicio.setValue(null); dataTermino.setValue(null);
@@ -420,6 +448,13 @@ public class CadastrarPenaController {
         new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK) {{
             setTitle("Aviso"); setHeaderText(null); showAndWait();
         }};
+    }
+
+    private void salvarInstituicoesDaPena(int idPena, List<Instituicao> instituicoes) {
+        List<Integer> ids = instituicoes.stream()
+                .map(Instituicao::getIdInstituicao)
+                .collect(Collectors.toList());
+        PenaInstituicaoDAO.salvarParaPena(idPena, ids);
     }
 
     private void fecharJanela() {

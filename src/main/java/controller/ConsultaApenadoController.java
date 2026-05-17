@@ -543,10 +543,6 @@ public class ConsultaApenadoController {
             return r1.getDataTrabalho().compareTo(r2.getDataTrabalho());
         });
         
-        // Busca o nome da instituição
-        String inst = InstituicaoDAO.buscarNomePorId(pena.getFkInstituicaoIdInstituicao());
-        String instituicao = inst != null ? inst : "";
-        
         // Cria os DTOs com o cálculo correto de horas restantes
         var tabela = new java.util.ArrayList<RegistroDTO>();
         double acumuladoParcial = 0;
@@ -563,11 +559,12 @@ public class ConsultaApenadoController {
                     dataTrabalho = formatarData(dataUtil);
                 }
                 
+                String nomeInst = InstituicaoDAO.nomeInstituicaoDoRegistro(r, pena);
                 RegistroDTO dto = new RegistroDTO(
                         dataTrabalho,
                         String.format("%.2f", r.getHorasCumpridas()),
                         String.format("%.2f", falta),
-                        instituicao);
+                        nomeInst);
                 
                 tabela.add(dto);
             }

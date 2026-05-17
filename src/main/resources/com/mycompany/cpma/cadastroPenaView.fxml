@@ -58,30 +58,26 @@
                                             </font>
                                         </Text>
                                         
-                                        <!-- Linha 1: Usuário e Instituição -->
-                                        <GridPane hgap="20.0" vgap="15.0">
-                                            <columnConstraints>
-                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" prefWidth="300.0" />
-                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="200.0" prefWidth="300.0" />
-                                            </columnConstraints>
-                                            <rowConstraints>
-                                                <RowConstraints minHeight="30.0" prefHeight="40.0" />
-                                            </rowConstraints>
+                                        <!-- Linha 1: Apenado -->
+                                        <VBox spacing="5.0">
                                             <children>
-                                                <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                                    <children>
-                                                        <Label text="👤 Apenado" styleClass="label-primary" />
-                                                        <ComboBox fx:id="usuario" styleClass="combo-box" />
-                                                    </children>
-                                                </VBox>
-                                                <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                                    <children>
-                                                        <Label text="🏢 Instituição" styleClass="label-primary" />
-                                                        <ComboBox fx:id="instituicao" styleClass="combo-box" />
-                                                    </children>
-                                                </VBox>
+                                                <Label text="👤 Apenado" styleClass="label-primary" />
+                                                <ComboBox fx:id="usuario" maxWidth="Infinity" styleClass="combo-box" />
                                             </children>
-                                        </GridPane>
+                                        </VBox>
+
+                                        <!-- Linha 2: Instituições (largura total) -->
+                                        <VBox spacing="6.0">
+                                            <children>
+                                                <Label text="🏢 Instituições" styleClass="label-primary" />
+                                                <Label text="Marque uma ou mais instituições em que a pena poderá ser cumprida" styleClass="label-secondary" wrapText="true" />
+                                                <ScrollPane fitToWidth="true" prefHeight="220.0" minHeight="200.0" maxHeight="320.0" styleClass="instituicoes-scroll" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+                                                    <content>
+                                                        <VBox fx:id="boxInstituicoes" spacing="10.0" styleClass="instituicoes-box" />
+                                                    </content>
+                                                </ScrollPane>
+                                            </children>
+                                        </VBox>
                                         
                                         <!-- Campo Código de Penas (somente leitura) -->
                                         <VBox spacing="5.0">
