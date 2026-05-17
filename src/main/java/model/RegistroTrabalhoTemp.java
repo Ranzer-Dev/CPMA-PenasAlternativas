@@ -15,6 +15,8 @@ public class RegistroTrabalhoTemp {
     private LocalTime horarioVolta;
     private LocalTime horarioSaida;
     private double horasCalculadas;
+    private Integer fkInstituicaoIdInstituicao;
+    private String nomeInstituicao = "";
 
     public RegistroTrabalhoTemp() {
         this.idRegistro = null;
@@ -86,6 +88,19 @@ public class RegistroTrabalhoTemp {
 
     public double getHorasCalculadas() {
         return horasCalculadas;
+    }
+
+    public Integer getFkInstituicaoIdInstituicao() {
+        return fkInstituicaoIdInstituicao;
+    }
+
+    public String getNomeInstituicao() {
+        return nomeInstituicao != null ? nomeInstituicao : "";
+    }
+
+    public void setInstituicao(Integer idInstituicao, String nome) {
+        this.fkInstituicaoIdInstituicao = idInstituicao;
+        this.nomeInstituicao = nome != null ? nome : "";
     }
 
     /**

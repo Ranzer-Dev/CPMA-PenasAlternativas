@@ -14,38 +14,69 @@ import util.SQLiteTimeUtil;
 
 public class RegistroDeTrabalhoDAO {
 
+    private static void mapearInstituicao(ResultSet rs, RegistroDeTrabalho r) throws SQLException {
+        int idInst = rs.getInt("fk_instituicao_id_instituicao");
+        if (!rs.wasNull()) {
+            r.setFkInstituicaoIdInstituicao(idInst);
+        }
+    }
+
+    private static RegistroDeTrabalho mapear(ResultSet rs) throws SQLException {
+        RegistroDeTrabalho r = new RegistroDeTrabalho();
+        r.setIdRegistro(rs.getInt("id_registro"));
+        r.setFkPenaId(rs.getInt("fk_pena_id_pena"));
+        r.setDataTrabalho(SQLiteDateUtil.getDate(rs, "data_trabalho"));
+        r.setHorasCumpridas(rs.getDouble("horas_cumpridas"));
+        r.setAtividades(rs.getString("atividades"));
+        r.setHorarioInicio(SQLiteTimeUtil.getTime(rs, "horario_inicio"));
+        r.setHorarioAlmoco(SQLiteTimeUtil.getTime(rs, "horario_almoco"));
+        r.setHorarioVolta(SQLiteTimeUtil.getTime(rs, "horario_volta"));
+        r.setHorarioSaida(SQLiteTimeUtil.getTime(rs, "horario_saida"));
+        mapearInstituicao(rs, r);
+        return r;
+    }
+
+    private static void definirInstituicao(PreparedStatement stmt, int index, Integer idInstituicao) throws SQLException {
+        if (idInstituicao != null && idInstituicao > 0) {
+            stmt.setInt(index, idInstituicao);
+        } else {
+            stmt.setNull(index, java.sql.Types.INTEGER);
+        }
+    }
+
     public boolean inserir(RegistroDeTrabalho registro) {
-        String sql = "INSERT INTO RegistroDeTrabalho (fk_pena_id_pena, data_trabalho, horas_cumpridas, atividades, horario_inicio, horario_almoco, horario_volta, horario_saida) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO RegistroDeTrabalho (fk_pena_id_pena, fk_instituicao_id_instituicao, data_trabalho, horas_cumpridas, atividades, horario_inicio, horario_almoco, horario_volta, horario_saida) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, registro.getFkPenaId());
+            definirInstituicao(stmt, 2, registro.getFkInstituicaoIdInstituicao());
             if (registro.getDataTrabalho() != null) {
-                stmt.setString(2, registro.getDataTrabalho().toString());
+                stmt.setString(3, registro.getDataTrabalho().toString());
             } else {
-                stmt.setNull(2, java.sql.Types.DATE);
+                stmt.setNull(3, java.sql.Types.DATE);
             }
-            stmt.setDouble(3, registro.getHorasCumpridas());
-            stmt.setString(4, registro.getAtividades());
+            stmt.setDouble(4, registro.getHorasCumpridas());
+            stmt.setString(5, registro.getAtividades());
             if (registro.getHorarioInicio() != null) {
-                stmt.setString(5, SQLiteTimeUtil.timeToString(registro.getHorarioInicio()));
-            } else {
-                stmt.setNull(5, java.sql.Types.TIME);
-            }
-            if (registro.getHorarioAlmoco() != null) {
-                stmt.setString(6, SQLiteTimeUtil.timeToString(registro.getHorarioAlmoco()));
+                stmt.setString(6, SQLiteTimeUtil.timeToString(registro.getHorarioInicio()));
             } else {
                 stmt.setNull(6, java.sql.Types.TIME);
             }
-            if (registro.getHorarioVolta() != null) {
-                stmt.setString(7, SQLiteTimeUtil.timeToString(registro.getHorarioVolta()));
+            if (registro.getHorarioAlmoco() != null) {
+                stmt.setString(7, SQLiteTimeUtil.timeToString(registro.getHorarioAlmoco()));
             } else {
                 stmt.setNull(7, java.sql.Types.TIME);
             }
-            if (registro.getHorarioSaida() != null) {
-                stmt.setString(8, SQLiteTimeUtil.timeToString(registro.getHorarioSaida()));
+            if (registro.getHorarioVolta() != null) {
+                stmt.setString(8, SQLiteTimeUtil.timeToString(registro.getHorarioVolta()));
             } else {
                 stmt.setNull(8, java.sql.Types.TIME);
+            }
+            if (registro.getHorarioSaida() != null) {
+                stmt.setString(9, SQLiteTimeUtil.timeToString(registro.getHorarioSaida()));
+            } else {
+                stmt.setNull(9, java.sql.Types.TIME);
             }
 
             return stmt.executeUpdate() > 0;
@@ -60,6 +91,7 @@ public class RegistroDeTrabalhoDAO {
         final String sql = """
             UPDATE RegistroDeTrabalho SET
                 fk_pena_id_pena = ?,
+                fk_instituicao_id_instituicao = ?,
                 data_trabalho  = ?, horas_cumpridas = ?, atividades = ?,
                 horario_inicio = ?, horario_almoco  = ?,
                 horario_volta  = ?, horario_saida   = ?
@@ -68,34 +100,35 @@ public class RegistroDeTrabalhoDAO {
         try (Connection c = ConnectionFactory.getConnection(); PreparedStatement st = c.prepareStatement(sql)) {
 
             st.setInt(1, r.getFkPenaId());
+            definirInstituicao(st, 2, r.getFkInstituicaoIdInstituicao());
             if (r.getDataTrabalho() != null) {
-                st.setString(2, r.getDataTrabalho().toString());
+                st.setString(3, r.getDataTrabalho().toString());
             } else {
-                st.setNull(2, java.sql.Types.DATE);
+                st.setNull(3, java.sql.Types.DATE);
             }
-            st.setDouble(3, r.getHorasCumpridas());
-            st.setString(4, r.getAtividades());
+            st.setDouble(4, r.getHorasCumpridas());
+            st.setString(5, r.getAtividades());
             if (r.getHorarioInicio() != null) {
-                st.setString(5, SQLiteTimeUtil.timeToString(r.getHorarioInicio()));
-            } else {
-                st.setNull(5, java.sql.Types.TIME);
-            }
-            if (r.getHorarioAlmoco() != null) {
-                st.setString(6, SQLiteTimeUtil.timeToString(r.getHorarioAlmoco()));
+                st.setString(6, SQLiteTimeUtil.timeToString(r.getHorarioInicio()));
             } else {
                 st.setNull(6, java.sql.Types.TIME);
             }
-            if (r.getHorarioVolta() != null) {
-                st.setString(7, SQLiteTimeUtil.timeToString(r.getHorarioVolta()));
+            if (r.getHorarioAlmoco() != null) {
+                st.setString(7, SQLiteTimeUtil.timeToString(r.getHorarioAlmoco()));
             } else {
                 st.setNull(7, java.sql.Types.TIME);
             }
-            if (r.getHorarioSaida() != null) {
-                st.setString(8, SQLiteTimeUtil.timeToString(r.getHorarioSaida()));
+            if (r.getHorarioVolta() != null) {
+                st.setString(8, SQLiteTimeUtil.timeToString(r.getHorarioVolta()));
             } else {
                 st.setNull(8, java.sql.Types.TIME);
             }
-            st.setInt(9, r.getIdRegistro());
+            if (r.getHorarioSaida() != null) {
+                st.setString(9, SQLiteTimeUtil.timeToString(r.getHorarioSaida()));
+            } else {
+                st.setNull(9, java.sql.Types.TIME);
+            }
+            st.setInt(10, r.getIdRegistro());
 
             return st.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -123,17 +156,7 @@ public class RegistroDeTrabalhoDAO {
 
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
-                    RegistroDeTrabalho r = new RegistroDeTrabalho();
-                    r.setIdRegistro(rs.getInt("id_registro"));
-                    r.setFkPenaId(rs.getInt("fk_pena_id_pena"));
-                    r.setDataTrabalho(SQLiteDateUtil.getDate(rs, "data_trabalho"));
-                    r.setHorasCumpridas(rs.getDouble("horas_cumpridas"));
-                    r.setAtividades(rs.getString("atividades"));
-                    r.setHorarioInicio(SQLiteTimeUtil.getTime(rs, "horario_inicio"));
-                    r.setHorarioAlmoco(SQLiteTimeUtil.getTime(rs, "horario_almoco"));
-                    r.setHorarioVolta(SQLiteTimeUtil.getTime(rs, "horario_volta"));
-                    r.setHorarioSaida(SQLiteTimeUtil.getTime(rs, "horario_saida"));
-                    lista.add(r);
+                    lista.add(mapear(rs));
                 }
             }
         } catch (SQLException e) {
@@ -163,17 +186,7 @@ public class RegistroDeTrabalhoDAO {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                RegistroDeTrabalho registro = new RegistroDeTrabalho();
-                registro.setIdRegistro(rs.getInt("id_registro"));
-                registro.setFkPenaId(rs.getInt("fk_pena_id_pena"));
-                registro.setDataTrabalho(SQLiteDateUtil.getDate(rs, "data_trabalho"));
-                registro.setHorasCumpridas(rs.getDouble("horas_cumpridas"));
-                registro.setAtividades(rs.getString("atividades"));
-                registro.setHorarioInicio(SQLiteTimeUtil.getTime(rs, "horario_inicio"));
-                registro.setHorarioAlmoco(SQLiteTimeUtil.getTime(rs, "horario_almoco"));
-                registro.setHorarioVolta(SQLiteTimeUtil.getTime(rs, "horario_volta"));
-                registro.setHorarioSaida(SQLiteTimeUtil.getTime(rs, "horario_saida"));
-                return registro;
+                return mapear(rs);
             }
 
         } catch (SQLException e) {
@@ -188,17 +201,7 @@ public class RegistroDeTrabalhoDAO {
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                RegistroDeTrabalho registro = new RegistroDeTrabalho();
-                registro.setIdRegistro(rs.getInt("id_registro"));
-                registro.setFkPenaId(rs.getInt("fk_pena_id_pena"));
-                registro.setDataTrabalho(SQLiteDateUtil.getDate(rs, "data_trabalho"));
-                registro.setHorasCumpridas(rs.getDouble("horas_cumpridas"));
-                registro.setAtividades(rs.getString("atividades"));
-                registro.setHorarioInicio(SQLiteTimeUtil.getTime(rs, "horario_inicio"));
-                registro.setHorarioAlmoco(SQLiteTimeUtil.getTime(rs, "horario_almoco"));
-                registro.setHorarioVolta(SQLiteTimeUtil.getTime(rs, "horario_volta"));
-                registro.setHorarioSaida(SQLiteTimeUtil.getTime(rs, "horario_saida"));
-                registros.add(registro);
+                registros.add(mapear(rs));
             }
 
         } catch (SQLException e) {
@@ -253,17 +256,7 @@ public class RegistroDeTrabalhoDAO {
             
             ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
-                RegistroDeTrabalho r = new RegistroDeTrabalho();
-                r.setIdRegistro(rs.getInt("id_registro"));
-                r.setFkPenaId(rs.getInt("fk_pena_id_pena"));
-                r.setDataTrabalho(SQLiteDateUtil.getDate(rs, "data_trabalho"));
-                r.setHorasCumpridas(rs.getDouble("horas_cumpridas"));
-                r.setAtividades(rs.getString("atividades"));
-                r.setHorarioInicio(SQLiteTimeUtil.getTime(rs, "horario_inicio"));
-                r.setHorarioAlmoco(SQLiteTimeUtil.getTime(rs, "horario_almoco"));
-                r.setHorarioVolta(SQLiteTimeUtil.getTime(rs, "horario_volta"));
-                r.setHorarioSaida(SQLiteTimeUtil.getTime(rs, "horario_saida"));
-                lista.add(r);
+                    lista.add(mapear(rs));
                 }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -279,40 +272,41 @@ public class RegistroDeTrabalhoDAO {
             return false;
         }
         
-        String sql = "INSERT INTO RegistroDeTrabalho (fk_pena_id_pena, data_trabalho, horas_cumpridas, atividades, horario_inicio, horario_almoco, horario_volta, horario_saida) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO RegistroDeTrabalho (fk_pena_id_pena, fk_instituicao_id_instituicao, data_trabalho, horas_cumpridas, atividades, horario_inicio, horario_almoco, horario_volta, horario_saida) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             for (RegistroDeTrabalho registro : registros) {
                 stmt.setInt(1, registro.getFkPenaId());
+                definirInstituicao(stmt, 2, registro.getFkInstituicaoIdInstituicao());
                 if (registro.getDataTrabalho() != null) {
-                    stmt.setString(2, registro.getDataTrabalho().toString());
+                    stmt.setString(3, registro.getDataTrabalho().toString());
                 } else {
-                    stmt.setNull(2, java.sql.Types.DATE);
+                    stmt.setNull(3, java.sql.Types.DATE);
                 }
-                stmt.setDouble(3, registro.getHorasCumpridas());
-                stmt.setString(4, registro.getAtividades());
+                stmt.setDouble(4, registro.getHorasCumpridas());
+                stmt.setString(5, registro.getAtividades());
                 if (registro.getHorarioInicio() != null) {
-                    stmt.setString(5, SQLiteTimeUtil.timeToString(registro.getHorarioInicio()));
-                } else {
-                    stmt.setNull(5, java.sql.Types.TIME);
-                }
-                if (registro.getHorarioAlmoco() != null) {
-                    stmt.setString(6, SQLiteTimeUtil.timeToString(registro.getHorarioAlmoco()));
+                    stmt.setString(6, SQLiteTimeUtil.timeToString(registro.getHorarioInicio()));
                 } else {
                     stmt.setNull(6, java.sql.Types.TIME);
                 }
-                if (registro.getHorarioVolta() != null) {
-                    stmt.setString(7, SQLiteTimeUtil.timeToString(registro.getHorarioVolta()));
+                if (registro.getHorarioAlmoco() != null) {
+                    stmt.setString(7, SQLiteTimeUtil.timeToString(registro.getHorarioAlmoco()));
                 } else {
                     stmt.setNull(7, java.sql.Types.TIME);
                 }
-                if (registro.getHorarioSaida() != null) {
-                    stmt.setString(8, SQLiteTimeUtil.timeToString(registro.getHorarioSaida()));
+                if (registro.getHorarioVolta() != null) {
+                    stmt.setString(8, SQLiteTimeUtil.timeToString(registro.getHorarioVolta()));
                 } else {
                     stmt.setNull(8, java.sql.Types.TIME);
+                }
+                if (registro.getHorarioSaida() != null) {
+                    stmt.setString(9, SQLiteTimeUtil.timeToString(registro.getHorarioSaida()));
+                } else {
+                    stmt.setNull(9, java.sql.Types.TIME);
                 }
                 stmt.addBatch();
             }

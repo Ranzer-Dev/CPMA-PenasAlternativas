@@ -58,9 +58,11 @@ public class CameraController {
     private final boolean deteccaoAtiva = true;
     private boolean cameraAtiva = false;
     private int frameCounter = 0; // Contador para otimização
-    private static final int SKIP_FRAMES = 1; // Processar detecção a cada 2 frames
-    private boolean ultimaFaceDetectada = false; // Para manter estado entre frames
+    /** A cada quantos frames roda face detection (resto só converte vídeo rápido). */
+    private static final int DETECTION_EVERY_N_FRAMES = 6;
     private List<Rectangle> ultimasFacesDetectadas = new ArrayList<>(); // Para manter coordenadas das faces
+    private volatile boolean atualizacaoPreviewPendente = false;
+    private EstadoPosicionamento ultimoEstadoOverlay = null;
 
     // Largura/altura do frame e parâmetros do guia oval (em pixels da imagem 640x480)
     private static final int FRAME_W = 640;
@@ -71,8 +73,8 @@ public class CameraController {
     // Tolerância de centralização em pixels
     private static final int TOLERANCIA_X = 90;
     private static final int TOLERANCIA_Y = 70;
-    // Quantidade de frames consecutivos com posicionamento OK para liberar captura
-    private static final int FRAMES_PARA_OK = 5;
+    /** Quantidade de avaliações consecutivas OK (nas rodadas com detecção) para liberar captura */
+    private static final int FRAMES_PARA_OK = 3;
     private int framesAlinhados = 0;
 
     private enum EstadoPosicionamento {
@@ -125,6 +127,8 @@ public class CameraController {
             camera.start();
             cameraAtiva = true;
             framesAlinhados = 0;
+            atualizacaoPreviewPendente = false;
+            ultimoEstadoOverlay = null;
 
             // Mostra o botão de capturar e atualiza o status
             btnIniciarCamera.setText("Parar Câmera");
@@ -146,39 +150,52 @@ public class CameraController {
                         // Aplica detecção facial se estiver ativa
                         Image imageToShow;
                         if (deteccaoAtiva && reconhecimentoFacial.isInicializado()) {
-                            // Processar detecção apenas a cada SKIP_FRAMES + 1 frames para melhor performance
-                            if (frameCounter % (SKIP_FRAMES + 1) == 0) {
+                            boolean rodadaDeteccao =
+                                    frameCounter % DETECTION_EVERY_N_FRAMES == 0;
+
+                            if (rodadaDeteccao) {
                                 BufferedImage bufferedImage = matToBufferedImage(frameCapturado);
                                 if (bufferedImage != null) {
-                                    // Detecta faces e salva coordenadas
-                                    ultimasFacesDetectadas = reconhecimentoFacial.detectarFacesComCoordenadas(bufferedImage);
-                                    ultimaFaceDetectada = !ultimasFacesDetectadas.isEmpty();
-                                    
-                                    // Desenha retângulos com as coordenadas reais
-                                    BufferedImage imagemComDetecao = reconhecimentoFacial.desenharRetangulosFaces(bufferedImage);
-                                    imageToShow = bufferedImageToImage(imagemComDetecao);
+                                    ultimasFacesDetectadas =
+                                            reconhecimentoFacial.detectarFacesComCoordenadas(bufferedImage);
 
-                                    EstadoPosicionamento estado = avaliarPosicionamento(ultimasFacesDetectadas);
-                                    Platform.runLater(() -> atualizarOverlay(estado));
+                                    // Sem desenhar retângulos no preview para manter fluidez no totem.
+                                    imageToShow = matParaPreviewJPEG(frameCapturado);
+
+                                    EstadoPosicionamento estado =
+                                            avaliarPosicionamento(ultimasFacesDetectadas);
+                                    boolean estadoMudou = estado != ultimoEstadoOverlay;
+                                    ultimoEstadoOverlay = estado;
+                                    // Mesmo sem mudar estado, precisamos reavaliar o botão com framesAlinhados.
+                                    if (estadoMudou) {
+                                        Platform.runLater(() -> atualizarOverlay(estado));
+                                    } else {
+                                        final boolean libera = estado == EstadoPosicionamento.OK
+                                                && framesAlinhados >= FRAMES_PARA_OK;
+                                        Platform.runLater(() -> {
+                                            if (btnCapturar != null) {
+                                                btnCapturar.setDisable(!libera);
+                                            }
+                                        });
+                                    }
                                 } else {
-                                    imageToShow = matToImage(frameCapturado);
+                                    imageToShow = matParaPreviewJPEG(frameCapturado);
                                 }
                             } else {
-                                // Mostrar frame com detecção visual baseada no último resultado
-                                BufferedImage bufferedImage = matToBufferedImage(frameCapturado);
-                                if (bufferedImage != null) {
-                                    BufferedImage imagemComDetecao = reconhecimentoFacial.desenharRetangulosComCoordenadas(bufferedImage, ultimasFacesDetectadas, ultimaFaceDetectada);
-                                    imageToShow = bufferedImageToImage(imagemComDetecao);
-                                } else {
-                                    imageToShow = matToImage(frameCapturado);
-                                }
+                                // Sem detecção: só codifica vídeo JPEG (rápido) → preview fluido
+                                imageToShow = matParaPreviewJPEG(frameCapturado);
                             }
                         } else {
-                            imageToShow = matToImage(frameCapturado);
+                            imageToShow = matParaPreviewJPEG(frameCapturado);
                         }
 
-                        if (imageToShow != null) {
-                            Platform.runLater(() -> cameraView.setImage(imageToShow));
+                        if (imageToShow != null && !atualizacaoPreviewPendente) {
+                            atualizacaoPreviewPendente = true;
+                            Image finalParaUi = imageToShow;
+                            Platform.runLater(() -> {
+                                cameraView.setImage(finalParaUi);
+                                atualizacaoPreviewPendente = false;
+                            });
                         }
                     }
                 } catch (FrameGrabber.Exception e) {
@@ -187,7 +204,8 @@ public class CameraController {
             };
 
             timer = Executors.newSingleThreadScheduledExecutor();
-            timer.scheduleAtFixedRate(frameGrabber, 0, 50, TimeUnit.MILLISECONDS);
+            // ~25 fps mais estável para hardware de totem
+            timer.scheduleAtFixedRate(frameGrabber, 0, 40, TimeUnit.MILLISECONDS);
 
         } catch (FrameGrabber.Exception e) {
             e.printStackTrace();
@@ -399,6 +417,8 @@ public class CameraController {
     private void pararCamera() {
         cameraAtiva = false;
         framesAlinhados = 0;
+        atualizacaoPreviewPendente = false;
+        ultimoEstadoOverlay = null;
         btnIniciarCamera.setText("Iniciar Câmera");
         btnCapturar.setVisible(false);
         btnCapturar.setDisable(true);
@@ -595,9 +615,14 @@ public class CameraController {
     }
 
     // MÉTODOS AUXILIARES DE CONVERSÃO
-    private Image matToImage(Mat frame) {
+    /**
+     * Preview ao vivo: JPEG é bem mais leve que PNG no {@code imencode} + decode no JavaFX.
+     */
+    private Image matParaPreviewJPEG(Mat frame) {
         try (BytePointer bytePointer = new BytePointer()) {
-            opencv_imgcodecs.imencode(".png", frame, bytePointer);
+            if (!opencv_imgcodecs.imencode(".jpg", frame, bytePointer)) {
+                return null;
+            }
             byte[] bytes = new byte[(int) bytePointer.limit()];
             bytePointer.get(bytes);
             return new Image(new ByteArrayInputStream(bytes));
@@ -607,35 +632,19 @@ public class CameraController {
     }
 
     private BufferedImage matToBufferedImage(Mat frame) {
-        try {
-            System.out.println("Convertendo Mat para BufferedImage...");
-            
-            BytePointer bytePointer = new BytePointer();
-            boolean encoded = opencv_imgcodecs.imencode(".png", frame, bytePointer);
-            
-            if (!encoded) {
-                System.err.println("❌ Falha ao codificar Mat para PNG");
-                bytePointer.close();
+        try (BytePointer bytePointer = new BytePointer()) {
+            if (!opencv_imgcodecs.imencode(".png", frame, bytePointer)) {
                 return null;
             }
-            
             byte[] bytes = new byte[(int) bytePointer.limit()];
             bytePointer.get(bytes);
-            bytePointer.close();
-            
-            System.out.println("Mat codificado em " + bytes.length + " bytes");
-            
             BufferedImage result = ImageIO.read(new ByteArrayInputStream(bytes));
-            if (result != null) {
-                System.out.println("BufferedImage criado: " + result.getWidth() + "x" + result.getHeight() + " tipo: " + result.getType());
-            } else {
-                System.err.println("❌ Falha ao criar BufferedImage do stream");
+            if (result == null) {
+                System.err.println("Falha ao criar BufferedImage a partir do frame");
             }
-            
             return result;
         } catch (Exception e) {
-            System.err.println("❌ Erro na conversão Mat -> BufferedImage: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Erro na conversão Mat -> BufferedImage: " + e.getMessage());
             return null;
         }
     }

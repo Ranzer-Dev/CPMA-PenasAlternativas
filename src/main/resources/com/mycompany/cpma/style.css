@@ -234,6 +234,40 @@
   -fx-border-width: 2px;
 }
 
+/* ===== SELEÇÃO DE INSTITUIÇÕES (CADASTRO DE PENA) ===== */
+.instituicoes-scroll {
+  -fx-background-color: #ffffff;
+  -fx-border-color: #e2e8f0;
+  -fx-border-radius: 8px;
+  -fx-background-radius: 8px;
+  -fx-border-width: 1px;
+  -fx-padding: 0;
+  -fx-min-height: 200px;
+  -fx-pref-height: 220px;
+}
+
+.instituicoes-scroll:focused {
+  -fx-border-color: #2563eb;
+  -fx-border-width: 2px;
+}
+
+.instituicoes-scroll > .viewport {
+  -fx-background-color: #ffffff;
+}
+
+.instituicoes-box {
+  -fx-padding: 14 16 14 16;
+  -fx-background-color: #ffffff;
+  -fx-min-width: 100%;
+}
+
+.instituicoes-box .check-box {
+  -fx-font-family: "Segoe UI", "Roboto", sans-serif;
+  -fx-font-size: 15px;
+  -fx-text-fill: #1e293b;
+  -fx-padding: 4 0 4 0;
+}
+
 /* ===== TEXTAREA ===== */
 .text-area {
   -fx-background-color: #ffffff;

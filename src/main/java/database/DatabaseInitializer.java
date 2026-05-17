@@ -30,6 +30,9 @@ public class DatabaseInitializer {
             
             // Criar tabela de dados faciais
             executeScript(conn, "/script/dados-faciais.sql");
+
+            // Múltiplas instituições por pena
+            executeScript(conn, "/script/migracao-multiplas-instituicoes.sql");
             
             // Inserir administrador inicial (se não existir)
             executeScript(conn, "/script/inserir-admin-inicial.sql");

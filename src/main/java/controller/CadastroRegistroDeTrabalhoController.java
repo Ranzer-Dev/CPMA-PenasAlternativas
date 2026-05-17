@@ -6,9 +6,11 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import dao.InstituicaoDAO;
 import dao.PenaDAO;
+import dao.PenaInstituicaoDAO;
 import dao.RegistroDeTrabalhoDAO;
 import dao.UsuarioDAO;
 import utils.FormatacaoUtils;
@@ -36,7 +38,7 @@ import model.Usuario;
 
 public class CadastroRegistroDeTrabalhoController {
 
-    @FXML private ComboBox<Instituicao> instituicao;
+    @FXML private TextField txtInstituicoesVinculadas;
     @FXML private ComboBox<Usuario> comboUsuario;
     @FXML private ComboBox<Pena> comboPena;
     @FXML private Button btnCadastrar;
@@ -49,6 +51,7 @@ public class CadastroRegistroDeTrabalhoController {
     
     @FXML private TableView<RegistroTrabalhoTemp> tabelaRegistros;
     @FXML private TableColumn<RegistroTrabalhoTemp, LocalDate> colData;
+    @FXML private TableColumn<RegistroTrabalhoTemp, Instituicao> colInst;
     @FXML private TableColumn<RegistroTrabalhoTemp, LocalTime> colInicio;
     @FXML private TableColumn<RegistroTrabalhoTemp, LocalTime> colAlmoco;
     @FXML private TableColumn<RegistroTrabalhoTemp, LocalTime> colVolta;
@@ -57,13 +60,24 @@ public class CadastroRegistroDeTrabalhoController {
     @FXML private TableColumn<RegistroTrabalhoTemp, Void> colAcao;
 
     private ObservableList<RegistroTrabalhoTemp> listaRegistros;
+    private List<Instituicao> instituicoesDaPena = new ArrayList<>();
     private final java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+    private final StringConverter<Instituicao> instituicaoConverter = new StringConverter<>() {
+        @Override
+        public String toString(Instituicao i) {
+            return i == null ? "" : i.getNome();
+        }
+
+        @Override
+        public Instituicao fromString(String s) {
+            return null;
+        }
+    };
 
     @FXML
     public void initialize() {
         try {
             listaRegistros = FXCollections.observableArrayList();
-            instituicao.setEditable(false); // Somente seleção da lista (sem digitação manual)
             
             if (tabelaRegistros == null) {
                 System.err.println("ERRO: tabelaRegistros é null!");
@@ -79,15 +93,14 @@ public class CadastroRegistroDeTrabalhoController {
             if (comboUsuario == null) {
                 System.err.println("ERRO: comboUsuario é null!");
             }
-            if (instituicao == null) {
-                System.err.println("ERRO: instituicao é null!");
+            if (txtInstituicoesVinculadas == null) {
+                System.err.println("ERRO: txtInstituicoesVinculadas é null!");
             }
             if (comboPena == null) {
                 System.err.println("ERRO: comboPena é null!");
             }
             
             carregarUsuarios();
-            carregarInstituicoes();
             configurarTabela();
             configurarBotoes();
             atualizarTotalHoras();
@@ -137,13 +150,17 @@ public class CadastroRegistroDeTrabalhoController {
                     modoEdicao = false;
                     atualizarVisibilidadeBotoes();
                     atualizarTotalHoras();
-                    
+                    Pena penaSel = comboPena.getValue();
+                    if (penaSel != null) {
+                        carregarInstituicoesDaPena(penaSel.getIdPena());
+                    }
                     continuarDeOndeParou();
                 });
             } else {
                 comboPena.getItems().clear();
                 comboPena.setDisable(true);
                 listaRegistros.clear();
+                limparInstituicoesDaPena();
                 modoEdicao = false;
                 atualizarVisibilidadeBotoes();
                 atualizarTotalHoras();
@@ -230,6 +247,7 @@ public class CadastroRegistroDeTrabalhoController {
                     LocalDate dataInicio = ultimaData.toLocalDate().plusDays(1);
                     if (listaRegistros.isEmpty()) {
                         RegistroTrabalhoTemp novoRegistro = new RegistroTrabalhoTemp(dataInicio);
+                        aplicarInstituicaoPadraoNoRegistro(novoRegistro);
                         listaRegistros.add(novoRegistro);
                         atualizarTotalHoras();
                         atualizarVisibilidadeBotoes();
@@ -246,6 +264,7 @@ public class CadastroRegistroDeTrabalhoController {
         modoEdicao = true;
         listaRegistros.clear();
         
+        Pena pena = comboPena.getValue();
         for (RegistroDeTrabalho reg : registros) {
             RegistroTrabalhoTemp temp = new RegistroTrabalhoTemp(reg.getDataTrabalho().toLocalDate());
             temp.setIdRegistro(reg.getIdRegistro()); // Armazena o ID para UPDATE posterior
@@ -253,10 +272,10 @@ public class CadastroRegistroDeTrabalhoController {
             temp.setHorarioAlmoco(reg.getHorarioAlmoco() != null ? reg.getHorarioAlmoco().toLocalTime() : null);
             temp.setHorarioVolta(reg.getHorarioVolta() != null ? reg.getHorarioVolta().toLocalTime() : null);
             temp.setHorarioSaida(reg.getHorarioSaida() != null ? reg.getHorarioSaida().toLocalTime() : null);
-            
+            preencherInstituicaoNoRegistro(temp, reg, pena);
             listaRegistros.add(temp);
         }
-        
+
         atualizarTotalHoras();
         atualizarVisibilidadeBotoes();
         
@@ -269,10 +288,11 @@ public class CadastroRegistroDeTrabalhoController {
 
     private void configurarTabela() {
         // Verifica se as colunas existem
-        if (colData == null || colInicio == null || colAlmoco == null || 
+        if (colData == null || colInst == null || colInicio == null || colAlmoco == null || 
             colVolta == null || colSaida == null || colHoras == null || colAcao == null) {
             System.err.println("ERRO: Uma ou mais colunas da tabela são null!");
             System.err.println("colData: " + (colData != null) + 
+                             ", colInst: " + (colInst != null) +
                              ", colInicio: " + (colInicio != null) +
                              ", colAlmoco: " + (colAlmoco != null) +
                              ", colVolta: " + (colVolta != null) +
@@ -281,6 +301,45 @@ public class CadastroRegistroDeTrabalhoController {
                              ", colAcao: " + (colAcao != null));
             return;
         }
+
+        colInst.setCellValueFactory(data -> {
+            RegistroTrabalhoTemp temp = data.getValue();
+            return new SimpleObjectProperty<>(temp != null ? buscarInstituicaoPorId(temp.getFkInstituicaoIdInstituicao()) : null);
+        });
+        colInst.setCellFactory(column -> new TableCell<RegistroTrabalhoTemp, Instituicao>() {
+            private final ComboBox<Instituicao> comboInst = new ComboBox<>();
+
+            {
+                comboInst.setConverter(instituicaoConverter);
+                comboInst.setMaxWidth(Double.MAX_VALUE);
+                comboInst.setOnAction(e -> {
+                    RegistroTrabalhoTemp temp = getTableRow() != null ? getTableRow().getItem() : null;
+                    Instituicao selecionada = comboInst.getValue();
+                    if (temp != null && selecionada != null) {
+                        temp.setInstituicao(selecionada.getIdInstituicao(), selecionada.getNome());
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Instituicao item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setGraphic(null);
+                } else {
+                    comboInst.setItems(FXCollections.observableArrayList(instituicoesDaPena));
+                    boolean unica = instituicoesDaPena.size() == 1;
+                    comboInst.setDisable(unica || instituicoesDaPena.isEmpty());
+                    comboInst.setPromptText(unica ? null : "Selecione...");
+                    if (item == null && unica) {
+                        item = instituicoesDaPena.get(0);
+                        getTableRow().getItem().setInstituicao(item.getIdInstituicao(), item.getNome());
+                    }
+                    comboInst.setValue(item);
+                    setGraphic(comboInst);
+                }
+            }
+        });
         
         // Coluna Data (DatePicker editável)
         colData.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getData()));
@@ -485,7 +544,9 @@ public class CadastroRegistroDeTrabalhoController {
                     .plusDays(1);
         }
         
-        listaRegistros.add(new RegistroTrabalhoTemp(dataInicio));
+        RegistroTrabalhoTemp novo = new RegistroTrabalhoTemp(dataInicio);
+        aplicarInstituicaoPadraoNoRegistro(novo);
+        listaRegistros.add(novo);
         atualizarTotalHoras();
     }
 
@@ -513,7 +574,9 @@ public class CadastroRegistroDeTrabalhoController {
             int diaSemana = dataAtual.getDayOfWeek().getValue();
             // Segunda=1 até Sexta=5
             if (diaSemana >= 1 && diaSemana <= 5) {
-                listaRegistros.add(new RegistroTrabalhoTemp(dataAtual));
+                RegistroTrabalhoTemp novo = new RegistroTrabalhoTemp(dataAtual);
+                aplicarInstituicaoPadraoNoRegistro(novo);
+                listaRegistros.add(novo);
                 diasAdicionados++;
             }
             dataAtual = dataAtual.plusDays(1);
@@ -672,9 +735,61 @@ public class CadastroRegistroDeTrabalhoController {
         lblTotalHoras.setText(String.format("Total: %.2f horas", total));
     }
 
-    private void carregarInstituicoes() {
-        List<Instituicao> lista = InstituicaoDAO.buscarTodasInstituicoes();
-        instituicao.setItems(FXCollections.observableArrayList(lista));
+    private void carregarInstituicoesDaPena(int idPena) {
+        instituicoesDaPena = new ArrayList<>(PenaInstituicaoDAO.buscarInstituicoesPorPena(idPena));
+        if (txtInstituicoesVinculadas != null) {
+            if (instituicoesDaPena.isEmpty()) {
+                txtInstituicoesVinculadas.setText("Nenhuma instituição vinculada à pena");
+            } else {
+                String nomes = instituicoesDaPena.stream()
+                        .map(Instituicao::getNome)
+                        .collect(Collectors.joining(", "));
+                txtInstituicoesVinculadas.setText(nomes);
+            }
+        }
+        tabelaRegistros.refresh();
+    }
+
+    private void limparInstituicoesDaPena() {
+        instituicoesDaPena.clear();
+        if (txtInstituicoesVinculadas != null) {
+            txtInstituicoesVinculadas.clear();
+        }
+    }
+
+    private Instituicao buscarInstituicaoPorId(Integer id) {
+        if (id == null || id <= 0) {
+            return null;
+        }
+        return instituicoesDaPena.stream()
+                .filter(i -> i.getIdInstituicao() == id)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void aplicarInstituicaoPadraoNoRegistro(RegistroTrabalhoTemp temp) {
+        if (instituicoesDaPena.size() == 1) {
+            Instituicao unica = instituicoesDaPena.get(0);
+            temp.setInstituicao(unica.getIdInstituicao(), unica.getNome());
+        }
+    }
+
+    private String formatarDataLinha(RegistroTrabalhoTemp temp) {
+        if (temp == null || temp.getData() == null) {
+            return "data não informada";
+        }
+        return temp.getData().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    private void preencherInstituicaoNoRegistro(RegistroTrabalhoTemp temp, RegistroDeTrabalho reg, Pena pena) {
+        Integer idInst = reg.getFkInstituicaoIdInstituicao();
+        if (idInst == null || idInst <= 0) {
+            idInst = pena != null ? pena.getFkInstituicaoIdInstituicao() : null;
+        }
+        if (idInst != null && idInst > 0) {
+            String nome = InstituicaoDAO.buscarNomePorId(idInst);
+            temp.setInstituicao(idInst, nome != null ? nome : "");
+        }
     }
 
     private void carregarUsuarios() {
@@ -715,10 +830,14 @@ public class CadastroRegistroDeTrabalhoController {
         try {
             Usuario user = comboUsuario.getValue();
             Pena pena = comboPena.getValue();
-            Instituicao inst = instituicao.getValue();
 
-            if (user == null || pena == null || inst == null) {
-                alert("Escolha usuário, pena e instituição.");
+            if (user == null || pena == null) {
+                alert("Escolha o apenado e a pena.");
+                return;
+            }
+
+            if (instituicoesDaPena.isEmpty()) {
+                alert("Esta pena não possui instituições vinculadas. Cadastre-as no cadastro de pena.");
                 return;
             }
 
@@ -766,9 +885,20 @@ public class CadastroRegistroDeTrabalhoController {
                     registrosDescartados++;
                     continue;
                 }
+
+                Integer idInstRegistro = temp.getFkInstituicaoIdInstituicao();
+                if (idInstRegistro == null || idInstRegistro <= 0) {
+                    alert("Selecione a instituição em cada linha da tabela antes de cadastrar.");
+                    return;
+                }
+                if (!PenaInstituicaoDAO.vinculada(pena.getIdPena(), idInstRegistro)) {
+                    alert("Instituição inválida na linha de " + formatarDataLinha(temp) + ".");
+                    return;
+                }
                 
                 RegistroDeTrabalho registro = new RegistroDeTrabalho();
                 registro.setFkPenaId(pena.getIdPena());
+                registro.setFkInstituicaoIdInstituicao(idInstRegistro);
                 registro.setDataTrabalho(Date.valueOf(temp.getData()));
                 registro.setHorasCumpridas(temp.getHorasCalculadas());
                 registro.setAtividades(""); // Campo removido, sempre vazio
