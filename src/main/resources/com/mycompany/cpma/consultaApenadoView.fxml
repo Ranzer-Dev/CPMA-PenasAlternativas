@@ -2,7 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.ScrollPane?>
@@ -22,8 +21,55 @@
 
 <StackPane prefHeight="800.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ConsultaApenadoController">
    <children>
-      <!-- Tela de reconhecimento facial (inicial) -->
-      <VBox fx:id="paneReconhecimento" alignment="CENTER" spacing="30.0" styleClass="content-container" visible="true">
+      <!-- Tela inicial: entrada por código de acesso -->
+      <VBox fx:id="paneCodigo" alignment="CENTER" spacing="30.0" styleClass="content-container" visible="true">
+         <padding>
+            <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
+         </padding>
+         <children>
+            <VBox alignment="CENTER" spacing="10.0">
+               <children>
+                  <Text fill="#2563eb" strokeType="OUTSIDE" strokeWidth="0.0" text="CPMA" textAlignment="CENTER">
+                     <font>
+                        <Font name="Segoe UI Bold" size="48.0" />
+                     </font>
+                  </Text>
+                  <Text fill="#64748b" strokeType="OUTSIDE" strokeWidth="0.0" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER">
+                     <font>
+                        <Font name="Segoe UI" size="16.0" />
+                     </font>
+                  </Text>
+                  <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="Consulta de Dados" textAlignment="CENTER">
+                     <font>
+                        <Font name="Segoe UI Bold" size="28.0" />
+                     </font>
+                  </Text>
+               </children>
+            </VBox>
+
+            <VBox alignment="CENTER" spacing="14.0">
+               <children>
+                  <Text fill="#64748b" strokeType="OUTSIDE" strokeWidth="0.0" text="Informe o código de 8 dígitos entregue pelo delegado para consultar seus registros" textAlignment="CENTER" wrappingWidth="700.0">
+                     <font>
+                        <Font name="Segoe UI" size="18.0" />
+                     </font>
+                  </Text>
+                  <TextField fx:id="txtEntradaCodigo" alignment="CENTER" maxWidth="360.0" prefHeight="64.0" promptText="00000000" styleClass="input-field codigo-totem-input" />
+                  <Label fx:id="lblStatusCodigo" text="" styleClass="label-secondary" />
+               </children>
+            </VBox>
+
+            <VBox alignment="CENTER" spacing="20.0">
+               <children>
+                  <Button fx:id="btnConfirmarCodigo" mnemonicParsing="false" onAction="#confirmarCodigo" prefHeight="60.0" prefWidth="300.0" styleClass="btn-primary" text="Validar código e continuar" />
+                  <!-- <Button fx:id="btnUsarFacial" managed="false" mnemonicParsing="false" onAction="#irParaFacial" prefHeight="44.0" prefWidth="320.0" styleClass="btn-secondary" text="Código não funcionou? Usar reconhecimento facial" visible="false" /> -->
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+
+      <!-- Tela de reconhecimento facial (fallback) -->
+      <VBox fx:id="paneReconhecimento" alignment="CENTER" spacing="30.0" styleClass="content-container" visible="false">
          <padding>
             <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
          </padding>
@@ -52,7 +98,7 @@
             <!-- Instruções -->
             <VBox alignment="CENTER" spacing="15.0">
                <children>
-                  <Text fill="#64748b" strokeType="OUTSIDE" strokeWidth="0.0" text="Posicione seu rosto na câmera para consultar seus dados" textAlignment="CENTER" wrappingWidth="600.0">
+                  <Text fx:id="txtInstrucaoFacial" fill="#64748b" strokeType="OUTSIDE" strokeWidth="0.0" text="Posicione seu rosto na câmera para confirmar sua identidade." textAlignment="CENTER" wrappingWidth="600.0">
                      <font>
                         <Font name="Segoe UI" size="18.0" />
                      </font>
@@ -66,6 +112,7 @@
                <children>
                   <Button fx:id="btnCapturar" mnemonicParsing="false" onAction="#iniciarCaptura" prefHeight="60.0" prefWidth="250.0" styleClass="btn-primary" text="📷 Iniciar Reconhecimento Facial" />
                   <ProgressIndicator fx:id="progressReconhecimento" visible="false" />
+                  <Button fx:id="btnVoltarParaCodigo" mnemonicParsing="false" onAction="#voltarParaCodigo" prefHeight="44.0" prefWidth="250.0" styleClass="btn-secondary" text="Voltar e tentar o código novamente" />
                </children>
             </VBox>
          </children>
@@ -150,8 +197,8 @@
                                           </VBox>
                                           <VBox spacing="8.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
                                              <children>
-                                                <Label text="🔢 Código da Pena" styleClass="label-primary" />
-                                                <ComboBox fx:id="cmbCodigoPena" styleClass="input-field" />
+                                                <Label text="🔢 Pena atual" styleClass="label-primary" />
+                                                <TextField fx:id="txtCodigoPena" editable="false" styleClass="input-field readonly" />
                                              </children>
                                           </VBox>
                                        </children>

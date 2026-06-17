@@ -4,11 +4,17 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
 
+import dao.CodigoAcessoApenadoDAO;
 import dao.DadosFaciaisDAO;
 import dao.InstituicaoDAO;
+import dao.LogAcessoApenadoDAO;
 import dao.PenaDAO;
 import dao.RegistroDeTrabalhoDAO;
+import dao.UsuarioDAO;
+import model.CodigoAcessoApenado;
 import model.DadosFaciais;
+import model.LogAcessoApenado;
+import util.CodigoAcessoUtil;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -17,7 +23,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
@@ -27,8 +32,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
 import model.Pena;
 import model.RegistroDeTrabalho;
 import model.Usuario;
@@ -37,6 +42,16 @@ import util.ReconhecimentoFacial;
 
 public class ConsultaApenadoController {
 
+    private enum ModoFacial {
+        NENHUM,
+        /** Segunda etapa obrigatória após o código ser aceito. */
+        OBRIGATORIO_APOS_CODIGO,
+        /** Alternativa quando o código não pôde ser validado. */
+        FALLBACK
+    }
+
+    @FXML
+    private VBox paneCodigo;
     @FXML
     private VBox paneReconhecimento;
     @FXML
@@ -44,7 +59,19 @@ public class ConsultaApenadoController {
     @FXML
     private Button btnCapturar;
     @FXML
+    private Button btnConfirmarCodigo;
+    @FXML
+    private Button btnUsarFacial;
+    @FXML
+    private Button btnVoltarParaCodigo;
+    @FXML
+    private TextField txtEntradaCodigo;
+    @FXML
+    private Label lblStatusCodigo;
+    @FXML
     private Label lblStatusReconhecimento;
+    @FXML
+    private Text txtInstrucaoFacial;
     @FXML
     private ProgressIndicator progressReconhecimento;
     
@@ -52,7 +79,7 @@ public class ConsultaApenadoController {
     @FXML
     private TextField txtNome, txtCpf, txtDataNasc;
     @FXML
-    private ComboBox<PenaItem> cmbCodigoPena;
+    private TextField txtCodigoPena;
     @FXML
     private TableView<RegistroDTO> tblRegistros;
     @FXML
@@ -65,54 +92,84 @@ public class ConsultaApenadoController {
     private ImageView imgFoto;
 
     private Usuario usuario;
-    private java.util.List<Pena> todasPenas;
+    private Pena penaAtual;
+    private CodigoAcessoApenado codigoAcessoUtilizado;
     private DadosFaciaisDAO dadosFaciaisDAO;
     private ReconhecimentoFacial reconhecimentoFacial;
 
-    /**
-     * Classe interna para representar um item do ComboBox de penas
-     */
-    public static class PenaItem {
-        private final int idPena;
-        private final String codigo;
-        private final Pena pena;
-        
-        public PenaItem(int idPena, String codigo, Pena pena) {
-            this.idPena = idPena;
-            this.codigo = codigo;
-            this.pena = pena;
-        }
-        
-        public int getIdPena() { return idPena; }
-        public String getCodigo() { return codigo; }
-        public Pena getPena() { return pena; }
-        
-        @Override
-        public String toString() {
-            return codigo;
-        }
-    }
+    /** Só true após falha na validação do código; libera o fallback facial. */
+    private boolean fallbackFacialHabilitado;
+    private ModoFacial modoFacialAtual = ModoFacial.NENHUM;
 
     @FXML
     private void initialize() {
-        // Inicializa DAOs
         dadosFaciaisDAO = new DadosFaciaisDAO();
         reconhecimentoFacial = new ReconhecimentoFacial();
         reconhecimentoFacial.inicializar();
-        
-        // Configura visibilidade inicial
-        paneReconhecimento.setVisible(true);
+
+        // Acesso por código é o caminho primário; reconhecimento facial é fallback
+        if (paneCodigo != null) {
+            paneCodigo.setVisible(true);
+        }
+        if (paneReconhecimento != null) {
+            paneReconhecimento.setVisible(false);
+        }
         paneDados.setVisible(false);
-        
-        // Configura botões
+
         btnVoltar.setOnAction(e -> voltar());
         btnImprimir.setOnAction(e -> imprimirDados());
-        
-        // Configura colunas da tabela
-        configurarColunasTabela();
 
-        // Modo totem: abre em tela cheia para maximizar legibilidade dos registros.
+        resetarFluxoCodigoInicial();
+        configurarEntradaCodigo();
+        configurarColunasTabela();
         configurarTelaCheiaTotem();
+    }
+
+    /**
+     * Reinicia o fluxo: código é sempre o primeiro passo; facial fica oculto
+     * até uma tentativa de código falhar na validação.
+     */
+    private void resetarFluxoCodigoInicial() {
+        fallbackFacialHabilitado = false;
+        modoFacialAtual = ModoFacial.NENHUM;
+        usuario = null;
+        codigoAcessoUtilizado = null;
+        if (btnUsarFacial != null) {
+            btnUsarFacial.setVisible(false);
+            btnUsarFacial.setManaged(false);
+        }
+    }
+
+    /**
+     * Exibe o botão de fallback facial somente depois que o código foi
+     * rejeitado (inválido, expirado ou já utilizado).
+     */
+    private void habilitarFallbackFacial() {
+        fallbackFacialHabilitado = true;
+        if (btnUsarFacial != null) {
+            btnUsarFacial.setVisible(true);
+            btnUsarFacial.setManaged(true);
+        }
+    }
+
+    /**
+     * Restringe o campo do código a 8 dígitos numéricos e permite enviar com Enter.
+     */
+    private void configurarEntradaCodigo() {
+        if (txtEntradaCodigo == null) {
+            return;
+        }
+        txtEntradaCodigo.textProperty().addListener((obs, antigo, novo) -> {
+            if (novo == null) return;
+            String limpo = novo.replaceAll("[^0-9]", "");
+            if (limpo.length() > CodigoAcessoUtil.TAMANHO_CODIGO) {
+                limpo = limpo.substring(0, CodigoAcessoUtil.TAMANHO_CODIGO);
+            }
+            if (!limpo.equals(novo)) {
+                txtEntradaCodigo.setText(limpo);
+            }
+        });
+        txtEntradaCodigo.setOnAction(e -> confirmarCodigo());
     }
 
     private void configurarTelaCheiaTotem() {
@@ -127,6 +184,256 @@ public class ConsultaApenadoController {
                 stage.setFullScreenExitHint("");
             }
         });
+    }
+
+    /**
+     * Valida o código digitado pelo apenado. Se válido, encaminha para a etapa
+     * obrigatória de reconhecimento facial (o código só é consumido após o rosto
+     * confirmar a identidade). Caso inválido, registra a tentativa e libera fallback.
+     */
+    @FXML
+    private void confirmarCodigo() {
+        if (txtEntradaCodigo == null) {
+            return;
+        }
+        String entrada = CodigoAcessoUtil.normalizar(txtEntradaCodigo.getText());
+        if (entrada.length() != CodigoAcessoUtil.TAMANHO_CODIGO) {
+            atualizarStatusCodigo("Digite os 8 dígitos do código.", true);
+            return;
+        }
+
+        atualizarStatusCodigo("Validando código...", false);
+        if (btnConfirmarCodigo != null) {
+            btnConfirmarCodigo.setDisable(true);
+        }
+
+        CodigoAcessoApenado codigo = CodigoAcessoApenadoDAO.buscarAtivoPorCodigo(entrada);
+
+        if (codigo == null) {
+            LogAcessoApenadoDAO.registrar(null, null, LogAcessoApenado.METODO_CODIGO, false, entrada,
+                    "Código inexistente, expirado ou já utilizado.");
+            atualizarStatusCodigo(
+                    "Código inválido ou expirado. Procure o delegado para um novo código.", true);
+            habilitarFallbackFacial();
+            txtEntradaCodigo.clear();
+            txtEntradaCodigo.requestFocus();
+            if (btnConfirmarCodigo != null) {
+                btnConfirmarCodigo.setDisable(false);
+            }
+            return;
+        }
+
+        if (codigo.estaExpirado()) {
+            CodigoAcessoApenadoDAO.marcarExpirados();
+            LogAcessoApenadoDAO.registrar(codigo.getFkUsuarioIdUsuario(), codigo.getIdCodigoAcesso(),
+                    LogAcessoApenado.METODO_CODIGO, false, entrada, "Código expirado.");
+            atualizarStatusCodigo(
+                    "Este código expirou. Solicite um novo ao delegado.", true);
+            habilitarFallbackFacial();
+            txtEntradaCodigo.clear();
+            if (btnConfirmarCodigo != null) {
+                btnConfirmarCodigo.setDisable(false);
+            }
+            return;
+        }
+
+        Usuario usuarioCodigo = UsuarioDAO.buscarPorId(codigo.getFkUsuarioIdUsuario());
+        if (usuarioCodigo == null) {
+            LogAcessoApenadoDAO.registrar(codigo.getFkUsuarioIdUsuario(), codigo.getIdCodigoAcesso(),
+                    LogAcessoApenado.METODO_CODIGO, false, entrada, "Usuário do código não localizado.");
+            atualizarStatusCodigo(
+                    "Não foi possível localizar seus dados. Procure o delegado.", true);
+            habilitarFallbackFacial();
+            if (btnConfirmarCodigo != null) {
+                btnConfirmarCodigo.setDisable(false);
+            }
+            return;
+        }
+
+        DadosFaciais dadosFaciais = dadosFaciaisDAO.buscarPorUsuario(usuarioCodigo.getIdUsuario());
+        if (dadosFaciais == null
+                || dadosFaciais.getDescritoresFaciais() == null
+                || dadosFaciais.getDescritoresFaciais().isEmpty()
+                || "[]".equals(dadosFaciais.getDescritoresFaciais())) {
+            LogAcessoApenadoDAO.registrar(usuarioCodigo.getIdUsuario(), codigo.getIdCodigoAcesso(),
+                    LogAcessoApenado.METODO_CODIGO, false, entrada,
+                    "Código válido, mas apenado sem foto facial cadastrada.");
+            atualizarStatusCodigo(
+                    "Código aceito, porém não há foto facial cadastrada. Procure o delegado.", true);
+            habilitarFallbackFacial();
+            if (btnConfirmarCodigo != null) {
+                btnConfirmarCodigo.setDisable(false);
+            }
+            return;
+        }
+
+        LogAcessoApenadoDAO.registrar(usuarioCodigo.getIdUsuario(), codigo.getIdCodigoAcesso(),
+                LogAcessoApenado.METODO_CODIGO, true, entrada,
+                "Código validado; encaminhado para reconhecimento facial obrigatório.");
+
+        usuario = usuarioCodigo;
+        codigoAcessoUtilizado = codigo;
+        modoFacialAtual = ModoFacial.OBRIGATORIO_APOS_CODIGO;
+        atualizarStatusCodigo("", false);
+        txtEntradaCodigo.clear();
+        if (btnConfirmarCodigo != null) {
+            btnConfirmarCodigo.setDisable(false);
+        }
+        irParaFacialObrigatorio();
+    }
+
+    /** Etapa 2: reconhecimento facial obrigatório após código aceito. */
+    private void irParaFacialObrigatorio() {
+        configurarInstrucaoFacial(
+                "Código validado. Posicione seu rosto na câmera para confirmar sua identidade.");
+        if (btnVoltarParaCodigo != null) {
+            btnVoltarParaCodigo.setText("Voltar ao código");
+        }
+        mostrarTelaFacial();
+    }
+
+    /**
+     * Alterna para a tela de reconhecimento facial (fallback).
+     * Só é permitido após falha na validação do código — o código é sempre o primeiro passo.
+     */
+    @FXML
+    private void irParaFacial() {
+        if (!fallbackFacialHabilitado) {
+            atualizarStatusCodigo(
+                    "Primeiro informe e valide o código de 8 dígitos entregue pelo delegado.", true);
+            if (txtEntradaCodigo != null) {
+                txtEntradaCodigo.requestFocus();
+            }
+            return;
+        }
+
+        LogAcessoApenadoDAO.registrar(null, null, LogAcessoApenado.METODO_FACIAL, false, null,
+                "Apenado optou pelo reconhecimento facial após falha na validação do código.");
+
+        modoFacialAtual = ModoFacial.FALLBACK;
+        usuario = null;
+        codigoAcessoUtilizado = null;
+        configurarInstrucaoFacial(
+                "Alternativa: o código não foi validado. Posicione seu rosto na câmera "
+                        + "para tentar o reconhecimento facial.");
+        if (btnVoltarParaCodigo != null) {
+            btnVoltarParaCodigo.setText("Voltar e tentar o código novamente");
+        }
+        mostrarTelaFacial();
+    }
+
+    private void mostrarTelaFacial() {
+        if (paneCodigo != null) {
+            paneCodigo.setVisible(false);
+        }
+        if (paneReconhecimento != null) {
+            paneReconhecimento.setVisible(true);
+        }
+        paneDados.setVisible(false);
+        if (lblStatusReconhecimento != null) {
+            lblStatusReconhecimento.setText("Aguardando captura...");
+        }
+        if (btnCapturar != null) {
+            btnCapturar.setDisable(false);
+        }
+        if (progressReconhecimento != null) {
+            progressReconhecimento.setVisible(false);
+        }
+    }
+
+    private void configurarInstrucaoFacial(String texto) {
+        if (txtInstrucaoFacial != null) {
+            txtInstrucaoFacial.setText(texto);
+        }
+    }
+
+    /**
+     * Volta da tela de reconhecimento facial para a entrada de código.
+     */
+    @FXML
+    private void voltarParaCodigo() {
+        if (paneReconhecimento != null) {
+            paneReconhecimento.setVisible(false);
+        }
+        paneDados.setVisible(false);
+        if (paneCodigo != null) {
+            paneCodigo.setVisible(true);
+        }
+        if (modoFacialAtual == ModoFacial.OBRIGATORIO_APOS_CODIGO) {
+            usuario = null;
+            codigoAcessoUtilizado = null;
+            modoFacialAtual = ModoFacial.NENHUM;
+        } else if (modoFacialAtual == ModoFacial.FALLBACK) {
+            modoFacialAtual = ModoFacial.NENHUM;
+        }
+        atualizarStatusCodigo("", false);
+        if (txtEntradaCodigo != null) {
+            txtEntradaCodigo.clear();
+            txtEntradaCodigo.requestFocus();
+        }
+    }
+
+    private void atualizarStatusCodigo(String mensagem, boolean erro) {
+        if (lblStatusCodigo == null) {
+            return;
+        }
+        lblStatusCodigo.setText(mensagem == null ? "" : mensagem);
+        lblStatusCodigo.setStyle(erro ? "-fx-text-fill: #b91c1c;" : "");
+    }
+
+    /**
+     * Confirma que o rosto capturado pertence ao apenado do código validado.
+     * Só então consome o código e libera a consulta dos registros.
+     */
+    private void processarFacialObrigatorioAposCodigo(String descritores, double threshold) {
+        if (usuario == null || codigoAcessoUtilizado == null) {
+            lblStatusReconhecimento.setText("Sessão expirada. Volte e informe o código novamente.");
+            btnCapturar.setDisable(false);
+            progressReconhecimento.setVisible(false);
+            return;
+        }
+
+        int idUsuario = usuario.getIdUsuario();
+        System.out.println("\n[ETAPA 3] Verificando rosto do apenado vinculado ao código (ID " + idUsuario + ")...");
+
+        boolean rostoConfere = dadosFaciaisDAO.verificarRostoDoUsuario(idUsuario, descritores, threshold);
+
+        if (!rostoConfere) {
+            LogAcessoApenadoDAO.registrar(idUsuario, codigoAcessoUtilizado.getIdCodigoAcesso(),
+                    LogAcessoApenado.METODO_FACIAL, false, codigoAcessoUtilizado.getCodigo(),
+                    "Rosto não confere com o titular do código validado.");
+            mostrarErro("Identidade não confirmada",
+                    "O rosto capturado não corresponde ao apenado deste código.\n\n"
+                            + "Verifique se está usando o código correto e tente novamente.\n"
+                            + "Se o problema persistir, procure o delegado.");
+            lblStatusReconhecimento.setText("Rosto não confere. Tente novamente.");
+            btnCapturar.setDisable(false);
+            progressReconhecimento.setVisible(false);
+            return;
+        }
+
+        boolean marcou = CodigoAcessoApenadoDAO.marcarComoUsado(codigoAcessoUtilizado.getIdCodigoAcesso());
+        if (!marcou) {
+            LogAcessoApenadoDAO.registrar(idUsuario, codigoAcessoUtilizado.getIdCodigoAcesso(),
+                    LogAcessoApenado.METODO_FACIAL, false, codigoAcessoUtilizado.getCodigo(),
+                    "Rosto confirmado, mas código já havia sido utilizado.");
+            mostrarErro("Código indisponível",
+                    "Este código já foi utilizado. Solicite um novo código ao delegado.");
+            lblStatusReconhecimento.setText("Código já utilizado.");
+            btnCapturar.setDisable(false);
+            progressReconhecimento.setVisible(false);
+            voltarParaCodigo();
+            return;
+        }
+
+        LogAcessoApenadoDAO.registrar(idUsuario, codigoAcessoUtilizado.getIdCodigoAcesso(),
+                LogAcessoApenado.METODO_FACIAL, true, codigoAcessoUtilizado.getCodigo(),
+                "Rosto confirmado após validação do código; acesso liberado.");
+
+        lblStatusReconhecimento.setText("Identidade confirmada!");
+        modoFacialAtual = ModoFacial.NENHUM;
+        codigoAcessoUtilizado = null;
+        exibirDadosUsuario();
     }
 
     @FXML
@@ -252,59 +559,26 @@ public class ConsultaApenadoController {
                 System.out.println("   Último valor: " + valoresArray[valoresArray.length - 1]);
             }
             
-            // ETAPA 3: Busca no banco de dados
-            // 0.54 reduz falso negativo em cenário de borda sem abrir tanto o critério.
-            // A margem antiambiguidade de 0.05 no DAO continua protegendo contra match errado.
-            // embeddings L2-normalizados). Valores acima disso são matches confiáveis,
-            // e o DAO ainda exige uma margem de 0.05 sobre o segundo melhor para evitar ambiguidade.
             final double THRESHOLD_FACENET = 0.54;
-            System.out.println("\n[ETAPA 3] Buscando usuário no banco de dados por similaridade facial...");
-            System.out.println("   Threshold configurado: " + THRESHOLD_FACENET
-                    + " (cosine similarity FaceNet) + margem antiambiguidade de 0.05");
+
+            if (modoFacialAtual == ModoFacial.OBRIGATORIO_APOS_CODIGO) {
+                processarFacialObrigatorioAposCodigo(descritores, THRESHOLD_FACENET);
+                return;
+            }
+
+            // Fallback: busca global por similaridade (código não foi validado)
+            System.out.println("\n[ETAPA 3] Buscando usuário no banco (fallback facial)...");
+            System.out.println("   Threshold: " + THRESHOLD_FACENET);
             usuario = dadosFaciaisDAO.buscarPorSimilaridadeFacial(descritores, THRESHOLD_FACENET);
-            
-            // ETAPA 4: Resultado da busca
+
             System.out.println("\n[ETAPA 4] Processando resultado da busca...");
             if (usuario != null) {
-                // Usuário identificado com sucesso
-                System.out.println("✅ SUCESSO: Usuário identificado!");
-                System.out.println("   ID: " + usuario.getIdUsuario());
-                System.out.println("   Nome: " + usuario.getNome());
-                System.out.println("   CPF: " + usuario.getCpf());
-                
-                // VALIDAÇÃO CRÍTICA: Verifica se o usuário tem dados faciais correspondentes
-                System.out.println("\n[VALIDAÇÃO] Verificando correspondência entre usuário e foto...");
-                DadosFaciais dadosFaciaisVerificacao = dadosFaciaisDAO.buscarPorUsuario(usuario.getIdUsuario());
-                if (dadosFaciaisVerificacao != null) {
-                    System.out.println("   ✅ DadosFaciais encontrado para o usuário ID: " + usuario.getIdUsuario());
-                    System.out.println("   ID DadosFaciais: " + dadosFaciaisVerificacao.getIdDadosFaciais());
-                    System.out.println("   ID Usuário no DadosFaciais: " + dadosFaciaisVerificacao.getFkUsuarioIdUsuario());
-                    
-                    // Valida se os IDs correspondem
-                    if (dadosFaciaisVerificacao.getFkUsuarioIdUsuario() != usuario.getIdUsuario()) {
-                        System.err.println("   ❌ ERRO CRÍTICO: ID do usuário não corresponde!");
-                        System.err.println("      Esperado: " + usuario.getIdUsuario());
-                        System.err.println("      Encontrado: " + dadosFaciaisVerificacao.getFkUsuarioIdUsuario());
-                    } else {
-                        System.out.println("   ✅ IDs correspondem corretamente!");
-                    }
-                    
-                    // Verifica se tem imagem
-                    if (dadosFaciaisVerificacao.getImagemRosto() != null && dadosFaciaisVerificacao.getImagemRosto().length > 0) {
-                        System.out.println("   ✅ Foto encontrada: " + dadosFaciaisVerificacao.getImagemRosto().length + 
-                                         " bytes (" + String.format("%.1f", dadosFaciaisVerificacao.getImagemRosto().length / 1024.0) + " KB)");
-                    } else {
-                        System.err.println("   ⚠️ AVISO: Usuário não tem foto cadastrada!");
-                    }
-                } else {
-                    System.err.println("   ❌ ERRO: Nenhum DadosFaciais encontrado para o usuário ID: " + usuario.getIdUsuario());
-                }
-                
-                System.out.println("\n" + "=".repeat(80));
-                System.out.println("✅ RECONHECIMENTO FACIAL CONCLUÍDO COM SUCESSO");
-                System.out.println("=".repeat(80) + "\n");
-                
+                System.out.println("✅ SUCESSO: Usuário identificado (fallback)!");
                 lblStatusReconhecimento.setText("Usuário identificado com sucesso!");
+                LogAcessoApenadoDAO.registrar(usuario.getIdUsuario(), null,
+                        LogAcessoApenado.METODO_FACIAL, true, null,
+                        "Acesso concedido pelo reconhecimento facial (fallback).");
+                modoFacialAtual = ModoFacial.NENHUM;
                 exibirDadosUsuario();
             } else {
                 // Usuário não encontrado
@@ -324,6 +598,10 @@ public class ConsultaApenadoController {
                 // Verifica se há usuários cadastrados no banco
                 boolean temUsuariosCadastrados = verificarSeTemUsuariosCadastrados();
                 
+                LogAcessoApenadoDAO.registrar(null, null,
+                        LogAcessoApenado.METODO_FACIAL, false, null,
+                        "Reconhecimento facial não localizou um apenado correspondente.");
+
                 if (!temUsuariosCadastrados) {
                     mostrarErro("Nenhum cadastro encontrado", 
                         "Não há nenhum usuário cadastrado no sistema com foto facial.\n\n" +
@@ -399,6 +677,9 @@ public class ConsultaApenadoController {
         carregarRegistros();
         
         // Alterna para a tela de dados
+        if (paneCodigo != null) {
+            paneCodigo.setVisible(false);
+        }
         paneReconhecimento.setVisible(false);
         paneDados.setVisible(true);
         System.out.println("  ✅ Dados exibidos com sucesso!");
@@ -422,80 +703,52 @@ public class ConsultaApenadoController {
         String dataNasc = formatarData(usuario.getDataNascimento());
         txtDataNasc.setText(dataNasc);
         
-        // Preenche o ComboBox de códigos de penas
-        preencherComboBoxCodigoPenas();
+        exibirPenaAtual();
         
         // Campos complementares removidos da tela
     }
 
     /**
-     * Preenche o ComboBox com os códigos das penas do usuário
+     * Exibe somente a pena ativa do apenado (sem permitir troca).
      */
-    private void preencherComboBoxCodigoPenas() {
-        todasPenas = PenaDAO.buscarPenasPorUsuario(usuario.getIdUsuario());
-        
-        if (todasPenas == null || todasPenas.isEmpty()) {
-            System.out.println("Nenhuma pena encontrada para o usuário");
-            cmbCodigoPena.setItems(FXCollections.observableArrayList());
+    private void exibirPenaAtual() {
+        penaAtual = PenaDAO.buscarPenaAtivaPorUsuario(usuario.getIdUsuario());
+
+        if (penaAtual == null) {
+            txtCodigoPena.setText("Nenhuma pena ativa");
+            tblRegistros.setItems(FXCollections.observableArrayList());
             return;
         }
-        
-        // Ordena as penas por data de início (mais recente primeiro)
-        todasPenas.sort((p1, p2) -> {
+
+        java.util.List<Pena> penasDoUsuario = PenaDAO.buscarPenasPorUsuario(usuario.getIdUsuario());
+        penasDoUsuario.sort((p1, p2) -> {
             if (p1.getDataInicio() == null && p2.getDataInicio() == null) return 0;
-            if (p1.getDataInicio() == null) return 1;
-            if (p2.getDataInicio() == null) return -1;
-            return p2.getDataInicio().compareTo(p1.getDataInicio());
+            if (p1.getDataInicio() == null) return -1;
+            if (p2.getDataInicio() == null) return 1;
+            return p1.getDataInicio().compareTo(p2.getDataInicio());
         });
-        
-        // Cria itens para o ComboBox
-        var items = new java.util.ArrayList<PenaItem>();
+
         int numeroPena = 1;
-        for (Pena pena : todasPenas) {
-            String codigo = CodigoPenaUtil.calcularCodigoAtual(numeroPena);
-            String dataInicio = formatarData(pena.getDataInicio());
-            String textoExibicao = codigo + " (" + dataInicio + ")";
-            items.add(new PenaItem(pena.getIdPena(), textoExibicao, pena));
+        for (Pena pena : penasDoUsuario) {
+            if (pena.getIdPena() == penaAtual.getIdPena()) {
+                break;
+            }
             numeroPena++;
         }
-        
-        cmbCodigoPena.setItems(FXCollections.observableArrayList(items));
-        
-        // Configura o StringConverter
-        cmbCodigoPena.setConverter(new StringConverter<PenaItem>() {
-            @Override
-            public String toString(PenaItem item) {
-                return item != null ? item.getCodigo() : "";
-            }
-            
-            @Override
-            public PenaItem fromString(String string) {
-                return null;
-            }
-        });
-        
-        // Adiciona listener para quando a seleção mudar
-        cmbCodigoPena.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                carregarRegistrosPorPena(newVal.getIdPena());
-            }
-        });
-        
-        // Seleciona a primeira pena (mais recente) por padrão
-        if (!items.isEmpty()) {
-            cmbCodigoPena.getSelectionModel().select(0);
-        }
+
+        String codigo = CodigoPenaUtil.calcularCodigoAtual(numeroPena);
+        String dataInicio = formatarData(penaAtual.getDataInicio());
+        txtCodigoPena.setText(codigo + " (" + dataInicio + ")");
+
+        carregarRegistrosPorPena(penaAtual.getIdPena());
     }
 
     /**
-     * Carrega os registros de trabalho
+     * Carrega os registros de trabalho da pena ativa.
      */
     private void carregarRegistros() {
-        PenaItem itemSelecionado = cmbCodigoPena.getSelectionModel().getSelectedItem();
-        if (itemSelecionado != null) {
-            carregarRegistrosPorPena(itemSelecionado.getIdPena());
-        } else if (todasPenas != null && !todasPenas.isEmpty()) {
-            carregarRegistrosPorPena(todasPenas.get(0).getIdPena());
+        if (penaAtual != null) {
+            carregarRegistrosPorPena(penaAtual.getIdPena());
         } else {
             tblRegistros.setItems(FXCollections.observableArrayList());
         }
@@ -509,10 +762,8 @@ public class ConsultaApenadoController {
             return;
         }
 
-        // Segurança adicional para totem: só permite visualizar penas do próprio usuário identificado.
-        boolean penaPertenceAoUsuario = todasPenas != null
-                && todasPenas.stream().anyMatch(p -> p != null && p.getIdPena() == idPena);
-        if (!penaPertenceAoUsuario) {
+        // Segurança: totem só exibe a pena ativa do apenado identificado.
+        if (penaAtual == null || penaAtual.getIdPena() != idPena) {
             tblRegistros.setItems(FXCollections.observableArrayList());
             return;
         }
@@ -762,13 +1013,31 @@ public class ConsultaApenadoController {
 
     @FXML
     private void voltar() {
-        // Volta para a tela de reconhecimento
         paneDados.setVisible(false);
-        paneReconhecimento.setVisible(true);
+        if (paneReconhecimento != null) {
+            paneReconhecimento.setVisible(false);
+        }
+        if (paneCodigo != null) {
+            paneCodigo.setVisible(true);
+        }
         usuario = null;
-        btnCapturar.setDisable(false);
-        progressReconhecimento.setVisible(false);
-        lblStatusReconhecimento.setText("Aguardando captura...");
+        penaAtual = null;
+        codigoAcessoUtilizado = null;
+        if (btnCapturar != null) {
+            btnCapturar.setDisable(false);
+        }
+        if (progressReconhecimento != null) {
+            progressReconhecimento.setVisible(false);
+        }
+        if (lblStatusReconhecimento != null) {
+            lblStatusReconhecimento.setText("Aguardando captura...");
+        }
+        resetarFluxoCodigoInicial();
+        atualizarStatusCodigo("", false);
+        if (txtEntradaCodigo != null) {
+            txtEntradaCodigo.clear();
+            txtEntradaCodigo.requestFocus();
+        }
     }
 
     @FXML

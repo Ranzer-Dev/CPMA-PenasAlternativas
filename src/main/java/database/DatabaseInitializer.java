@@ -33,6 +33,9 @@ public class DatabaseInitializer {
 
             // Múltiplas instituições por pena
             executeScript(conn, "/script/migracao-multiplas-instituicoes.sql");
+
+            // Códigos de acesso ao totem e log de auditoria
+            executeScript(conn, "/script/codigo-acesso-totem.sql");
             
             // Inserir administrador inicial (se não existir)
             executeScript(conn, "/script/inserir-admin-inicial.sql");

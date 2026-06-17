@@ -192,6 +192,23 @@
   -fx-effect: none;
 }
 
+.input-field.codigo-acesso-display {
+  -fx-font-family: "Segoe UI Bold";
+  -fx-font-size: 22px;
+  -fx-text-fill: #2563eb;
+  -fx-alignment: center;
+  -fx-letter-spacing: 4px;
+}
+
+.input-field.codigo-totem-input {
+  -fx-font-family: "Segoe UI Bold";
+  -fx-font-size: 36px;
+  -fx-text-fill: #1e293b;
+  -fx-alignment: center;
+  -fx-padding: 8 16 8 16;
+  -fx-letter-spacing: 8px;
+}
+
 /* ===== IMAGEM DE PERFIL ===== */
 .profile-image {
   -fx-background-color: #f8fafc;
