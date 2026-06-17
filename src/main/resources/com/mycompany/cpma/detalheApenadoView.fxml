@@ -221,6 +221,26 @@
                      </children>
                   </VBox>
                   
+                  <!-- Seção: código de acesso ao totem -->
+                  <VBox spacing="14.0" styleClass="section-container">
+                     <children>
+                        <Text fill="#1e293b" strokeType="OUTSIDE" strokeWidth="0.0" text="🔑 Código de acesso ao totem" textAlignment="CENTER">
+                           <font>
+                              <Font name="Segoe UI Bold" size="20.0" />
+                           </font>
+                        </Text>
+                        <Label text="Gere um código numérico de 8 dígitos para o apenado consultar seus registros no totem. O código é de uso único e expira em 72 horas." styleClass="label-secondary" wrapText="true" />
+                        <HBox alignment="CENTER_LEFT" spacing="15.0">
+                           <children>
+                              <TextField fx:id="txtCodigoAcessoTotem" editable="false" prefWidth="220.0" promptText="--------" styleClass="input-field readonly codigo-acesso-display" />
+                              <Label fx:id="lblValidadeCodigo" text="Nenhum código ativo" styleClass="label-secondary" />
+                              <Button fx:id="btnGerarCodigoAcesso" mnemonicParsing="false" onAction="#gerarCodigoAcesso" prefHeight="40.0" prefWidth="200.0" styleClass="btn-primary" text="Gerar código" />
+                              <Button fx:id="btnCancelarCodigoAcesso" mnemonicParsing="false" onAction="#cancelarCodigoAcesso" prefHeight="40.0" prefWidth="160.0" styleClass="btn-secondary" text="Cancelar código" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
                   <!-- Botões de ação -->
                   <VBox spacing="20.0" styleClass="section-container">
                      <children>

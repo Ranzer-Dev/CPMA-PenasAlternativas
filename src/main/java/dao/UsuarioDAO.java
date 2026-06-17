@@ -212,6 +212,39 @@ public class UsuarioDAO {
         return false;
     }
 
+    public static Usuario buscarPorId(int idUsuario) {
+        String sql = "SELECT * FROM Usuario WHERE id_usuario = ?";
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Usuario u = new Usuario();
+                    u.setIdUsuario(rs.getInt("id_usuario"));
+                    u.setNome(rs.getString("nome"));
+                    u.setCpf(rs.getString("cpf"));
+                    u.setCodigo(rs.getString("codigo"));
+                    u.setNacionalidade(rs.getString("nacionalidade"));
+                    u.setDataNascimento(SQLiteDateUtil.getDate(rs, "data_nascimento"));
+                    u.setCriadoEm(SQLiteDateUtil.getDate(rs, "criado_em"));
+                    u.setFoto(rs.getString("foto"));
+                    u.setEndereco(rs.getString("endereco"));
+                    u.setBairro(rs.getString("bairro"));
+                    u.setCidade(rs.getString("cidade"));
+                    u.setUf(rs.getString("uf"));
+                    u.setObservacao(rs.getString("observacao"));
+                    u.setTelefone(rs.getString("telefone"));
+                    u.setCep(rs.getString("cep"));
+                    u.setFkAdministradorIdAdmin(rs.getInt("fk_administrador_id_admin"));
+                    return u;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static int buscarUltimoIdInserido() {
         String sql = "SELECT MAX(id_usuario) AS ultimo_id FROM Usuario";
         try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {

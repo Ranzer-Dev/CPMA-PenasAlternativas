@@ -6,6 +6,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -13,17 +14,22 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import dao.CodigoAcessoApenadoDAO;
 import dao.DadosFaciaisDAO;
 import dao.InstituicaoDAO;
 import dao.PenaDAO;
 import dao.PenaInstituicaoDAO;
 import dao.RegistroDeTrabalhoDAO;
+import model.CodigoAcessoApenado;
 import model.DadosFaciais;
 import model.Pena;
 import model.RegistroDeTrabalho;
 import model.Usuario;
+import util.CodigoAcessoUtil;
 import util.CodigoPenaUtil;
 import util.ReconhecimentoFacial;
+import util.SessaoUsuario;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javafx.print.PrinterJob;
 import javafx.scene.Node;
@@ -68,6 +74,12 @@ public class DetalheApenadoController {
     private TableColumn<RegistroDTO, String> colCumprida, colFalta;
     @FXML
     private Button btnVoltar, btnEditar, btnImprimir;
+    @FXML
+    private Button btnGerarCodigoAcesso, btnCancelarCodigoAcesso;
+    @FXML
+    private TextField txtCodigoAcessoTotem;
+    @FXML
+    private Label lblValidadeCodigo;
     @FXML
     private ImageView imgFoto;
 
@@ -116,6 +128,7 @@ public class DetalheApenadoController {
         
         preencherCampos();
         carregarRegistros();
+        atualizarPainelCodigoAcesso();
     }
 
     private void preencherCampos() {
@@ -422,11 +435,14 @@ public class DetalheApenadoController {
         
         // Configura as colunas da tabela imediatamente (sempre, mesmo que vazio)
         configurarColunasTabela();
-        
+
+        atualizarPainelCodigoAcesso();
+
         // Se o usuário já foi definido antes do initialize(), preenche os campos agora
         if (usuario != null) {
             System.out.println("Usuario já definido, preenchendo campos...");
             preencherCampos();
+            atualizarPainelCodigoAcesso();
             // carregarRegistros() será chamado automaticamente quando a pena for selecionada no ComboBox
         }
     }
@@ -1221,6 +1237,134 @@ public class DetalheApenadoController {
         a.setTitle(titulo);
         a.setHeaderText(null);
         a.showAndWait();
+    }
+
+    /**
+     * Reflete na UI o código ATIVO do apenado, se houver.
+     * Mantém os campos coerentes ao abrir a tela ou após gerar/cancelar.
+     */
+    private void atualizarPainelCodigoAcesso() {
+        if (txtCodigoAcessoTotem == null || lblValidadeCodigo == null) {
+            return;
+        }
+        if (usuario == null) {
+            txtCodigoAcessoTotem.setText("");
+            lblValidadeCodigo.setText("Nenhum código ativo");
+            if (btnCancelarCodigoAcesso != null) {
+                btnCancelarCodigoAcesso.setDisable(true);
+            }
+            return;
+        }
+        CodigoAcessoApenado ativo = CodigoAcessoApenadoDAO.buscarAtivoPorUsuario(usuario.getIdUsuario());
+        if (ativo == null) {
+            txtCodigoAcessoTotem.setText("");
+            lblValidadeCodigo.setText("Nenhum código ativo");
+            if (btnCancelarCodigoAcesso != null) {
+                btnCancelarCodigoAcesso.setDisable(true);
+            }
+            return;
+        }
+        txtCodigoAcessoTotem.setText(CodigoAcessoUtil.formatarParaExibicao(ativo.getCodigo()));
+        lblValidadeCodigo.setText("Válido até " + formatarDataHora(ativo.getDataExpiracao()));
+        if (btnCancelarCodigoAcesso != null) {
+            btnCancelarCodigoAcesso.setDisable(false);
+        }
+    }
+
+    @FXML
+    private void gerarCodigoAcesso() {
+        if (usuario == null) {
+            alerta("Atenção", "Selecione um apenado antes de gerar o código.");
+            return;
+        }
+        if (SessaoUsuario.getAdminLogado() == null) {
+            alerta("Sessão expirada", "Faça login novamente para gerar o código de acesso.");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Ao gerar um novo código, qualquer código ativo anterior será cancelado. Deseja continuar?",
+                ButtonType.OK, ButtonType.CANCEL);
+        confirm.setTitle("Gerar código de acesso");
+        confirm.setHeaderText(null);
+        java.util.Optional<ButtonType> resp = confirm.showAndWait();
+        if (resp.isEmpty() || resp.get() != ButtonType.OK) {
+            return;
+        }
+
+        int idAdmin = SessaoUsuario.getAdminLogado().getIdAdministrador();
+        CodigoAcessoApenado novo = CodigoAcessoApenadoDAO.gerarParaUsuario(
+                usuario.getIdUsuario(),
+                idAdmin,
+                CodigoAcessoUtil.VALIDADE_HORAS_PADRAO);
+
+        if (novo == null) {
+            alerta("Erro", "Não foi possível gerar o código. Tente novamente.");
+            return;
+        }
+
+        atualizarPainelCodigoAcesso();
+        exibirDialogoCodigoGerado(novo);
+    }
+
+    @FXML
+    private void cancelarCodigoAcesso() {
+        if (usuario == null) {
+            return;
+        }
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Cancelar o código ativo? O apenado precisará de um novo código para usar o totem.",
+                ButtonType.OK, ButtonType.CANCEL);
+        confirm.setTitle("Cancelar código");
+        confirm.setHeaderText(null);
+        java.util.Optional<ButtonType> resp = confirm.showAndWait();
+        if (resp.isEmpty() || resp.get() != ButtonType.OK) {
+            return;
+        }
+        int afetados = CodigoAcessoApenadoDAO.cancelarAtivosDoUsuario(usuario.getIdUsuario());
+        if (afetados > 0) {
+            alerta("Código cancelado", "O código ativo foi cancelado com sucesso.");
+        } else {
+            alerta("Aviso", "Não havia código ativo para cancelar.");
+        }
+        atualizarPainelCodigoAcesso();
+    }
+
+    private void exibirDialogoCodigoGerado(CodigoAcessoApenado codigo) {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setTitle("Código gerado");
+        info.setHeaderText("Entregue este código ao apenado");
+
+        VBox conteudo = new VBox(12);
+        conteudo.setPadding(new Insets(10, 5, 5, 5));
+
+        Text codigoText = new Text(CodigoAcessoUtil.formatarParaExibicao(codigo.getCodigo()));
+        codigoText.setFont(Font.font("Segoe UI", FontWeight.BOLD, 36));
+        codigoText.setFill(Color.web("#2563eb"));
+
+        Label validade = new Label("Válido até " + formatarDataHora(codigo.getDataExpiracao()));
+        Label uso = new Label("Uso único: ao validar no totem o código deixa de funcionar.");
+        uso.setWrapText(true);
+
+        Button btnCopiar = new Button("Copiar código");
+        btnCopiar.setOnAction(e -> {
+            javafx.scene.input.Clipboard cb = javafx.scene.input.Clipboard.getSystemClipboard();
+            javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+            content.putString(codigo.getCodigo());
+            cb.setContent(content);
+            btnCopiar.setText("Copiado!");
+        });
+
+        conteudo.getChildren().addAll(codigoText, validade, uso, btnCopiar);
+        info.getDialogPane().setContent(conteudo);
+        info.showAndWait();
+    }
+
+    private String formatarDataHora(java.time.LocalDateTime dt) {
+        if (dt == null) {
+            return "";
+        }
+        return dt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 
 }

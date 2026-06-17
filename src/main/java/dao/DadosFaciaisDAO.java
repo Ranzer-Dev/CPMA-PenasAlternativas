@@ -328,6 +328,42 @@ public class DadosFaciaisDAO {
     }
 
     /**
+     * Verifica se o rosto capturado corresponde ao usuário esperado (etapa após código válido).
+     * Compara com todas as fotos ativas cadastradas para aquele apenado.
+     */
+    public boolean verificarRostoDoUsuario(int idUsuario, String descritoresFaciais, double threshold) {
+        String sql = "SELECT descritores_faciais FROM DadosFaciais "
+                + "WHERE fk_usuario_id_usuario = ? AND ativo = 1";
+
+        double melhorSimilaridade = 0.0;
+
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idUsuario);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String armazenados = rs.getString("descritores_faciais");
+                    if (armazenados == null || armazenados.isEmpty() || "[]".equals(armazenados)) {
+                        continue;
+                    }
+                    double similaridade = calcularSimilaridade(descritoresFaciais, armazenados);
+                    melhorSimilaridade = Math.max(melhorSimilaridade, similaridade);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar rosto do usuário " + idUsuario + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+
+        System.out.println("   Verificação facial do usuário " + idUsuario
+                + ": melhor similaridade = " + String.format("%.4f", melhorSimilaridade)
+                + " (threshold " + threshold + ")");
+        return melhorSimilaridade >= threshold;
+    }
+
+    /**
      * Lista todos os dados faciais ativos
      */
     public List<DadosFaciais> listarTodos() {
