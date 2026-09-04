@@ -25,22 +25,37 @@ public class DatabaseInitializer {
                 return;
             }
 
+            boolean isPostgres = false;
+            try {
+                String dbName = conn.getMetaData().getDatabaseProductName();
+                if (dbName != null && dbName.toLowerCase().contains("postgresql")) {
+                    isPostgres = true;
+                }
+            } catch (SQLException e) {
+                String dbUrl = DatabaseConfig.getDbUrl();
+                if (dbUrl != null && dbUrl.contains("postgresql")) {
+                    isPostgres = true;
+                }
+            }
+
+            String prefix = isPostgres ? "/script/postgresql/" : "/script/";
+
             // Criar tabelas principais
-            executeScript(conn, "/script/penas-alternativas.sql");
+            executeScript(conn, prefix + "penas-alternativas.sql");
             
             // Criar tabela de dados faciais
-            executeScript(conn, "/script/dados-faciais.sql");
+            executeScript(conn, prefix + "dados-faciais.sql");
 
             // Múltiplas instituições por pena
-            executeScript(conn, "/script/migracao-multiplas-instituicoes.sql");
+            executeScript(conn, prefix + "migracao-multiplas-instituicoes.sql");
 
             // Códigos de acesso ao totem e log de auditoria
-            executeScript(conn, "/script/codigo-acesso-totem.sql");
+            executeScript(conn, prefix + "codigo-acesso-totem.sql");
             
             // Inserir administrador inicial (se não existir)
-            executeScript(conn, "/script/inserir-admin-inicial.sql");
+            executeScript(conn, prefix + "inserir-admin-inicial.sql");
 
-            System.out.println("Banco de dados inicializado com sucesso!");
+            System.out.println("Banco de dados inicializado com sucesso! (Engine: " + (isPostgres ? "PostgreSQL" : "SQLite") + ")");
             
         } catch (SQLException e) {
             System.err.println("Erro ao inicializar banco de dados:");

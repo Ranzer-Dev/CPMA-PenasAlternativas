@@ -26,14 +26,12 @@ public class DadosFaciaisDAO {
     public boolean cadastrar(DadosFaciais dadosFaciais) {
         String sql = "INSERT INTO DadosFaciais (fk_usuario_id_usuario, imagem_rosto, descritores_faciais, data_cadastro, data_atualizacao, ativo) VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, dadosFaciais.getFkUsuarioIdUsuario());
             
             // Salva a imagem no banco como BLOB usando setBytes()
-            // NOTA: SQLite via JDBC usa setBytes() que escreve BLOBs eficientemente.
-            // A interface C sqlite3_blob_write() não é necessária quando usando JDBC,
-            // pois o driver JDBC já otimiza a escrita de BLOBs internamente.
             if (dadosFaciais.getImagemRosto() != null && dadosFaciais.getImagemRosto().length > 0) {
                 stmt.setBytes(2, dadosFaciais.getImagemRosto());
                 System.out.println("  - Campo imagem_rosto: " + dadosFaciais.getImagemRosto().length + 
@@ -62,16 +60,14 @@ public class DadosFaciaisDAO {
                 stmt.setNull(5, java.sql.Types.DATE);
             }
             
-            stmt.setInt(6, dadosFaciais.isAtivo() ? 1 : 0); // SQLite usa INTEGER para boolean
+            stmt.setInt(6, dadosFaciais.isAtivo() ? 1 : 0);
 
             System.out.println("Executando INSERT na tabela DadosFaciais...");
             int rowsAffected = stmt.executeUpdate();
             System.out.println("Rows affected: " + rowsAffected);
 
             if (rowsAffected > 0) {
-                // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
-                try (Statement stmt2 = conn.createStatement();
-                     ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
                         dadosFaciais.setIdDadosFaciais(rs.getInt(1));
                         System.out.println("✅ Dados faciais cadastrados com ID: " + dadosFaciais.getIdDadosFaciais());

@@ -14,7 +14,13 @@ public class AdminDAO {
         Administrador admin = null;
         String sql = "SELECT * FROM Administrador WHERE cpf = ?";
 
-        try (Connection conn = ConnectionFactory.getConnection();
+        Connection conn = ConnectionFactory.getConnection();
+        if (conn == null) {
+            System.err.println("   ❌ Falha ao conectar ao banco de dados em AdminDAO.");
+            return null;
+        }
+
+        try (conn;
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             // Normaliza o CPF removendo pontos e hífens para comparar
@@ -46,7 +52,13 @@ public class AdminDAO {
     public boolean alterarSenhaPorCpf(String cpf, String novaSenha) {
         String sql = "UPDATE Administrador SET senha = ? WHERE cpf = ?";
 
-        try (Connection conn = ConnectionFactory.getConnection();
+        Connection conn = ConnectionFactory.getConnection();
+        if (conn == null) {
+            System.err.println("   ❌ Falha ao conectar ao banco de dados em AdminDAO.");
+            return false;
+        }
+
+        try (conn;
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             // Normaliza o CPF removendo pontos e hífens

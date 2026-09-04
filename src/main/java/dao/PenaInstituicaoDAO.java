@@ -19,7 +19,7 @@ public class PenaInstituicaoDAO {
             return;
         }
         removerPorPena(idPena);
-        String sql = "INSERT OR IGNORE INTO pena_instituicao (fk_pena_id_pena, fk_instituicao_id_instituicao) VALUES (?, ?)";
+        String sql = "INSERT INTO pena_instituicao (fk_pena_id_pena, fk_instituicao_id_instituicao) VALUES (?, ?) ON CONFLICT DO NOTHING";
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (Integer idInst : idsInstituicoes) {

@@ -43,7 +43,7 @@ public class CodigoAcessoApenadoDAO {
                 + "VALUES (?, ?, ?, ?, ?, 'ATIVO')";
 
         try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, idUsuario);
             stmt.setInt(2, idAdmin);
@@ -56,8 +56,7 @@ public class CodigoAcessoApenadoDAO {
             }
 
             CodigoAcessoApenado registro = new CodigoAcessoApenado();
-            try (Statement st = conn.createStatement();
-                 ResultSet rs = st.executeQuery("SELECT last_insert_rowid()")) {
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
                     registro.setIdCodigoAcesso(rs.getInt(1));
                 }

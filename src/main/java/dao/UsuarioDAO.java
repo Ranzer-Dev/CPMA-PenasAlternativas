@@ -92,7 +92,8 @@ public class UsuarioDAO {
                 + "endereco, bairro, cidade, uf, observacao, foto, fk_Administrador_id_admin, telefone, cep, codigo) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = ConnectionFactory.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             usuario.setFkAdministradorIdAdmin(SessaoUsuario.getAdminLogado().getIdAdministrador());
 
@@ -117,9 +118,7 @@ public class UsuarioDAO {
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
-                // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
-                try (Statement stmt2 = conn.createStatement();
-                     ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
                         return rs.getInt(1);
                     }

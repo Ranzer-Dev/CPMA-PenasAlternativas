@@ -1058,13 +1058,27 @@ public class ReconhecimentoFacial {
                 faceAligned.close();
             }
 
-            // FaceNet foi treinado em RGB; OpenCV lê em BGR.
-            Mat faceRgb = new Mat();
-            if (faceBase.channels() == 1) {
-                opencv_imgproc.cvtColor(faceBase, faceRgb, opencv_imgproc.COLOR_GRAY2RGB);
+            // Otimização FRR: Convertendo para escala de cinza e aplicando CLAHE (Equalização Adaptativa de Histograma)
+            // Isso suaviza sombras e melhora o contraste sob diferentes condições de iluminação.
+            Mat faceGray = new Mat();
+            if (faceBase.channels() == 3) {
+                opencv_imgproc.cvtColor(faceBase, faceGray, opencv_imgproc.COLOR_BGR2GRAY);
             } else {
-                opencv_imgproc.cvtColor(faceBase, faceRgb, opencv_imgproc.COLOR_BGR2RGB);
+                faceGray = faceBase.clone();
             }
+
+            org.bytedeco.opencv.opencv_imgproc.CLAHE clahe = opencv_imgproc.createCLAHE(2.0, new Size(8, 8));
+            Mat faceEqualized = new Mat();
+            clahe.apply(faceGray, faceEqualized);
+
+            // Convertendo a imagem equalizada de volta para RGB (3 canais idênticos) esperado pelo FaceNet
+            Mat faceRgb = new Mat();
+            opencv_imgproc.cvtColor(faceEqualized, faceRgb, opencv_imgproc.COLOR_GRAY2RGB);
+
+            // Liberando recursos temporários do CLAHE
+            faceGray.close();
+            faceEqualized.close();
+            clahe.close();
 
             // Normalização FaceNet: (pixel - 127.5) / 128
             Mat faceFloat = new Mat();

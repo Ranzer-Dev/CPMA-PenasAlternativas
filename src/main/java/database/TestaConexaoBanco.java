@@ -14,14 +14,12 @@ public class TestaConexaoBanco {
                 return;
             }
 
-            try (Statement stmt = conn.createStatement();
-                    ResultSet rs = stmt.executeQuery("SELECT DB_NAME() AS CurrentDatabase")) {
-
-                if (rs.next()) {
-                    System.out.println("Conectado ao banco: " + rs.getString("CurrentDatabase"));
-                } else {
-                    System.out.println("Não foi possível obter o nome do banco.");
-                }
+            String dbName = conn.getCatalog();
+            String product = conn.getMetaData().getDatabaseProductName();
+            System.out.println("Conectado ao banco com sucesso!");
+            System.out.println("Engine: " + product);
+            if (dbName != null) {
+                System.out.println("Catálogo/Banco: " + dbName);
             }
         } catch (SQLException e) {
             System.err.println("Erro durante operação no banco:");
