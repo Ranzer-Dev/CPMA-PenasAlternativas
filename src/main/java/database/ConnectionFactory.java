@@ -10,6 +10,15 @@ public class ConnectionFactory {
     private static final String USER = DatabaseConfig.getDbUser();
     private static final String PASSWORD = DatabaseConfig.getDbPassword();
 
+    static {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            // Ignora se algum driver não estiver presente no classpath
+        }
+    }
+
     public static Connection getConnection() {
         try {
             // SQLite não precisa de usuário e senha

@@ -19,15 +19,13 @@ public final class InstituicaoDAO {
             VALUES (?,?,?,?,?,?,?,?,?)
         """;
         try (Connection c = ConnectionFactory.getConnection();
-             PreparedStatement st = c.prepareStatement(sql)) {
+             PreparedStatement st = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             preencherParams(st, inst);
             int affected = st.executeUpdate();
 
             if (affected > 0) {
-                // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
-                try (Statement stmt2 = c.createStatement();
-                     ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
+                try (ResultSet rs = st.getGeneratedKeys()) {
                     if (rs.next()) {
                         inst.setIdInstituicao(rs.getInt(1));
                     }
@@ -49,7 +47,7 @@ public final class InstituicaoDAO {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
         try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, inst.getNome());
             stmt.setString(2, inst.getEndereco() != null ? inst.getEndereco() : "");
@@ -67,9 +65,7 @@ public final class InstituicaoDAO {
             System.out.println("Linhas afetadas: " + affected);
 
             if (affected > 0) {
-                // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
-                try (Statement stmt2 = conn.createStatement();
-                     ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
                         int idGerado = rs.getInt(1);
                         System.out.println("ID gerado: " + idGerado);

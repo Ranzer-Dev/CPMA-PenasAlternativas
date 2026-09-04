@@ -244,20 +244,19 @@ public class RegistroDeTrabalhoDAO {
     public static List<RegistroDeTrabalho> buscarPorPenaEMes(int idPena, int mes, int ano) {
         List<RegistroDeTrabalho> lista = new ArrayList<>();
         String sql = "SELECT * FROM RegistroDeTrabalho WHERE fk_pena_id_pena = ? " +
-                     "AND CAST(strftime('%m', data_trabalho) AS INTEGER) = ? AND CAST(strftime('%Y', data_trabalho) AS INTEGER) = ? " +
+                     "AND data_trabalho LIKE ? " +
                      "ORDER BY data_trabalho";
 
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, idPena);
-            stmt.setInt(2, mes);
-            stmt.setInt(3, ano);
+            stmt.setString(2, String.format("%04d-%02d-%%", ano, mes));
             
             ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    lista.add(mapear(rs));
-                }
+            while (rs.next()) {
+                lista.add(mapear(rs));
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

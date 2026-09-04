@@ -52,20 +52,31 @@ public class SQLiteDateUtil {
             try {
                 // Tenta formato datetime primeiro
                 if (dateStr.contains(" ")) {
+                    // Trata possíveis frações de segundos como .0
+                    if (dateStr.contains(".")) {
+                        dateStr = dateStr.substring(0, dateStr.indexOf("."));
+                    }
                     return new Date(DATETIME_FORMAT.parse(dateStr).getTime());
                 } else {
                     // Formato date apenas
                     return new Date(DATE_FORMAT.parse(dateStr).getTime());
                 }
             } catch (ParseException e) {
-                // Se não conseguir fazer parse, retorna null
-                System.err.println("Erro ao fazer parse da data '" + dateStr + "': " + e.getMessage());
-                return null;
+                // Se não conseguir fazer parse da string, tenta rs.getDate() diretamente (PostgreSQL)
+                try {
+                    return rs.getDate(columnName);
+                } catch (Exception ex) {
+                    System.err.println("Erro ao fazer parse da data '" + dateStr + "': " + e.getMessage());
+                    return null;
+                }
             }
             
         } catch (SQLException e) {
-            // Se houver erro ao ler a coluna, retorna null
-            return null;
+            try {
+                return rs.getDate(columnName);
+            } catch (Exception ex) {
+                return null;
+            }
         }
     }
 }

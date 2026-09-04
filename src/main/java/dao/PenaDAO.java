@@ -15,7 +15,7 @@ public class PenaDAO {
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, pena.getTipoPena());
             if (pena.getDataInicio() != null) {
@@ -39,9 +39,7 @@ public class PenaDAO {
 
             int rows = stmt.executeUpdate();
             if (rows > 0) {
-                // SQLite não suporta getGeneratedKeys(), então usamos last_insert_rowid()
-                try (Statement stmt2 = conn.createStatement();
-                     ResultSet rs = stmt2.executeQuery("SELECT last_insert_rowid()")) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
                         return rs.getInt(1);
                     }
@@ -156,7 +154,7 @@ public class PenaDAO {
             FROM Pena
             WHERE fk_usuario_id_usuario = ?
             ORDER BY
-                CASE WHEN data_termino IS NULL OR data_termino >= date('now', 'localtime') THEN 0 ELSE 1 END,
+                CASE WHEN data_termino IS NULL OR data_termino >= ? THEN 0 ELSE 1 END,
                 data_inicio DESC
             LIMIT 1
         """;
@@ -165,6 +163,7 @@ public class PenaDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, idUsuario);
+            stmt.setString(2, new java.sql.Date(System.currentTimeMillis()).toString());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) return mapear(rs);
 

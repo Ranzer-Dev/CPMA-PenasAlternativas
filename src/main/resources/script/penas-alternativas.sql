@@ -1,28 +1,27 @@
--- Script SQLite para criação do banco de dados PENAS_ALTERNATIVAS
--- Execute este script usando: sqlite3 penas_alternativas.db < penas-alternativas.sql
+-- Script PostgreSQL para criação do banco de dados PENAS_ALTERNATIVAS
 
 -- Tabela Administrador
 CREATE TABLE IF NOT EXISTS Administrador (
-    id_admin INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_admin SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
     cpf TEXT NOT NULL UNIQUE,
     senha TEXT NOT NULL,
     nivel_permissao INTEGER NOT NULL,
     pergunta_secreta TEXT,
     resposta_secreta TEXT,
-    criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+    criado_em TEXT NOT NULL DEFAULT TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS')
 );
 
 -- Tabela tipoDeInstituição
 CREATE TABLE IF NOT EXISTS tipoDeInstituição (
-    id_tipo INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_tipo SERIAL PRIMARY KEY,
     tipo TEXT,
-    criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+    criado_em TEXT NOT NULL DEFAULT TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS')
 );
 
 -- Tabela Instituicao
 CREATE TABLE IF NOT EXISTS Instituicao (
-    id_instituicao INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_instituicao SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
     endereco TEXT,
     cidade TEXT,
@@ -32,13 +31,13 @@ CREATE TABLE IF NOT EXISTS Instituicao (
     responsavel TEXT,
     telefone TEXT,
     tipo INTEGER NOT NULL,
-    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    criado_em TEXT NOT NULL DEFAULT TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'),
     FOREIGN KEY (tipo) REFERENCES tipoDeInstituição(id_tipo)
 );
 
 -- Tabela Usuario
 CREATE TABLE IF NOT EXISTS Usuario (
-    id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_usuario SERIAL PRIMARY KEY,
     codigo TEXT NOT NULL,
     nome TEXT NOT NULL,
     cpf TEXT NOT NULL UNIQUE,
@@ -49,7 +48,7 @@ CREATE TABLE IF NOT EXISTS Usuario (
     cep TEXT,
     uf TEXT,
     nacionalidade TEXT,
-    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    criado_em TEXT NOT NULL DEFAULT TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'),
     foto TEXT,
     observacao TEXT,
     telefone TEXT,
@@ -59,7 +58,7 @@ CREATE TABLE IF NOT EXISTS Usuario (
 
 -- Tabela Pena
 CREATE TABLE IF NOT EXISTS Pena (
-    id_pena INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_pena SERIAL PRIMARY KEY,
     tipo_pena TEXT NOT NULL,
     data_inicio TEXT NOT NULL,
     data_termino TEXT,
@@ -71,14 +70,14 @@ CREATE TABLE IF NOT EXISTS Pena (
     horas_totais INTEGER NOT NULL,
     fk_usuario_id_usuario INTEGER NOT NULL,
     fk_instituicao_id_instituicao INTEGER NOT NULL,
-    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    criado_em TEXT NOT NULL DEFAULT TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'),
     FOREIGN KEY (fk_usuario_id_usuario) REFERENCES Usuario(id_usuario),
     FOREIGN KEY (fk_instituicao_id_instituicao) REFERENCES Instituicao(id_instituicao)
 );
 
 -- Tabela RegistroDeTrabalho
 CREATE TABLE IF NOT EXISTS RegistroDeTrabalho (
-    id_registro INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_registro SERIAL PRIMARY KEY,
     data_trabalho TEXT NOT NULL,
     horas_cumpridas REAL NOT NULL,
     atividades TEXT,
@@ -88,10 +87,11 @@ CREATE TABLE IF NOT EXISTS RegistroDeTrabalho (
     horario_saida TEXT,
     fk_pena_id_pena INTEGER NOT NULL,
     fk_instituicao_id_instituicao INTEGER,
-    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    criado_em TEXT NOT NULL DEFAULT TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'),
     FOREIGN KEY (fk_pena_id_pena) REFERENCES Pena(id_pena) ON DELETE CASCADE,
     FOREIGN KEY (fk_instituicao_id_instituicao) REFERENCES Instituicao(id_instituicao)
 );
+
 -- Vínculo N:N entre pena e instituições
 CREATE TABLE IF NOT EXISTS pena_instituicao (
     fk_pena_id_pena INTEGER NOT NULL,
@@ -103,24 +103,24 @@ CREATE TABLE IF NOT EXISTS pena_instituicao (
 
 -- Tabela disponibilidade_instituicao
 CREATE TABLE IF NOT EXISTS disponibilidade_instituicao (
-    id_disponibilidade INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_disponibilidade SERIAL PRIMARY KEY,
     dia_semana TEXT,
     hora_inicio_1 TEXT,
     hora_fim_1 TEXT,
     hora_inicio_2 TEXT,
     hora_fim_2 TEXT,
     fk_instituicao_id_instituicao INTEGER NOT NULL,
-    criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+    criado_em TEXT NOT NULL DEFAULT TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'),
     FOREIGN KEY (fk_instituicao_id_instituicao) REFERENCES Instituicao(id_instituicao)
 );
 
 -- Códigos temporários para acesso do apenado ao totem
 CREATE TABLE IF NOT EXISTS CodigoAcessoApenado (
-    id_codigo_acesso INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_codigo_acesso SERIAL PRIMARY KEY,
     fk_usuario_id_usuario INTEGER NOT NULL,
     fk_admin_id_admin INTEGER NOT NULL,
     codigo TEXT NOT NULL,
-    data_geracao TEXT NOT NULL DEFAULT (datetime('now')),
+    data_geracao TEXT NOT NULL DEFAULT TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'),
     data_expiracao TEXT NOT NULL,
     data_uso TEXT,
     status TEXT NOT NULL DEFAULT 'ATIVO',
@@ -130,14 +130,14 @@ CREATE TABLE IF NOT EXISTS CodigoAcessoApenado (
 
 -- Log de auditoria das tentativas de acesso pelo totem
 CREATE TABLE IF NOT EXISTS LogAcessoApenado (
-    id_log INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_log SERIAL PRIMARY KEY,
     fk_usuario_id_usuario INTEGER,
     fk_codigo_acesso_id INTEGER,
     metodo TEXT NOT NULL,
     sucesso INTEGER NOT NULL DEFAULT 0,
     codigo_tentado TEXT,
     mensagem TEXT,
-    data_hora TEXT NOT NULL DEFAULT (datetime('now')),
+    data_hora TEXT NOT NULL DEFAULT TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'),
     FOREIGN KEY (fk_usuario_id_usuario) REFERENCES Usuario(id_usuario) ON DELETE SET NULL,
     FOREIGN KEY (fk_codigo_acesso_id) REFERENCES CodigoAcessoApenado(id_codigo_acesso) ON DELETE SET NULL
 );
