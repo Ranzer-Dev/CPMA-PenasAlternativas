@@ -1,0 +1,7 @@
+br\gov\sp\cpma\AuthControllerTest.class
+br\gov\sp\cpma\RegistroTrabalhoControllerTest.class
+br\gov\sp\cpma\UsuarioControllerTest.class
+br\gov\sp\cpma\CodigoPenaCalculatorTest.class
+br\gov\sp\cpma\PenaControllerTest.class
+br\gov\sp\cpma\TotemControllerTest.class
+br\gov\sp\cpma\InstituicaoControllerTest.class

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+
+<StackPane style="-fx-background-color: #f8fafc;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.LoginController">
+    <HBox alignment="CENTER" maxHeight="620.0" maxWidth="960.0" spacing="40.0" style="-fx-background-color: #ffffff; -fx-background-radius: 16px; -fx-border-radius: 16px; -fx-border-color: #e2e8f0; -fx-border-width: 1px; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 24, 0, 0, 4);" StackPane.alignment="CENTER">
+        <padding>
+            <Insets bottom="40.0" left="48.0" right="48.0" top="40.0" />
+        </padding>
+
+        <!-- Coluna Esquerda: Identidade Visual Fiel ao Sistema Original -->
+        <VBox alignment="CENTER" maxWidth="420.0" prefWidth="420.0" spacing="18.0" HBox.hgrow="ALWAYS">
+            <VBox alignment="CENTER" spacing="6.0">
+                <Label style="-fx-font-size: 38px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="CPMA" />
+                <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-text-alignment: center;" text="Central de Penas e Medidas Alternativas" textAlignment="CENTER" />
+                <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b; -fx-text-alignment: center;" text="Sistema de Gestao para Controle e Acompanhamento de Penas Alternativas" textAlignment="CENTER" wrapText="true" />
+            </VBox>
+
+            <ImageView fitHeight="135.0" fitWidth="135.0" pickOnBounds="true" preserveRatio="true" smooth="true">
+                <image>
+                    <Image url="@../images/logoSP.png" />
+                </image>
+            </ImageView>
+
+            <VBox alignment="CENTER" spacing="4.0">
+                <Label style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-text-alignment: center;" text="GOVERNO DO ESTADO DE SAO PAULO&#10;SECRETARIA DA ADMINISTRACAO PENITENCIARIA" textAlignment="CENTER" />
+                <Label style="-fx-font-size: 11px; -fx-text-fill: #64748b;" text="Versao 1.0" />
+            </VBox>
+        </VBox>
+
+        <!-- Divisor Vertical Sutil -->
+        <Separator orientation="VERTICAL" style="-fx-opacity: 0.6;" />
+
+        <!-- Coluna Direita: Formulario de Login Limpo e Direto -->
+        <VBox alignment="CENTER" maxWidth="420.0" prefWidth="420.0" spacing="22.0" HBox.hgrow="ALWAYS">
+            <VBox alignment="CENTER" spacing="6.0">
+                <Label style="-fx-font-size: 28px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Bem-vindo" />
+                <Label style="-fx-font-size: 14px; -fx-text-fill: #64748b;" text="Faca login para acessar o sistema" />
+            </VBox>
+
+            <Label fx:id="lblError" maxWidth="Infinity" visible="false" wrapText="true" />
+
+            <VBox spacing="14.0">
+                <VBox spacing="6.0">
+                    <Label style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 13px;" text="CPF" />
+                    <TextField fx:id="txtCpf" prefHeight="42.0" promptText="Digite seu CPF" styleClass="input-field" />
+                    <Label fx:id="lblCpfError" />
+                </VBox>
+
+                <VBox spacing="6.0">
+                    <Label style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 13px;" text="Senha" />
+                    <PasswordField fx:id="txtSenha" prefHeight="42.0" promptText="Digite sua senha" styleClass="input-field" />
+                    <Label fx:id="lblSenhaError" />
+                </VBox>
+
+                <HBox alignment="CENTER_RIGHT">
+                    <Hyperlink style="-fx-text-fill: #2563eb; -fx-font-size: 12px;" text="Esqueceu sua senha?" />
+                </HBox>
+            </VBox>
+
+            <VBox spacing="14.0">
+                <Button fx:id="btnEntrar" defaultButton="true" maxWidth="Infinity" onAction="#handleLogin" prefHeight="46.0" styleClass="btn-primary" text="Entrar" />
+
+                <HBox alignment="CENTER" spacing="12.0">
+                    <Separator HBox.hgrow="ALWAYS" />
+                    <Label style="-fx-text-fill: #94a3b8; -fx-font-size: 12px;" text="ou" />
+                    <Separator HBox.hgrow="ALWAYS" />
+                </HBox>
+
+                <Button fx:id="btnTotem" maxWidth="Infinity" onAction="#handleAbrirTotem" prefHeight="44.0" styleClass="btn-secondary" text="Consultar Meus Dados (Reconhecimento Facial)" />
+            </VBox>
+        </VBox>
+    </HBox>
+</StackPane>

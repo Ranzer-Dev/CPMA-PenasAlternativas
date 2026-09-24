@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.FrequenciaController">
+    <content>
+        <VBox spacing="16.0">
+            <!-- Card de Localizacao do Apenado e Selecao de Pena -->
+            <VBox spacing="12.0" styleClass="card-container">
+                <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Localizar Apenado para Lancamento de Horas" />
+
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <TextField fx:id="txtCpfBusca" prefWidth="250.0" promptText="CPF do Apenado (apenas numeros)" />
+                    <Button onAction="#handleBuscarApenado" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="Localizar" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="lblApenadoNome" style="-fx-font-weight: bold; -fx-text-fill: #2563eb;" text="Nenhum apenado selecionado" />
+                </HBox>
+
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Pena Ativa:" />
+                    <ComboBox fx:id="cbPenas" maxWidth="Infinity" HBox.hgrow="ALWAYS" promptText="Selecione a pena correspondente..." />
+                </HBox>
+            </VBox>
+
+            <!-- Card de Progresso / Horas Cumpridas -->
+            <VBox fx:id="boxResumo" spacing="10.0" styleClass="card-container" visible="false" managed="false">
+                <HBox alignment="CENTER_LEFT" spacing="16.0">
+                    <Label style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #2563eb;" text="Status de Cumprimento da Pena" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="lblStatusCumprimento" styleClass="status-badge-online" text="EM CUMPRIMENTO" />
+                </HBox>
+
+                <ProgressBar fx:id="pbProgresso" maxWidth="Infinity" prefHeight="16.0" progress="0.0" />
+
+                <HBox spacing="20.0">
+                    <Label fx:id="lblHorasCumpridas" style="-fx-font-weight: 700; -fx-text-fill: #059669;" text="Cumpridas: 0h" />
+                    <Label fx:id="lblHorasRestantes" style="-fx-font-weight: 700; -fx-text-fill: #dc2626;" text="Restantes: 0h" />
+                    <Label fx:id="lblHorasTotais" style="-fx-font-weight: 700; -fx-text-fill: #64748b;" text="Total: 0h" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="lblPercentual" style="-fx-font-weight: 800; -fx-text-fill: #1e293b;" text="0.0%" />
+                </HBox>
+            </VBox>
+
+            <!-- Formulario de Lancamento de Frequencia -->
+            <VBox fx:id="boxLancamento" spacing="12.0" styleClass="card-container" visible="false" managed="false">
+                <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Registrar Nova Frequencia / Atividade de Trabalho" />
+                <Label fx:id="lblFeedbackLancamento" maxWidth="Infinity" visible="false" wrapText="true" />
+
+                <GridPane hgap="14.0" vgap="10.0">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="30.0" />
+                        <ColumnConstraints percentWidth="25.0" />
+                        <ColumnConstraints percentWidth="45.0" />
+                    </columnConstraints>
+
+                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Data da Atividade *" />
+                        <DatePicker fx:id="dpDataTrabalho" maxWidth="Infinity" />
+                    </VBox>
+
+                    <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Horas Cumpridas *" />
+                        <TextField fx:id="txtHorasCumpridas" promptText="Ex: 4" />
+                    </VBox>
+
+                    <VBox spacing="4.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Atividades / Observacoes" />
+                        <TextField fx:id="txtAtividades" promptText="Ex: Manutencao e higienizacao" />
+                    </VBox>
+                </GridPane>
+
+                <HBox alignment="CENTER_RIGHT" spacing="12.0">
+                    <Button fx:id="btnSalvarRegistro" onAction="#handleSalvarRegistro" prefHeight="38.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 24px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Confirmar Presenca e Registrar Horas" />
+                </HBox>
+            </VBox>
+
+            <!-- Historico de Registros de Trabalho -->
+            <VBox fx:id="boxHistorico" spacing="8.0" styleClass="card-container" visible="false" managed="false">
+                <Label style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Historico de Frequencia desta Pena" />
+                <TableView fx:id="tblHistorico" prefHeight="200.0">
+                    <columns>
+                        <TableColumn fx:id="colHistId" prefWidth="50.0" text="ID" />
+                        <TableColumn fx:id="colHistData" prefWidth="120.0" text="Data Trabalho" />
+                        <TableColumn fx:id="colHistHoras" prefWidth="90.0" text="Horas" />
+                        <TableColumn fx:id="colHistObs" prefWidth="350.0" text="Atividades" />
+                    </columns>
+                    <placeholder>
+                        <Label text="Nenhum registro de trabalho lancado para esta pena." style="-fx-text-fill: #64748b;" />
+                    </placeholder>
+                </TableView>
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>
