@@ -1,0 +1,3 @@
+@echo off
+echo Iniciando Aplicativo Desktop CPMA (JavaFX + AtlantaFX)...
+D:\apache-maven-3.9.9\bin\mvn.cmd javafx:run -f cpma-desktop/pom.xml

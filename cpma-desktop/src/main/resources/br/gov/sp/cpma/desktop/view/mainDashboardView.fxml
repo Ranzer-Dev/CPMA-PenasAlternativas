@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.MainDashboardController">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="16.0" style="-fx-background-color: #ffffff; -fx-padding: 16px 24px; -fx-border-color: rgba(148, 163, 184, 0.15); -fx-border-width: 0 0 1 0;">
+            <VBox>
+                <Label style="-fx-font-size: 20px; -fx-font-weight: 900; -fx-text-fill: #2563eb;" text="CPMA" />
+                <Label style="-fx-font-size: 11px; -fx-text-fill: #64748b;" text="Centro de Penas e Medidas Alternativas" />
+            </VBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <Label style="-fx-font-size: 12px; -fx-text-fill: #22c55e; -fx-font-weight: 700; -fx-background-color: rgba(34, 197, 94, 0.1); -fx-padding: 4px 10px; -fx-border-radius: 4px; -fx-border-color: rgba(34, 197, 94, 0.3);" text="● Conectado ao Servidor Local" />
+        </HBox>
+    </top>
+
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE" style="-fx-background-color: #f8fafc;">
+            <Tab fx:id="tabCadastro" text="👤 Cadastro de Apenados" />
+            <Tab fx:id="tabTotem" text="🖥 Terminal Totem (Entrada)" />
+        </TabPane>
+    </center>
+</BorderPane>

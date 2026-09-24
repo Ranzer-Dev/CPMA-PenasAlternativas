@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="16.0" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.InstituicoesController">
+    <!-- Topo: Botoes de Acao -->
+    <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="card-container">
+        <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Rede de Instituicoes Parceiras" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#handleAlternarFormulario" prefHeight="36.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;" text="➕ Cadastrar Nova Instituicao" />
+    </HBox>
+
+    <!-- Formulario de Cadastro de Instituicao (Ocultavel) -->
+    <VBox fx:id="paneFormulario" spacing="12.0" styleClass="card-container" visible="false" managed="false">
+        <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #2563eb;" text="Cadastro de Nova Instituicao Parceira" />
+        <Label fx:id="lblFeedbackForm" maxWidth="Infinity" visible="false" wrapText="true" />
+
+        <GridPane hgap="14.0" vgap="10.0">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="50.0" />
+                <ColumnConstraints percentWidth="50.0" />
+            </columnConstraints>
+
+            <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Razao Social / Nome Fantasia *" />
+                <TextField fx:id="txtNome" promptText="Ex: Hospital Municipal Sao Camilo" />
+                <Label fx:id="lblNomeError" />
+            </VBox>
+
+            <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Responsavel / Contato *" />
+                <TextField fx:id="txtResponsavel" promptText="Nome do responsavel" />
+                <Label fx:id="lblResponsavelError" />
+            </VBox>
+
+            <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Telefone de Contato" />
+                <TextField fx:id="txtTelefone" promptText="(11) 3333-0000" />
+            </VBox>
+
+            <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="CEP" />
+                <TextField fx:id="txtCep" promptText="00000-000" />
+            </VBox>
+
+            <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Endereco Completo" />
+                <TextField fx:id="txtEndereco" promptText="Rua / Av, Numero" />
+            </VBox>
+
+            <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Bairro" />
+                <TextField fx:id="txtBairro" promptText="Bairro" />
+            </VBox>
+
+            <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="3">
+                <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Cidade" />
+                <TextField fx:id="txtCidade" promptText="Sao Paulo" />
+            </VBox>
+
+            <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Tipo de Instituicao" />
+                <HBox spacing="8.0">
+                    <ComboBox fx:id="cbTipoInstituicao" maxWidth="Infinity" HBox.hgrow="ALWAYS" promptText="Selecione o tipo..." />
+                    <Button onAction="#handleNovoTipoInstituicao" styleClass="btn-secondary" text="➕ Novo Tipo" style="-fx-font-size: 12px; -fx-padding: 6px 12px;" />
+                </HBox>
+            </VBox>
+        </GridPane>
+
+        <HBox alignment="CENTER_RIGHT" spacing="12.0">
+            <Button onAction="#handleCancelarFormulario" style="-fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-text-fill: #64748b; -fx-font-weight: 600; -fx-cursor: hand;" text="Cancelar" />
+            <Button fx:id="btnSalvarInstituicao" onAction="#handleSalvarInstituicao" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 20px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Salvar Instituicao" />
+        </HBox>
+    </VBox>
+
+    <!-- Tabela de Instituicoes -->
+    <VBox spacing="8.0" VBox.vgrow="ALWAYS" styleClass="card-container">
+        <TableView fx:id="tblInstituicoes" VBox.vgrow="ALWAYS" prefHeight="350.0">
+            <columns>
+                <TableColumn fx:id="colId" prefWidth="50.0" text="ID" />
+                <TableColumn fx:id="colNome" prefWidth="250.0" text="Nome / Razao Social" />
+                <TableColumn fx:id="colResponsavel" prefWidth="180.0" text="Responsavel" />
+                <TableColumn fx:id="colTelefone" prefWidth="130.0" text="Telefone" />
+                <TableColumn fx:id="colEndereco" prefWidth="220.0" text="Endereco" />
+                <TableColumn fx:id="colBairro" prefWidth="140.0" text="Bairro" />
+                <TableColumn fx:id="colCidade" prefWidth="130.0" text="Cidade" />
+            </columns>
+            <placeholder>
+                <Label text="Nenhuma instituicao cadastrada." style="-fx-text-fill: #64748b;" />
+            </placeholder>
+        </TableView>
+    </VBox>
+</VBox>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.PenasController">
+    <content>
+        <VBox spacing="18.0">
+            <!-- Formulario de Cadastro de Pena -->
+            <VBox spacing="16.0" styleClass="card-container">
+                <Label style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="Lancar Nova Pena Alternativa" />
+                <Label style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Vincule o apenado a uma instituicao cadastrada e defina a carga horaria e tipo de pena." />
+
+                <Label fx:id="lblFeedback" maxWidth="Infinity" visible="false" wrapText="true" />
+
+                <!-- Busca do Apenado por CPF -->
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="CPF do Apenado *" />
+                        <HBox spacing="8.0">
+                            <TextField fx:id="txtCpfApenado" promptText="000.000.000-00" HBox.hgrow="ALWAYS" />
+                            <Button onAction="#handleBuscarApenado" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-cursor: hand;" text="Localizar Apenado" />
+                        </HBox>
+                        <Label fx:id="lblCpfError" />
+                    </VBox>
+                </HBox>
+
+                <!-- Nome do Apenado Encontrado -->
+                <HBox fx:id="boxApenadoEncontrado" alignment="CENTER_LEFT" spacing="12.0" style="-fx-background-color: #f1f5f9; -fx-padding: 10px 14px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px;" visible="false" managed="false">
+                    <Label style="-fx-font-weight: bold; -fx-text-fill: #059669;" text="Apenado Selecionado:" />
+                    <Label fx:id="lblNomeApenado" style="-fx-font-weight: bold; -fx-text-fill: #1e293b;" text="---" />
+                </HBox>
+
+                <GridPane hgap="16.0" vgap="12.0">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50.0" />
+                        <ColumnConstraints percentWidth="50.0" />
+                    </columnConstraints>
+
+                    <!-- Instituicao -->
+                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Instituicao Parceira Principal *" />
+                        <ComboBox fx:id="cbInstituicao" maxWidth="Infinity" promptText="Selecione a instituicao parceira..." />
+                        <Label fx:id="lblInstituicaoError" />
+                    </VBox>
+
+                    <!-- Tipo de Pena -->
+                    <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Tipo de Medida Alternativa *" />
+                        <HBox spacing="8.0">
+                            <ComboBox fx:id="cbTipoPena" editable="true" maxWidth="Infinity" HBox.hgrow="ALWAYS" promptText="Selecione ou digite o tipo..." />
+                            <Button onAction="#handleNovoTipoPena" styleClass="btn-secondary" text="➕ Novo Tipo" style="-fx-font-size: 12px; -fx-padding: 6px 12px;" />
+                        </HBox>
+                        <Label fx:id="lblTipoPenaError" />
+                    </VBox>
+
+                    <!-- Horas Totais -->
+                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Total de Horas a Cumprir *" />
+                        <TextField fx:id="txtHorasTotais" promptText="Ex: 160" />
+                        <Label fx:id="lblHorasTotaisError" />
+                    </VBox>
+
+                    <!-- Horas Semanais -->
+                    <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Carga Horaria Semanal (Horas) *" />
+                        <TextField fx:id="txtHorasSemanais" promptText="Ex: 8" />
+                        <Label fx:id="lblHorasSemanaisError" />
+                    </VBox>
+
+                    <!-- Data Inicio -->
+                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Data de Inicio *" />
+                        <DatePicker fx:id="dpDataInicio" maxWidth="Infinity" />
+                        <Label fx:id="lblDataInicioError" />
+                    </VBox>
+
+                    <!-- Data Termino Estimada -->
+                    <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                            <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Data de Termino Estimada" />
+                            <Button onAction="#handleCalcularEstimativa" style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand;" text="⚡ Calcular" />
+                        </HBox>
+                        <DatePicker fx:id="dpDataTermino" maxWidth="Infinity" />
+                        <Label fx:id="lblEstimativaTexto" style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="" />
+                    </VBox>
+
+                    <!-- Atividades Acordadas -->
+                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3">
+                        <Label style="-fx-text-fill: #1e293b;" text="Atividades Acordadas e Observacoes" />
+                        <TextArea fx:id="txtAtividades" prefRowCount="3" promptText="Descricao dos servicos e regras especificadas..." />
+                    </VBox>
+                </GridPane>
+
+                <HBox alignment="CENTER_RIGHT" spacing="12.0">
+                    <Button fx:id="btnSalvarPena" onAction="#handleSalvarPena" prefHeight="40.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 24px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Salvar e Registrar Pena" />
+                </HBox>
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>

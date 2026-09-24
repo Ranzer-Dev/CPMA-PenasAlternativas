@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.CadastroApenadoController">
+    <content>
+        <VBox spacing="18.0" styleClass="card-container">
+            <padding>
+                <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+            </padding>
+
+            <Label style="-fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="Cadastro de Apenado (Novo Registro)" />
+            <Label style="-fx-font-size: 13px; -fx-text-fill: #64748b;" text="Preencha os dados abaixo. Campos obrigatorios marcados em vermelho caso invalidos." />
+
+            <Label fx:id="lblFeedbackMessage" wrapText="true" maxWidth="Infinity" />
+
+            <GridPane hgap="16.0" vgap="12.0">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50.0" />
+                    <ColumnConstraints percentWidth="50.0" />
+                </columnConstraints>
+
+                <!-- Nome -->
+                <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    <Label text="Nome Completo *" style="-fx-font-weight: 600;" />
+                    <TextField fx:id="txtNome" promptText="Digite o nome completo" />
+                    <Label fx:id="lblNomeError" />
+                </VBox>
+
+                <!-- CPF -->
+                <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <Label text="CPF *" style="-fx-font-weight: 600;" />
+                    <TextField fx:id="txtCpf" promptText="000.000.000-00" />
+                    <Label fx:id="lblCpfError" />
+                </VBox>
+
+                <!-- Codigo -->
+                <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                    <Label text="Codigo do Apenado *" style="-fx-font-weight: 600;" />
+                    <TextField fx:id="txtCodigo" promptText="Ex: APN-2026-001" />
+                    <Label fx:id="lblCodigoError" />
+                </VBox>
+
+                <!-- Data Nascimento -->
+                <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <Label text="Data de Nascimento" style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" />
+                    <TextField fx:id="txtDataNascimento" promptText="DD/MM/AAAA" />
+                </VBox>
+
+                <!-- Telefone -->
+                <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                    <Label text="Telefone de Contato" style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" />
+                    <TextField fx:id="txtTelefone" promptText="(11) 90000-0000" />
+                </VBox>
+
+                <!-- CEP -->
+                <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                    <Label text="CEP" style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" />
+                    <TextField fx:id="txtCep" promptText="00000-000" />
+                </VBox>
+
+                <!-- Endereco -->
+                <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="3">
+                    <Label text="Endereco Residencial" style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" />
+                    <TextField fx:id="txtEndereco" promptText="Rua, Numero, Complemento" />
+                </VBox>
+
+                <!-- Bairro -->
+                <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                    <Label text="Bairro" style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" />
+                    <TextField fx:id="txtBairro" promptText="Bairro" />
+                </VBox>
+
+                <!-- Cidade -->
+                <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="4">
+                    <Label text="Cidade" style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" />
+                    <TextField fx:id="txtCidade" promptText="Cidade" />
+                </VBox>
+
+                <!-- UF -->
+                <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                    <Label text="UF" style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" />
+                    <TextField fx:id="txtUf" promptText="SP" />
+                </VBox>
+
+                <!-- Observacoes -->
+                <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="5">
+                    <Label text="Observacoes Gerais" style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" />
+                    <TextArea fx:id="txtObservacao" prefRowCount="3" promptText="Informacoes adicionais sobre o apenado..." />
+                </VBox>
+            </GridPane>
+
+            <HBox alignment="CENTER_RIGHT" spacing="12.0">
+                <Button fx:id="btnSalvar" onAction="#handleSalvar" text="Salvar Apenado" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 8px 24px; -fx-background-radius: 6px; -fx-cursor: hand;" />
+            </HBox>
+        </VBox>
+    </content>
+</ScrollPane>

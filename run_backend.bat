@@ -1,0 +1,3 @@
+@echo off
+echo Iniciando Servidor Backend CPMA na porta 8080...
+D:\apache-maven-3.9.9\bin\mvn.cmd spring-boot:run -f cpma-backend/pom.xml

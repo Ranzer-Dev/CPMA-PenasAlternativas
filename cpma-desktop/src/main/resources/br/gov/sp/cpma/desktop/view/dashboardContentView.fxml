@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" styleClass="scroll-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.DashboardContentController">
+    <content>
+        <VBox spacing="20.0">
+            <!-- 1. KPIs de Negocio (3 Cards Espacosos sem Jargoes Tecnicos e sem Truncamento) -->
+            <HBox spacing="16.0">
+                <VBox HBox.hgrow="ALWAYS" spacing="8.0" styleClass="stat-card">
+                    <HBox alignment="CENTER_LEFT" spacing="14.0">
+                        <StackPane styleClass="icon-circle, icon-circle-blue">
+                            <Label style="-fx-font-size: 22px;" text="👥" />
+                        </StackPane>
+                        <VBox spacing="2.0">
+                            <Label styleClass="stat-label" text="TOTAL DE APENADOS" />
+                            <Label fx:id="lblTotalApenados" styleClass="stat-value" text="---" />
+                        </VBox>
+                    </HBox>
+                    <Separator style="-fx-opacity: 0.5;" />
+                    <Label style="-fx-text-fill: #2563eb; -fx-font-size: 12px; -fx-font-weight: 600;" text="Sentenciados cadastrados no sistema" />
+                </VBox>
+
+                <VBox HBox.hgrow="ALWAYS" spacing="8.0" styleClass="stat-card">
+                    <HBox alignment="CENTER_LEFT" spacing="14.0">
+                        <StackPane styleClass="icon-circle, icon-circle-green">
+                            <Label style="-fx-font-size: 22px;" text="🏢" />
+                        </StackPane>
+                        <VBox spacing="2.0">
+                            <Label styleClass="stat-label" text="INSTITUICOES PARCEIRAS" />
+                            <Label fx:id="lblTotalInstituicoes" styleClass="stat-value" text="---" />
+                        </VBox>
+                    </HBox>
+                    <Separator style="-fx-opacity: 0.5;" />
+                    <Label style="-fx-text-fill: #10b981; -fx-font-size: 12px; -fx-font-weight: 600;" text="Entidades ativas conveniadas" />
+                </VBox>
+
+                <VBox HBox.hgrow="ALWAYS" spacing="8.0" styleClass="stat-card">
+                    <HBox alignment="CENTER_LEFT" spacing="14.0">
+                        <StackPane styleClass="icon-circle, icon-circle-amber">
+                            <Label style="-fx-font-size: 22px;" text="📸" />
+                        </StackPane>
+                        <VBox spacing="2.0">
+                            <Label styleClass="stat-label" text="TOTEM BIOMETRICO" />
+                            <Label styleClass="stat-value" style="-fx-font-size: 20px; -fx-text-fill: #1e293b;" text="Terminal Facial" />
+                        </VBox>
+                    </HBox>
+                    <Separator style="-fx-opacity: 0.5;" />
+                    <HBox alignment="CENTER_RIGHT">
+                        <Button onAction="#handleAbrirTotem" prefHeight="28.0" styleClass="btn-secondary" text="Abrir Totem Kiosk" style="-fx-font-size: 11px; -fx-padding: 4px 12px;" />
+                    </HBox>
+                </VBox>
+            </HBox>
+
+            <!-- 2. Atalhos Operacionais em Grid 2x2 com Espaco Amplo -->
+            <VBox spacing="14.0" styleClass="card-container">
+                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                    <Label style="-fx-font-size: 17px; -fx-font-weight: 800; -fx-text-fill: #1e293b;" text="Gestao e Operacoes do Sistema" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Acesso rapido aos modulos principais" />
+                </HBox>
+
+                <GridPane hgap="16.0" vgap="16.0">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50.0" />
+                        <ColumnConstraints percentWidth="50.0" />
+                    </columnConstraints>
+
+                    <!-- Card 1: Apenados -->
+                    <VBox spacing="12.0" styleClass="management-card" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                        <HBox alignment="CENTER_LEFT" spacing="14.0">
+                            <StackPane styleClass="icon-circle, icon-circle-blue">
+                                <Label style="-fx-font-size: 22px;" text="👥" />
+                            </StackPane>
+                            <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Apenados" />
+                                <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Cadastros, fotos e qualificacao civil" />
+                            </VBox>
+                        </HBox>
+                        <Label style="-fx-font-size: 13px; -fx-text-fill: #475569;" text="Cadastrar novos sentenciados, registrar foto biometrica e consultar fichas cadastrais." wrapText="true" />
+                        <Button maxWidth="Infinity" onAction="#handleNovoApenado" prefHeight="42.0" styleClass="btn-primary" text="Gerenciar Apenados" />
+                    </VBox>
+
+                    <!-- Card 2: Instituicoes -->
+                    <VBox spacing="12.0" styleClass="management-card" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <HBox alignment="CENTER_LEFT" spacing="14.0">
+                            <StackPane styleClass="icon-circle, icon-circle-green">
+                                <Label style="-fx-font-size: 22px;" text="🏢" />
+                            </StackPane>
+                            <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Instituicoes Parceiras" />
+                                <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Entidades e locais de cumprimento" />
+                            </VBox>
+                        </HBox>
+                        <Label style="-fx-font-size: 13px; -fx-text-fill: #475569;" text="Credenciar novas entidades sociais, orgaos publicos e acompanhar vagas disponiveis." wrapText="true" />
+                        <Button maxWidth="Infinity" onAction="#handleNovaInstituicao" prefHeight="42.0" styleClass="btn-primary" text="Gerenciar Instituicoes" />
+                    </VBox>
+
+                    <!-- Card 3: Penas Alternativas -->
+                    <VBox spacing="12.0" styleClass="management-card" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                        <HBox alignment="CENTER_LEFT" spacing="14.0">
+                            <StackPane styleClass="icon-circle, icon-circle-purple">
+                                <Label style="-fx-font-size: 22px;" text="⚖" />
+                            </StackPane>
+                            <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Penas Alternativas" />
+                                <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Processos judiciais e calculo de horas" />
+                            </VBox>
+                        </HBox>
+                        <Label style="-fx-font-size: 13px; -fx-text-fill: #475569;" text="Vincular apenados a processos penais, calcular total de horas e definir local de trabalho." wrapText="true" />
+                        <Button maxWidth="Infinity" onAction="#handleNovaPena" prefHeight="42.0" styleClass="btn-primary" text="Lancar Nova Pena" />
+                    </VBox>
+
+                    <!-- Card 4: Frequencia e Trabalho -->
+                    <VBox spacing="12.0" styleClass="management-card" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <HBox alignment="CENTER_LEFT" spacing="14.0">
+                            <StackPane styleClass="icon-circle, icon-circle-amber">
+                                <Label style="-fx-font-size: 22px;" text="⏱" />
+                            </StackPane>
+                            <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Frequencia e Cumprimento" />
+                                <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Lancamentos e presencas semanais" />
+                            </VBox>
+                        </HBox>
+                        <Label style="-fx-font-size: 13px; -fx-text-fill: #475569;" text="Lancar folhas semanais de trabalho manual ou validar registros de presenca." wrapText="true" />
+                        <Button maxWidth="Infinity" onAction="#handleRegistrarFrequencia" prefHeight="42.0" styleClass="btn-primary" text="Registrar Presenca" />
+                    </VBox>
+                </GridPane>
+            </VBox>
+
+            <!-- 3. Consulta Rapida e Atalhos Frequentes (Focado na Tarefa do Usuario - Nielsen #7) -->
+            <VBox spacing="14.0" styleClass="card-container">
+                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                    <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Consulta Rapida de Sentenciado" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Localize a ficha do apenado e suas penas" />
+                </HBox>
+
+                <HBox alignment="CENTER_LEFT" spacing="14.0">
+                    <TextField fx:id="txtBuscaRapida" prefHeight="42.0" prefWidth="440.0" promptText="Digite o CPF ou Nome do apenado..." styleClass="input-field" />
+                    <Button onAction="#handleBuscaRapida" prefHeight="42.0" styleClass="btn-primary" text="Localizar Sentenciado" />
+                    <Button onAction="#handleNovoApenado" prefHeight="42.0" styleClass="btn-secondary" text="Listar Todos os Apenados" />
+                </HBox>
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>
