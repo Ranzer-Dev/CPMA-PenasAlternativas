@@ -49,28 +49,41 @@ public class CadastroApenadoController implements Initializable {
 
     @FXML
     public void handleSalvar() {
-        btnSalvar.setDisable(true);
-        lblFeedbackMessage.setVisible(false);
         formValidator.clearAllErrors();
+        lblFeedbackMessage.setVisible(false);
+
+        boolean nomeValido = FormValidator.validarCampoObrigatorio(txtNome, lblNomeError, "Nome completo e obrigatorio");
+        boolean cpfValido = FormValidator.validarCpf(txtCpf, lblCpfError, "CPF invalido (informe 11 digitos numericos)");
+        boolean codigoValido = FormValidator.validarCampoObrigatorio(txtCodigo, lblCodigoError, "Codigo do apenado e obrigatorio");
+
+        if (!nomeValido || !cpfValido || !codigoValido) {
+            exibirMensagemErro("Preencha todos os campos obrigatorios destacados em vermelho.");
+            return;
+        }
+
+        btnSalvar.setDisable(true);
 
         CadastroUsuarioDTO dto = new CadastroUsuarioDTO();
-        dto.setNome(txtNome.getText());
-        dto.setCpf(txtCpf.getText());
-        dto.setCodigo(txtCodigo.getText());
-        dto.setDataNascimento(txtDataNascimento.getText());
-        dto.setTelefone(txtTelefone.getText());
-        dto.setEndereco(txtEndereco.getText());
-        dto.setBairro(txtBairro.getText());
-        dto.setCidade(txtCidade.getText());
-        dto.setCep(txtCep.getText());
-        dto.setUf(txtUf.getText());
-        dto.setObservacao(txtObservacao.getText());
+        dto.setNome(txtNome.getText().trim());
+        dto.setCpf(txtCpf.getText().trim().replaceAll("\\D", ""));
+        dto.setCodigo(txtCodigo.getText().trim());
+        dto.setDataNascimento(txtDataNascimento.getText() != null ? txtDataNascimento.getText().trim() : null);
+        dto.setTelefone(txtTelefone.getText() != null ? txtTelefone.getText().trim() : null);
+        dto.setEndereco(txtEndereco.getText() != null ? txtEndereco.getText().trim() : null);
+        dto.setBairro(txtBairro.getText() != null ? txtBairro.getText().trim() : null);
+        dto.setCidade(txtCidade.getText() != null ? txtCidade.getText().trim() : null);
+        dto.setCep(txtCep.getText() != null ? txtCep.getText().trim() : null);
+        dto.setUf(txtUf.getText() != null ? txtUf.getText().trim() : null);
+        dto.setObservacao(txtObservacao.getText() != null ? txtObservacao.getText().trim() : null);
         dto.setAdminId(1L);
 
         CompletableFuture.supplyAsync(() -> apiClient.cadastrarUsuario(dto))
                 .thenAccept(this::processarResposta)
                 .exceptionally(ex -> {
-                    Platform.runLater(() -> exibirMensagemErro("Erro inesperado ao conectar com a API: " + ex.getMessage()));
+                    Platform.runLater(() -> {
+                        btnSalvar.setDisable(false);
+                        exibirMensagemErro("Falha de conexao com o servidor: " + ex.getMessage());
+                    });
                     return null;
                 });
     }
@@ -79,16 +92,15 @@ public class CadastroApenadoController implements Initializable {
         Platform.runLater(() -> {
             btnSalvar.setDisable(false);
 
-            if (response.isSuccess()) {
+            if (response.isSuccess() && response.getData() != null) {
                 exibirMensagemSucesso("Apenado cadastrado com sucesso! ID: " + response.getData().getIdUsuario());
                 limparFormulario();
-            } else if (response.getStatusCode() == 422) {
-                formValidator.applyErrors(response.getError());
-                exibirMensagemErro("Existem campos obrigatorios nao preenchidos ou invalidos.");
-            } else if (response.getStatusCode() == 409) {
-                exibirMensagemErro("Conflito: " + response.getError().getMessage());
             } else {
-                exibirMensagemErro("Falha: " + (response.getError() != null ? response.getError().getMessage() : "Erro desconhecido"));
+                if (response.getStatusCode() == 422) {
+                    formValidator.applyErrors(response.getError());
+                }
+                String mensagemErro = FormValidator.formatarMensagemErro(response.getError(), response.getStatusCode());
+                exibirMensagemErro(mensagemErro);
             }
         });
     }

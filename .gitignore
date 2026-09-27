@@ -1,11 +1,13 @@
 # Arquivo .gitignore para Projeto Java com Maven
 # Gerado por Gemini em 23/08/2025
 
-### Maven ###
-# Pasta de saída da compilação
-/target
-./target/classes
-# Arquivos de log do Maven
+### Maven & Python Build ###
+target/
+**/target/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+**/.pytest_cache/
 *.log
 /logs/
 

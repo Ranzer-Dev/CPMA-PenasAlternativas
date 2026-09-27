@@ -61,11 +61,12 @@
             </VBox>
 
             <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Tipo de Instituicao" />
+                <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Tipo de Instituicao *" />
                 <HBox spacing="8.0">
                     <ComboBox fx:id="cbTipoInstituicao" maxWidth="Infinity" HBox.hgrow="ALWAYS" promptText="Selecione o tipo..." />
                     <Button onAction="#handleNovoTipoInstituicao" styleClass="btn-secondary" text="➕ Novo Tipo" style="-fx-font-size: 12px; -fx-padding: 6px 12px;" />
                 </HBox>
+                <Label fx:id="lblTipoInstituicaoError" />
             </VBox>
         </GridPane>
 

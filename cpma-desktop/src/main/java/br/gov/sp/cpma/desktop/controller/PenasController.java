@@ -88,9 +88,12 @@ public class PenasController {
         configurarComboBoxInstituicao();
         carregarInstituicoes();
 
-        FormValidator.limparAoDigitar(txtCpfApenado, lblCpfError);
-        FormValidator.limparAoDigitar(txtHorasTotais, lblHorasTotaisError);
-        FormValidator.limparAoDigitar(txtHorasSemanais, lblHorasSemanaisError);
+        FormValidator.vincularLimpezaAoInteragir(txtCpfApenado, lblCpfError);
+        FormValidator.vincularLimpezaAoInteragir(cbInstituicao, lblInstituicaoError);
+        FormValidator.vincularLimpezaAoInteragir(cbTipoPena, lblTipoPenaError);
+        FormValidator.vincularLimpezaAoInteragir(txtHorasTotais, lblHorasTotaisError);
+        FormValidator.vincularLimpezaAoInteragir(txtHorasSemanais, lblHorasSemanaisError);
+        FormValidator.vincularLimpezaAoInteragir(dpDataInicio, lblDataInicioError);
     }
 
     private void configurarComboBoxInstituicao() {
@@ -197,16 +200,14 @@ public class PenasController {
 
     @FXML
     public void handleSalvarPena() {
+        boolean apenadoVal = true;
         if (apenadoSelecionado == null) {
             FormValidator.marcarErro(txtCpfApenado, lblCpfError, "Localize um apenado antes de registrar");
-            return;
+            apenadoVal = false;
         }
 
         InstituicaoDTO instituicao = cbInstituicao.getValue();
-        if (instituicao == null) {
-            lblInstituicaoError.setText("Selecione uma instituicao");
-            return;
-        }
+        boolean instVal = FormValidator.validarCampoObrigatorio(cbInstituicao, lblInstituicaoError, "Selecione uma instituicao parceira");
 
         String tipoPena = null;
         if (cbTipoPena.getEditor() != null && cbTipoPena.getEditor().getText() != null && !cbTipoPena.getEditor().getText().isBlank()) {
@@ -215,19 +216,27 @@ public class PenasController {
             tipoPena = cbTipoPena.getValue().trim();
         }
 
+        boolean tipoVal = true;
         if (tipoPena == null || tipoPena.isEmpty()) {
-            lblTipoPenaError.setText("Informe ou selecione o tipo de pena");
-            return;
+            FormValidator.marcarErro(cbTipoPena, lblTipoPenaError, "Informe ou selecione o tipo de pena");
+            tipoVal = false;
+        } else {
+            FormValidator.limparErro(cbTipoPena, lblTipoPenaError);
         }
 
-        boolean hTotaisVal = FormValidator.validarCampoObrigatorio(txtHorasTotais, lblHorasTotaisError, "Horas totais obrigatorias");
-        boolean hSemanaisVal = FormValidator.validarCampoObrigatorio(txtHorasSemanais, lblHorasSemanaisError, "Horas semanais obrigatorias");
+        boolean hTotaisVal = FormValidator.validarNumeroInteiroPositivo(txtHorasTotais, lblHorasTotaisError, "Horas totais sao obrigatorias");
+        boolean hSemanaisVal = FormValidator.validarNumeroInteiroPositivo(txtHorasSemanais, lblHorasSemanaisError, "Horas semanais sao obrigatorias");
+        boolean dataInicioVal = FormValidator.validarCampoObrigatorio(dpDataInicio, lblDataInicioError, "Data de inicio e obrigatoria");
 
-        if (!hTotaisVal || !hSemanaisVal) {
+        if (!apenadoVal || !instVal || !tipoVal || !hTotaisVal || !hSemanaisVal || !dataInicioVal) {
+            lblFeedback.setText("Preencha todos os campos obrigatorios destacados em vermelho.");
+            lblFeedback.getStyleClass().setAll("banner-error");
+            lblFeedback.setVisible(true);
             return;
         }
 
         btnSalvarPena.setDisable(true);
+        lblFeedback.setVisible(false);
 
         CadastroPenaDTO dto = new CadastroPenaDTO();
         dto.setUsuarioId(apenadoSelecionado.getIdUsuario());
@@ -243,13 +252,14 @@ public class PenasController {
             ApiResponse<PenaDTO> resp = apiClient.cadastrarPena(dto);
             Platform.runLater(() -> {
                 btnSalvarPena.setDisable(false);
-                if (resp.isSuccess()) {
+                if (resp.isSuccess() && resp.getData() != null) {
                     lblFeedback.setText("Pena registrada com sucesso para " + apenadoSelecionado.getNome() + "!");
                     lblFeedback.getStyleClass().setAll("banner-success");
                     lblFeedback.setVisible(true);
                     limparFormulario();
                 } else {
-                    lblFeedback.setText("Falha ao registrar pena: " + (resp.getError() != null ? resp.getError().getMessage() : "Erro desconhecido"));
+                    String mensagemErro = FormValidator.formatarMensagemErro(resp.getError(), resp.getStatusCode());
+                    lblFeedback.setText(mensagemErro);
                     lblFeedback.getStyleClass().setAll("banner-error");
                     lblFeedback.setVisible(true);
                 }
@@ -263,9 +273,18 @@ public class PenasController {
         txtHorasSemanais.clear();
         txtAtividades.clear();
         cbTipoPena.getSelectionModel().selectFirst();
-        lblTipoPenaError.setText("");
         boxApenadoEncontrado.setVisible(false);
         boxApenadoEncontrado.setManaged(false);
         apenadoSelecionado = null;
+        dpDataInicio.setValue(LocalDate.now());
+        dpDataTermino.setValue(null);
+        lblEstimativaTexto.setText("");
+
+        FormValidator.limparErro(txtCpfApenado, lblCpfError);
+        FormValidator.limparErro(cbInstituicao, lblInstituicaoError);
+        FormValidator.limparErro(cbTipoPena, lblTipoPenaError);
+        FormValidator.limparErro(txtHorasTotais, lblHorasTotaisError);
+        FormValidator.limparErro(txtHorasSemanais, lblHorasSemanaisError);
+        FormValidator.limparErro(dpDataInicio, lblDataInicioError);
     }
 }
