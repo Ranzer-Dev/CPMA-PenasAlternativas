@@ -11,6 +11,17 @@ public class ValidarAcessoDTO {
     private String usuarioNome;
     private String usuarioCodigo;
 
+    public ValidarAcessoDTO() {
+    }
+
+    public ValidarAcessoDTO(boolean sucesso, String mensagem, Long usuarioId, String usuarioNome, String usuarioCodigo) {
+        this.sucesso = sucesso;
+        this.mensagem = mensagem;
+        this.usuarioId = usuarioId;
+        this.usuarioNome = usuarioNome;
+        this.usuarioCodigo = usuarioCodigo;
+    }
+
     public boolean isSucesso() {
         return sucesso;
     }

@@ -105,7 +105,13 @@ public class CpmaApiClient {
         return executePost("/totem/reconhecer", payload, ReconhecimentoFacialDTO.class, tokenTotem);
     }
 
-    
+    public ApiResponse<TokenTotemDTO> gerarTokenTotem(String terminalId, Long adminId) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("terminalId", terminalId);
+        payload.put("adminId", adminId);
+        return executePost("/totem/token", payload, TokenTotemDTO.class, null);
+    }
+
     public ApiResponse<TipoInstituicaoDTO> cadastrarTipoInstituicao(String tipo) {
         Map<String, String> payload = new HashMap<>();
         payload.put("tipo", tipo);

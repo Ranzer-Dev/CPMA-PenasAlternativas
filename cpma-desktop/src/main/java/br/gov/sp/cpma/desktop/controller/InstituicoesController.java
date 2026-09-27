@@ -53,6 +53,9 @@ public class InstituicoesController {
     private ComboBox<TipoInstituicaoDTO> cbTipoInstituicao;
 
     @FXML
+    private Label lblTipoInstituicaoError;
+
+    @FXML
     private Button btnSalvarInstituicao;
 
     @FXML
@@ -91,8 +94,9 @@ public class InstituicoesController {
         carregarTipos();
         carregarInstituicoes();
 
-        FormValidator.limparAoDigitar(txtNome, lblNomeError);
-        FormValidator.limparAoDigitar(txtResponsavel, lblResponsavelError);
+        FormValidator.vincularLimpezaAoInteragir(txtNome, lblNomeError);
+        FormValidator.vincularLimpezaAoInteragir(txtResponsavel, lblResponsavelError);
+        FormValidator.vincularLimpezaAoInteragir(cbTipoInstituicao, lblTipoInstituicaoError);
     }
 
     private void configurarColunas() {
@@ -157,23 +161,28 @@ public class InstituicoesController {
 
     @FXML
     public void handleSalvarInstituicao() {
-        boolean nomeVal = FormValidator.validarCampoObrigatorio(txtNome, lblNomeError, "Nome e obrigatorio");
+        boolean nomeVal = FormValidator.validarCampoObrigatorio(txtNome, lblNomeError, "Nome da instituicao e obrigatorio");
         boolean respVal = FormValidator.validarCampoObrigatorio(txtResponsavel, lblResponsavelError, "Responsavel e obrigatorio");
+        boolean tipoVal = FormValidator.validarCampoObrigatorio(cbTipoInstituicao, lblTipoInstituicaoError, "Selecione o tipo de instituicao");
 
-        if (!nomeVal || !respVal) {
+        if (!nomeVal || !respVal || !tipoVal) {
+            lblFeedbackForm.setText("Preencha todos os campos obrigatorios destacados em vermelho.");
+            lblFeedbackForm.getStyleClass().setAll("banner-error");
+            lblFeedbackForm.setVisible(true);
             return;
         }
 
         btnSalvarInstituicao.setDisable(true);
+        lblFeedbackForm.setVisible(false);
 
         CadastroInstituicaoDTO dto = new CadastroInstituicaoDTO();
         dto.setNome(txtNome.getText().trim());
         dto.setResponsavel(txtResponsavel.getText().trim());
-        dto.setTelefone(txtTelefone.getText().trim());
-        dto.setCep(txtCep.getText().trim());
-        dto.setEndereco(txtEndereco.getText().trim());
-        dto.setBairro(txtBairro.getText().trim());
-        dto.setCidade(txtCidade.getText().trim());
+        dto.setTelefone(txtTelefone.getText() != null ? txtTelefone.getText().trim() : null);
+        dto.setCep(txtCep.getText() != null ? txtCep.getText().trim() : null);
+        dto.setEndereco(txtEndereco.getText() != null ? txtEndereco.getText().trim() : null);
+        dto.setBairro(txtBairro.getText() != null ? txtBairro.getText().trim() : null);
+        dto.setCidade(txtCidade.getText() != null ? txtCidade.getText().trim() : null);
 
         if (cbTipoInstituicao.getValue() != null) {
             dto.setTipoId(cbTipoInstituicao.getValue().getIdTipo());
@@ -183,14 +192,15 @@ public class InstituicoesController {
             ApiResponse<InstituicaoDTO> resp = apiClient.cadastrarInstituicao(dto);
             Platform.runLater(() -> {
                 btnSalvarInstituicao.setDisable(false);
-                if (resp.isSuccess()) {
-                    lblFeedbackForm.setText("Instituicao cadastrada com sucesso!");
+                if (resp.isSuccess() && resp.getData() != null) {
+                    lblFeedbackForm.setText("Instituicao cadastrada com sucesso! ID: " + resp.getData().getIdInstituicao());
                     lblFeedbackForm.getStyleClass().setAll("banner-success");
                     lblFeedbackForm.setVisible(true);
                     carregarInstituicoes();
                     limparForm();
                 } else {
-                    lblFeedbackForm.setText("Erro ao salvar: " + (resp.getError() != null ? resp.getError().getMessage() : ""));
+                    String mensagemErro = FormValidator.formatarMensagemErro(resp.getError(), resp.getStatusCode());
+                    lblFeedbackForm.setText(mensagemErro);
                     lblFeedbackForm.getStyleClass().setAll("banner-error");
                     lblFeedbackForm.setVisible(true);
                 }
@@ -206,6 +216,10 @@ public class InstituicoesController {
         txtEndereco.clear();
         txtBairro.clear();
         txtCidade.clear();
+        cbTipoInstituicao.setValue(null);
+        FormValidator.limparErro(txtNome, lblNomeError);
+        FormValidator.limparErro(txtResponsavel, lblResponsavelError);
+        FormValidator.limparErro(cbTipoInstituicao, lblTipoInstituicaoError);
     }
 
     @FXML
