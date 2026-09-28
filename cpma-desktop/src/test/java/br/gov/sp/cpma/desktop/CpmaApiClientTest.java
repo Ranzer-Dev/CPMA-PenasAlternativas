@@ -212,4 +212,34 @@ public class CpmaApiClientTest {
             server.stop(0);
         }
     }
+
+    @Test
+    @DisplayName("Deve desserializar TipoInstituicaoDTO ignorando campos desconhecidos adicionais")
+    void deveDesserializarIgnorandoCamposDesconhecidos() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/api/v1/instituicoes/tipos", exchange -> {
+            byte[] responseBytes = "{\"idTipo\":1,\"tipo\":\"Educacional\",\"criadoEm\":\"2026-09-28T10:00:00\",\"campoInexistente\":\"teste\"}".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, responseBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(responseBytes);
+            }
+        });
+        server.start();
+
+        try {
+            int port = server.getAddress().getPort();
+            CpmaApiClient client = new CpmaApiClient("http://127.0.0.1:" + port + "/api/v1");
+            ApiResponse<br.gov.sp.cpma.desktop.client.TipoInstituicaoDTO> response = client.cadastrarTipoInstituicao("Educacional");
+
+            assertTrue(response.isSuccess());
+            assertEquals(200, response.getStatusCode());
+            assertNotNull(response.getData());
+            assertEquals("Educacional", response.getData().getTipo());
+            assertEquals(1L, response.getData().getIdTipo());
+            assertNotNull(response.getData().getCriadoEm());
+        } finally {
+            server.stop(0);
+        }
+    }
 }
