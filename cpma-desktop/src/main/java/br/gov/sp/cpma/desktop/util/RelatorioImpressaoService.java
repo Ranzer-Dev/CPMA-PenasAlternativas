@@ -305,18 +305,24 @@ public class RelatorioImpressaoService {
         h1.setFont(Font.font("Arial", FontWeight.BOLD, 10));
         Text h2 = new Text("Entrada");
         h2.setFont(Font.font("Arial", FontWeight.BOLD, 10));
-        Text h3 = new Text("Saída");
+        Text h3 = new Text("Almoço");
         h3.setFont(Font.font("Arial", FontWeight.BOLD, 10));
-        Text h4 = new Text("Horas");
+        Text h4 = new Text("Volta");
         h4.setFont(Font.font("Arial", FontWeight.BOLD, 10));
-        Text h5 = new Text("Atividades");
+        Text h5 = new Text("Saída");
         h5.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+        Text h6 = new Text("Horas");
+        h6.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+        Text h7 = new Text("Atividades Realizadas");
+        h7.setFont(Font.font("Arial", FontWeight.BOLD, 10));
 
         gridRegs.add(h1, 0, 0);
         gridRegs.add(h2, 1, 0);
         gridRegs.add(h3, 2, 0);
         gridRegs.add(h4, 3, 0);
         gridRegs.add(h5, 4, 0);
+        gridRegs.add(h6, 5, 0);
+        gridRegs.add(h7, 6, 0);
 
         int linha = 1;
         if (registros != null && !registros.isEmpty()) {
@@ -324,28 +330,34 @@ public class RelatorioImpressaoService {
                 if (linha > 12) break;
                 Text tData = new Text(r.getDataTrabalho() != null ? r.getDataTrabalho().toString() : "-");
                 tData.setFont(Font.font("Arial", 9));
-                Text tEnt = new Text(r.getHorarioInicio() != null ? r.getHorarioInicio() : "-");
+                Text tEnt = new Text(r.getHorarioInicio() != null && !r.getHorarioInicio().isBlank() ? r.getHorarioInicio() : "-");
                 tEnt.setFont(Font.font("Arial", 9));
-                Text tSai = new Text(r.getHorarioSaida() != null ? r.getHorarioSaida() : "-");
+                Text tAlm = new Text(r.getHorarioAlmoco() != null && !r.getHorarioAlmoco().isBlank() ? r.getHorarioAlmoco() : "-");
+                tAlm.setFont(Font.font("Arial", 9));
+                Text tVol = new Text(r.getHorarioVolta() != null && !r.getHorarioVolta().isBlank() ? r.getHorarioVolta() : "-");
+                tVol.setFont(Font.font("Arial", 9));
+                Text tSai = new Text(r.getHorarioSaida() != null && !r.getHorarioSaida().isBlank() ? r.getHorarioSaida() : "-");
                 tSai.setFont(Font.font("Arial", 9));
                 Text tH = new Text(r.getHorasCumpridas() != null ? String.format("%.1fh", r.getHorasCumpridas()) : "-");
                 tH.setFont(Font.font("Arial", FontWeight.BOLD, 9));
                 Text tAtiv = new Text(r.getAtividades() != null ? r.getAtividades() : "-");
                 tAtiv.setFont(Font.font("Arial", 9));
-                tAtiv.setWrappingWidth(180);
+                tAtiv.setWrappingWidth(130);
 
                 gridRegs.add(tData, 0, linha);
                 gridRegs.add(tEnt, 1, linha);
-                gridRegs.add(tSai, 2, linha);
-                gridRegs.add(tH, 3, linha);
-                gridRegs.add(tAtiv, 4, linha);
+                gridRegs.add(tAlm, 2, linha);
+                gridRegs.add(tVol, 3, linha);
+                gridRegs.add(tSai, 4, linha);
+                gridRegs.add(tH, 5, linha);
+                gridRegs.add(tAtiv, 6, linha);
                 linha++;
             }
         } else {
             Text tVazio = new Text("Nenhum registro de trabalho lançado para esta pena.");
             tVazio.setFont(Font.font("Arial", 9));
             tVazio.setFill(Color.web("#94a3b8"));
-            gridRegs.add(tVazio, 0, 1, 5, 1);
+            gridRegs.add(tVazio, 0, 1, 7, 1);
         }
 
         secRegistros.getChildren().add(gridRegs);
