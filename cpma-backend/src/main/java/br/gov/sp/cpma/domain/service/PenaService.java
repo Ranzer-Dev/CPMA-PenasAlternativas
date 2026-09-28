@@ -98,6 +98,72 @@ public class PenaService {
         return new PenaResponse(p);
     }
 
+    @Transactional
+    public PenaResponse atualizar(Long idPena, CadastroPenaRequest req) {
+        Pena pena = penaRepository.findById(idPena)
+                .orElseThrow(() -> new DomainException("PENA_NOT_FOUND", "Pena nao encontrada", HttpStatus.NOT_FOUND));
+
+        if (req.getInstituicaoId() != null) {
+            Instituicao instPrincipal = instituicaoRepository.findById(req.getInstituicaoId())
+                    .orElseThrow(() -> new DomainException("INSTITUICAO_NOT_FOUND", "Instituicao principal nao encontrada", HttpStatus.NOT_FOUND));
+            pena.setInstituicaoPrincipal(instPrincipal);
+        }
+
+        if (req.getTipoPena() != null && !req.getTipoPena().isBlank()) {
+            pena.setTipoPena(req.getTipoPena());
+        }
+
+        if (req.getDataInicio() != null) {
+            pena.setDataInicio(req.getDataInicio());
+        }
+
+        if (req.getHorasSemanais() != null) {
+            pena.setHorasSemanais(req.getHorasSemanais());
+        }
+
+        if (req.getHorasTotais() != null) {
+            pena.setHorasTotais(req.getHorasTotais());
+        }
+
+        double tempoEstimado = pena.getHorasTotais() / (pena.getHorasSemanais() * 4.0);
+        pena.setTempoPena(tempoEstimado);
+
+        LocalDate dataTerminoCalculada = req.getDataTermino();
+        if (dataTerminoCalculada == null && pena.getDataInicio() != null) {
+            dataTerminoCalculada = br.gov.sp.cpma.domain.util.CalculadoraExecucaoPenal
+                    .calcularDataTerminoEstimada(pena.getDataInicio(), pena.getHorasTotais(), pena.getHorasSemanais());
+        }
+        pena.setDataTermino(dataTerminoCalculada);
+
+        if (req.getDescricao() != null) {
+            pena.setDescricao(req.getDescricao());
+        }
+
+        if (req.getDiasSemanaEHorariosDisponivel() != null) {
+            pena.setDiasSemanaEHorariosDisponivel(req.getDiasSemanaEHorariosDisponivel());
+        }
+
+        if (req.getAtividadesAcordadas() != null) {
+            pena.setAtividadesAcordadas(req.getAtividadesAcordadas());
+        }
+
+        if (req.getOutrasInstituicoesIds() != null) {
+            List<Instituicao> outras = instituicaoRepository.findAllById(req.getOutrasInstituicoesIds());
+            pena.setInstituicoesVinculadas(new ArrayList<>(outras));
+        }
+
+        Pena salva = penaRepository.save(pena);
+        return new PenaResponse(salva);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PenaResponse> listarTodas() {
+        return penaRepository.findAll()
+                .stream()
+                .map(PenaResponse::new)
+                .toList();
+    }
+
     public EstimativaPenaResponse calcularEstimativa(EstimativaPenaRequest req) {
         double meses = req.getHorasTotais() / (req.getHorasSemanais() * 4.0);
         LocalDate termino = br.gov.sp.cpma.domain.util.CalculadoraExecucaoPenal
@@ -105,3 +171,4 @@ public class PenaService {
         return new EstimativaPenaResponse(meses, termino);
     }
 }
+

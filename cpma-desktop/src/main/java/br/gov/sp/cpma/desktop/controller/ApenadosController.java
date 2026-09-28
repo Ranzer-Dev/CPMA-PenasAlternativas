@@ -115,6 +115,16 @@ public class ApenadosController {
             }
         });
 
+        tblPenasApenado.setRowFactory(tv -> {
+            TableRow<PenaDTO> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    handleEditarPenaApenado();
+                }
+            });
+            return row;
+        });
+
         carregarApenados();
     }
 
@@ -278,4 +288,25 @@ public class ApenadosController {
             });
         }).start();
     }
+
+    @FXML
+    public void handleEditarPenaApenado() {
+        PenaDTO pena = tblPenasApenado.getSelectionModel().getSelectedItem();
+        if (pena == null && !tblPenasApenado.getItems().isEmpty()) {
+            pena = tblPenasApenado.getItems().get(0);
+        }
+
+        if (pena != null) {
+            if (MainShellController.getInstance() != null) {
+                MainShellController.getInstance().abrirEdicaoPena(pena);
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Atencao");
+            alert.setHeaderText("Nenhuma Pena Selecionada");
+            alert.setContentText("Selecione uma pena na tabela para editar seus termos e contrato.");
+            alert.showAndWait();
+        }
+    }
 }
+
