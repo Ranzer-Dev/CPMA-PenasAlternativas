@@ -132,6 +132,7 @@ async function handleValidarCodigo() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        codigo: state.currentPin,
         codigoAcesso: state.currentPin,
         terminalId: TERMINAL_ID
       })
@@ -139,23 +140,16 @@ async function handleValidarCodigo() {
 
     const data = await res.json();
 
-    if (!res.ok) {
-      const msg = data.message || 'Código de acesso incorreto ou expirado.';
+    if (!res.ok || !data.sucesso) {
+      const msg = data.mensagem || data.message || 'Código de acesso incorreto ou expirado.';
       showAlert(dom.alertKeypad, 'error', msg);
       dom.btnConfirmarCodigo.disabled = false;
       dom.btnConfirmarCodigo.textContent = 'Confirmar Acesso ➔';
       return;
     }
 
-    state.token = data.tokenTotem;
     state.usuarioId = data.usuarioId;
-    state.penaId = data.penaId;
-
-    if (data.precisaReconhecimentoFacial) {
-      abrirEtapaCamera();
-    } else {
-      abrirEtapaProntuario();
-    }
+    abrirEtapaProntuario();
   } catch (err) {
     showAlert(dom.alertKeypad, 'error', 'Falha ao conectar com o servidor. Verifique a rede.');
   } finally {
@@ -218,6 +212,7 @@ async function handleCapturarFoto() {
         'Authorization': 'Bearer ' + state.token
       },
       body: JSON.stringify({
+        fotoCapturadaBase64: base64Data,
         fotoBase64: base64Data,
         threshold: 0.65
       })
@@ -225,7 +220,7 @@ async function handleCapturarFoto() {
 
     const data = await res.json();
 
-    if (!res.ok || !data.reconhecido) {
+    if (!res.ok || !data.sucesso) {
       const msg = data.mensagem || 'Biometria facial não confere com o cadastro.';
       showAlert(dom.alertCamera, 'error', msg);
       dom.btnCapturarFoto.disabled = false;

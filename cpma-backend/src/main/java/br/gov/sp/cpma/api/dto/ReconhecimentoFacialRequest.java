@@ -1,10 +1,12 @@
 package br.gov.sp.cpma.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 
 public class ReconhecimentoFacialRequest {
 
     @NotBlank(message = "A foto capturada e obrigatoria.")
+    @JsonAlias({"fotoBase64", "fotoCapturadaBase64"})
     private String fotoCapturadaBase64;
 
     private Double threshold;

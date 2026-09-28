@@ -17,6 +17,11 @@ public class TotemController {
         this.totemService = totemService;
     }
 
+    @GetMapping({"", "/"})
+    public void redirecionarIndex(jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+        response.sendRedirect("/api/v1/totem/index.html");
+    }
+
     @GetMapping("/status")
     public ResponseEntity<java.util.Map<String, String>> status() {
         return ResponseEntity.ok(java.util.Map.of("status", "UP", "service", "cpma-backend"));
