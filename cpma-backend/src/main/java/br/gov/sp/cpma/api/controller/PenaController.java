@@ -45,8 +45,19 @@ public class PenaController {
         return ResponseEntity.ok(penaService.listarPorUsuario(usuarioId));
     }
 
+    @GetMapping
+    public ResponseEntity<List<PenaResponse>> listarTodas() {
+        return ResponseEntity.ok(penaService.listarTodas());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PenaResponse> atualizar(@PathVariable Long id, @RequestBody CadastroPenaRequest req) {
+        return ResponseEntity.ok(penaService.atualizar(id, req));
+    }
+
     @PostMapping("/estimativa")
     public ResponseEntity<EstimativaPenaResponse> calcularEstimativa(@Valid @RequestBody EstimativaPenaRequest req) {
         return ResponseEntity.ok(penaService.calcularEstimativa(req));
     }
 }
+

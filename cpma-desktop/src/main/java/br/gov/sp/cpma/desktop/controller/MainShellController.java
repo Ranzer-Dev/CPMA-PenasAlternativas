@@ -110,6 +110,23 @@ public class MainShellController {
         carregarConteudo("/br/gov/sp/cpma/desktop/view/apenadosView.fxml");
     }
 
+    private br.gov.sp.cpma.desktop.client.PenaDTO penaParaEdicao;
+
+    public void setPenaParaEdicao(br.gov.sp.cpma.desktop.client.PenaDTO pena) {
+        this.penaParaEdicao = pena;
+    }
+
+    public br.gov.sp.cpma.desktop.client.PenaDTO consumirPenaParaEdicao() {
+        br.gov.sp.cpma.desktop.client.PenaDTO p = this.penaParaEdicao;
+        this.penaParaEdicao = null;
+        return p;
+    }
+
+    public void abrirEdicaoPena(br.gov.sp.cpma.desktop.client.PenaDTO pena) {
+        this.penaParaEdicao = pena;
+        navegarParaPenas();
+    }
+
     @FXML
     public void navegarParaPenas() {
         ativarBotao(btnNavPenas, "Gestao de Penas Alternativas");

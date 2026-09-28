@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -139,4 +140,35 @@ public class PenaControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tempoEstimadoMeses").value(5.0));
     }
+
+    @Test
+    @DisplayName("Deve atualizar pena com sucesso retornando status 200")
+    void deveAtualizarPenaComSucesso() throws Exception {
+        CadastroPenaRequest request = new CadastroPenaRequest();
+        request.setHorasTotais(200);
+        request.setHorasSemanais(10);
+        request.setTipoPena("Prestacao de Servicos");
+        request.setDiasSemanaEHorariosDisponivel("Seg, Qua, Sex - 08h as 12h");
+
+        Pena pena = new Pena();
+        pena.setIdPena(100L);
+        pena.setTipoPena(request.getTipoPena());
+        pena.setHorasSemanais(10);
+        pena.setHorasTotais(200);
+        pena.setTempoPena(5.0);
+        pena.setDiasSemanaEHorariosDisponivel("Seg, Qua, Sex - 08h as 12h");
+        pena.setCriadoEm(LocalDateTime.now());
+
+        PenaResponse response = new PenaResponse(pena);
+        when(penaService.atualizar(any(Long.class), any(CadastroPenaRequest.class))).thenReturn(response);
+
+        mockMvc.perform(put("/penas/100")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.idPena").value(100))
+                .andExpect(jsonPath("$.horasTotais").value(200))
+                .andExpect(jsonPath("$.diasSemanaEHorariosDisponivel").value("Seg, Qua, Sex - 08h as 12h"));
+    }
 }
+

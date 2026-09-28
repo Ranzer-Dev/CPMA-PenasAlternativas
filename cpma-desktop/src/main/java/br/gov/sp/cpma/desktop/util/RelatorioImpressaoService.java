@@ -248,7 +248,7 @@ public class RelatorioImpressaoService {
         doc.getChildren().add(secUsuario);
 
         VBox secPena = new VBox(4);
-        Text titPena = new Text("2. MEDIDA ALTERNATIVA E INSTITUIÇÃO PARCEIRA");
+        Text titPena = new Text("2. CONTRATO INICIAL / MEDIDA ALTERNATIVA E DIAS ACORDADOS");
         titPena.setFont(Font.font("Arial", FontWeight.BOLD, 11));
         titPena.setFill(Color.web("#0f172a"));
         secPena.getChildren().add(titPena);
@@ -259,7 +259,11 @@ public class RelatorioImpressaoService {
         adicionarCampoGrid(gridPena, 0, 0, "Tipo de Pena:", pena != null && pena.getTipoPena() != null ? pena.getTipoPena() : "Prestação de Serviços à Comunidade (PSC)");
         adicionarCampoGrid(gridPena, 1, 0, "Instituição:", pena != null && pena.getInstituicaoPrincipalNome() != null ? pena.getInstituicaoPrincipalNome() : "-");
         adicionarCampoGrid(gridPena, 0, 1, "Total de Horas:", pena != null ? pena.getHorasTotais() + " horas" : "-");
-        adicionarCampoGrid(gridPena, 1, 1, "Data de Início:", pena != null && pena.getDataInicio() != null ? pena.getDataInicio().toString() : "-");
+        adicionarCampoGrid(gridPena, 1, 1, "Carga Semanal:", pena != null ? pena.getHorasSemanais() + "h/semana" : "-");
+        adicionarCampoGrid(gridPena, 0, 2, "Data de Início:", pena != null && pena.getDataInicio() != null ? pena.getDataInicio().toString() : "-");
+        adicionarCampoGrid(gridPena, 1, 2, "Término Previsto:", pena != null && pena.getDataTermino() != null ? pena.getDataTermino().toString() : "-");
+        adicionarCampoGrid(gridPena, 0, 3, "Dias e Horários:", pena != null && pena.getDiasSemanaEHorariosDisponivel() != null ? pena.getDiasSemanaEHorariosDisponivel() : "-");
+        adicionarCampoGrid(gridPena, 1, 3, "Atividades:", pena != null && pena.getAtividadesAcordadas() != null ? pena.getAtividadesAcordadas() : "Conforme atribuição");
         secPena.getChildren().add(gridPena);
         doc.getChildren().add(secPena);
 
