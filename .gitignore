@@ -10,6 +10,7 @@ target/
 **/.pytest_cache/
 *.log
 /logs/
+cpma-server-ip.txt
 
 # Arquivos de crash da JVM (Java Virtual Machine)
 hs_err_pid*

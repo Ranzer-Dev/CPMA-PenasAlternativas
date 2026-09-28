@@ -155,4 +155,13 @@ public class TotemControllerTest {
                 .andExpect(jsonPath("$.usuarioNome").value("Jose Pereira"))
                 .andExpect(jsonPath("$.confidence").value(0.89));
     }
+
+    @Test
+    @DisplayName("Deve retornar status UP e identificacao do servico em GET /totem/status")
+    void deveRetornarStatusDoTotemComSucesso() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/totem/status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.service").value("cpma-backend"));
+    }
 }

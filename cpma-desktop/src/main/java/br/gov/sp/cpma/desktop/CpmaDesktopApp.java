@@ -15,7 +15,8 @@ public class CpmaDesktopApp extends Application {
 
         boolean isKiosk = getParameters().getUnnamed().contains("--kiosk")
                 || getParameters().getUnnamed().contains("-kiosk")
-                || Boolean.getBoolean("cpma.kiosk");
+                || Boolean.getBoolean("cpma.kiosk")
+                || Boolean.parseBoolean(System.getenv("CPMA_KIOSK"));
 
         if (isKiosk) {
             Parent root = FXMLLoader.load(getClass().getResource("/br/gov/sp/cpma/desktop/view/totemKioskView.fxml"));
