@@ -15,7 +15,7 @@ fi
 
 TOTEM_URL="http://${SERVER_IP}:8080/api/v1/totem/index.html"
 KIOSK_DATA_DIR="/tmp/cpma_totem_kiosk_profile"
-KIOSK_FLAGS="--kiosk --user-data-dir=${KIOSK_DATA_DIR} --no-first-run --no-default-browser-check --disable-infobars --disable-session-crashed-bubble --disable-features=Translate --overscroll-history-navigation=0 --disable-pinch --noerrdialogs ${TOTEM_URL}"
+KIOSK_FLAGS="--kiosk --user-data-dir=${KIOSK_DATA_DIR} --no-first-run --no-default-browser-check --disable-infobars --disable-session-crashed-bubble --disable-features=Translate,FullscreenExitUI,EdgeSwipe --overscroll-history-navigation=0 --disable-pinch --noerrdialogs --hide-scrollbars --incognito ${TOTEM_URL}"
 
 echo "=========================================================="
 echo "   INICIANDO CPMA - TOTEM WEB KIOSK (NAVEGADOR)           "

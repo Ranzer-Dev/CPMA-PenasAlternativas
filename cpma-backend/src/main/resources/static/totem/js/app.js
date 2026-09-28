@@ -55,25 +55,70 @@ function init() {
 
 function setupKioskLockdown() {
   document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('selectstart', e => e.preventDefault());
+  document.addEventListener('dragstart', e => e.preventDefault());
+
+  window.addEventListener('wheel', (e) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  function aplicarLockdownTeclado() {
+    if ('keyboard' in navigator && typeof navigator.keyboard.lock === 'function') {
+      navigator.keyboard.lock(['Escape', 'F11', 'F12', 'KeyW', 'KeyN', 'KeyT', 'BrowserBack', 'BrowserForward']).catch(() => {});
+    }
+  }
 
   function requisitarFullscreen() {
     if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      document.documentElement.requestFullscreen().then(() => {
+        aplicarLockdownTeclado();
+      }).catch(() => {});
     }
   }
 
   document.addEventListener('click', requisitarFullscreen, { once: true });
   document.addEventListener('touchstart', requisitarFullscreen, { once: true });
 
-  window.addEventListener('keydown', (e) => {
-    if (['F5', 'F12'].includes(e.key) ||
-        (e.ctrlKey && ['r', 'u', 'p', 's', 'o', 'h', 'j', 'n', 't', 'w'].includes(e.key.toLowerCase())) ||
-        (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(e.key.toLowerCase())) ||
-        (e.altKey && ['ArrowLeft', 'ArrowRight'].includes(e.key))) {
-      e.preventDefault();
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      setTimeout(requisitarFullscreen, 100);
+    } else {
+      aplicarLockdownTeclado();
     }
   });
+
+  window.addEventListener('keydown', (e) => {
+    const key = e.key;
+    const lowerKey = key ? key.toLowerCase() : '';
+
+    if (['Escape', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].includes(key)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    if (e.ctrlKey && ['r', 'u', 'p', 's', 'o', 'h', 'j', 'n', 't', 'w', '+', '-', '0'].includes(lowerKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    if (e.ctrlKey && e.shiftKey && ['i', 'j', 'c', 'delete'].includes(lowerKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    if (e.altKey && ['f4', 'arrowleft', 'arrowright', 'home'].includes(lowerKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+  }, true);
 }
+
 
 function setupKeypad() {
   document.querySelectorAll('.key-btn[data-num]').forEach(btn => {
