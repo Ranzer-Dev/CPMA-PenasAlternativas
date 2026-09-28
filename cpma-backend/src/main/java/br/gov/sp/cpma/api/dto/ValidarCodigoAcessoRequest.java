@@ -1,10 +1,12 @@
 package br.gov.sp.cpma.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 
 public class ValidarCodigoAcessoRequest {
 
     @NotBlank(message = "O codigo de acesso e obrigatorio.")
+    @JsonAlias({"codigoAcesso", "codigo"})
     private String codigo;
 
     private String terminalId;
