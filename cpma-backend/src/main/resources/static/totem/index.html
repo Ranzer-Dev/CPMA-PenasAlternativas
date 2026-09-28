@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+  <title>CPMA - Terminal de Autoatendimento ao Cidadão</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="kiosk-header">
+    <div class="header-brand">
+      <img src="images/logo-sp.png" alt="Governo do Estado de São Paulo" class="header-logo">
+      <div class="header-titles">
+        <h1>GOVERNO DO ESTADO DE SÃO PAULO</h1>
+        <h2>Secretaria da Administração Penitenciária - CPMA</h2>
+        <p>Terminal Oficial de Autoatendimento e Ponto Biométrico</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <span class="badge-terminal">Terminal: TOTEM_EXTERNO_01</span>
+      <span id="badgeOnline" class="badge-online">● Sistema Online</span>
+    </div>
+  </header>
+
+  <main class="kiosk-main">
+
+    <section id="stepKeypad" class="step-card active">
+      <h2 class="step-title">Identificação do Apenado</h2>
+      <p class="step-subtitle">Digite no teclado abaixo a senha de 6 números gerada no atendimento do balcão para iniciar o registro.</p>
+
+      <div class="pin-display">
+        <div class="pin-slot"></div>
+        <div class="pin-slot"></div>
+        <div class="pin-slot"></div>
+        <div class="pin-slot"></div>
+        <div class="pin-slot"></div>
+        <div class="pin-slot"></div>
+      </div>
+
+      <div class="keypad-grid">
+        <button type="button" class="key-btn" data-num="1">1</button>
+        <button type="button" class="key-btn" data-num="2">2</button>
+        <button type="button" class="key-btn" data-num="3">3</button>
+        <button type="button" class="key-btn" data-num="4">4</button>
+        <button type="button" class="key-btn" data-num="5">5</button>
+        <button type="button" class="key-btn" data-num="6">6</button>
+        <button type="button" class="key-btn" data-num="7">7</button>
+        <button type="button" class="key-btn" data-num="8">8</button>
+        <button type="button" class="key-btn" data-num="9">9</button>
+        <button type="button" class="key-btn action-key" id="btnClear">C</button>
+        <button type="button" class="key-btn" data-num="0">0</button>
+        <button type="button" class="key-btn action-key" id="btnBackspace">⌫</button>
+      </div>
+
+      <button type="button" class="btn-primary" id="btnConfirmarCodigo" disabled>
+        Confirmar Acesso ➔
+      </button>
+
+      <div id="alertKeypad" class="alert-box"></div>
+    </section>
+
+    <section id="stepCamera" class="step-card">
+      <h2 class="step-title">Reconhecimento Facial</h2>
+      <p class="step-subtitle">Olhe diretamente para a câmera e posicione seu rosto na marcação para registrar sua presença.</p>
+
+      <div class="camera-viewport">
+        <video id="cameraFeed" autoplay playsinline muted></video>
+        <div class="camera-guide-oval"></div>
+        <div class="camera-scanner"></div>
+      </div>
+
+      <button type="button" class="btn-primary" id="btnCapturarFoto">
+        📸 Capturar Foto e Validar
+      </button>
+
+      <button type="button" class="btn-secondary" id="btnVoltarKeypad" style="margin-top: 14px; width: 100%; max-width: 380px;">
+        🔙 Cancelar e Voltar
+      </button>
+
+      <div id="alertCamera" class="alert-box"></div>
+    </section>
+
+    <section id="stepProntuario" class="step-card wide">
+      <div class="print-only-header">
+        <img src="images/logo-sp.png" alt="Governo de SP" style="height: 50px;">
+        <div>
+          <h2 style="font-size: 13pt; margin: 0; font-weight: bold;">GOVERNO DO ESTADO DE SÃO PAULO</h2>
+          <h3 style="font-size: 10pt; margin: 0; color: #475569;">SECRETARIA DA ADMINISTRAÇÃO PENITENCIÁRIA - CPMA</h3>
+          <p style="font-size: 11pt; margin: 0; color: #2563eb; font-weight: bold;">COMPROVANTE DE COMPARECIMENTO E REGISTROS DE TRABALHO</p>
+        </div>
+      </div>
+
+      <div class="prontuario-container">
+        <div class="success-banner">
+          <div class="success-icon">✓</div>
+          <div class="success-text">
+            <h3>Presença Registrada com Sucesso!</h3>
+            <p>Seus dados e o espelho de cumprimento das penas alternativas estão atualizados abaixo.</p>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-card">
+            <h4 class="info-card-title">1. Dados do Apenado</h4>
+            <div class="field-row">
+              <span class="field-label">Nome:</span>
+              <span class="field-value" id="lblNome">-</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Matrícula:</span>
+              <span class="field-value" id="lblCodigo">-</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">CPF:</span>
+              <span class="field-value" id="lblCpf">-</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Telefone:</span>
+              <span class="field-value" id="lblTelefone">-</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Endereço:</span>
+              <span class="field-value" id="lblEndereco">-</span>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <h4 class="info-card-title">2. Medida Alternativa e Instituição</h4>
+            <div class="field-row">
+              <span class="field-label">Tipo de Pena:</span>
+              <span class="field-value" id="lblTipoPena">-</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Instituição:</span>
+              <span class="field-value" id="lblInstituicao">-</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Carga Total:</span>
+              <span class="field-value" id="lblHorasTotais">-</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Data Início:</span>
+              <span class="field-value" id="lblDataInicio">-</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h4 class="info-card-title">3. Resumo de Cumprimento de Horas</h4>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-label">Previsto</div>
+              <div class="stat-value" id="statPrevisto">0h</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Cumpridas</div>
+              <div class="stat-value" id="statCumpridas" style="color: #34d399;">0h</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Restantes</div>
+              <div class="stat-value" id="statRestantes" style="color: #f87171;">0h</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Conclusão</div>
+              <div class="stat-value" id="statConclusao" style="color: #60a5fa;">0%</div>
+            </div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h4 class="info-card-title">4. Histórico de Comparecimentos e Trabalho</h4>
+          <div class="table-wrapper">
+            <table class="kiosk-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Entrada</th>
+                  <th>Saída</th>
+                  <th>Horas</th>
+                  <th>Atividades / Instituição</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaRegistrosCorpo">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: #94a3b8; padding: 16px;">Carregando histórico...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="print-only-signatures">
+          <div class="print-signature-box">
+            <div class="print-signature-line"></div>
+            <div>Assinatura do Apenado</div>
+          </div>
+          <div class="print-signature-box">
+            <div class="print-signature-line"></div>
+            <div>Responsável Técnico CPMA</div>
+          </div>
+        </div>
+
+        <div class="actions-bar">
+          <button type="button" class="btn-primary" id="btnImprimir" style="max-width: 320px;">
+            🖨️ Imprimir Folha de Ponto
+          </button>
+          <button type="button" class="btn-secondary" id="btnNovoAcesso">
+            🔙 Concluir Atendimento
+          </button>
+        </div>
+
+        <div class="timeout-bar-container">
+          <div class="timeout-label">Retorno automático em <strong id="timeoutContador">60</strong>s</div>
+          <div class="timeout-track">
+            <div class="timeout-fill" id="timeoutFill"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
