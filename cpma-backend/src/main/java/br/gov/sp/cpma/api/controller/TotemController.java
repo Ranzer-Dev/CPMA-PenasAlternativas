@@ -17,6 +17,11 @@ public class TotemController {
         this.totemService = totemService;
     }
 
+    @GetMapping("/status")
+    public ResponseEntity<java.util.Map<String, String>> status() {
+        return ResponseEntity.ok(java.util.Map.of("status", "UP", "service", "cpma-backend"));
+    }
+
     @PostMapping("/token")
     public ResponseEntity<GerarTokenTotemResponse> gerarTokenTotem(@Valid @RequestBody GerarTokenTotemRequest request) {
         GerarTokenTotemResponse response = totemService.gerarTokenTotem(request);

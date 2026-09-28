@@ -89,6 +89,8 @@ if ($serverIp) {
     Write-Host "==========================================================" -ForegroundColor Green
     Write-Host ""
 
+    $env:CPMA_API_URL = "http://${serverIp}:8080/api/v1"
+    $env:CPMA_KIOSK = "true"
     Set-Location (Join-Path $root "cpma-desktop")
-    D:\apache-maven-3.9.9\bin\mvn.cmd javafx:run -Dcpma.api.url="http://${serverIp}:8080/api/v1" -Djavafx.args="--kiosk"
+    D:\apache-maven-3.9.9\bin\mvn.cmd javafx:run
 }
