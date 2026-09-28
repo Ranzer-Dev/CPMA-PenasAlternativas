@@ -1,0 +1,12 @@
+{
+  "name": "cpma-penas-alternativas",
+  "version": "1.0.0",
+  "description": "Sistema de Gestao de Penas Alternativas e Totem Biometrico Kiosk",
+  "scripts": {
+    "start:admin": "start_admin.bat",
+    "start:totem": "start_totem.bat",
+    "test:all": "test_all.bat"
+  },
+  "author": "Secretaria da Administracao Penitenciaria - SP",
+  "license": "UNLICENSED"
+}
