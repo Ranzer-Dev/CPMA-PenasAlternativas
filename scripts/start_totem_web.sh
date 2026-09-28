@@ -14,6 +14,8 @@ if [ -f "$CACHE_FILE" ]; then
 fi
 
 TOTEM_URL="http://${SERVER_IP}:8080/api/v1/totem/index.html"
+KIOSK_DATA_DIR="/tmp/cpma_totem_kiosk_profile"
+KIOSK_FLAGS="--kiosk --user-data-dir=${KIOSK_DATA_DIR} --no-first-run --no-default-browser-check --disable-infobars --disable-session-crashed-bubble --disable-features=Translate --overscroll-history-navigation=0 --disable-pinch --noerrdialogs ${TOTEM_URL}"
 
 echo "=========================================================="
 echo "   INICIANDO CPMA - TOTEM WEB KIOSK (NAVEGADOR)           "
@@ -22,11 +24,11 @@ echo "Acessando terminal em: $TOTEM_URL"
 echo ""
 
 if command -v chromium-browser >/dev/null 2>&1; then
-    exec chromium-browser --kiosk --noerrdialogs --disable-infobars "$TOTEM_URL"
+    exec chromium-browser $KIOSK_FLAGS
 elif command -v chromium >/dev/null 2>&1; then
-    exec chromium --kiosk --noerrdialogs --disable-infobars "$TOTEM_URL"
+    exec chromium $KIOSK_FLAGS
 elif command -v google-chrome >/dev/null 2>&1; then
-    exec google-chrome --kiosk "$TOTEM_URL"
+    exec google-chrome $KIOSK_FLAGS
 elif command -v xdg-open >/dev/null 2>&1; then
     exec xdg-open "$TOTEM_URL"
 elif command -v open >/dev/null 2>&1; then
