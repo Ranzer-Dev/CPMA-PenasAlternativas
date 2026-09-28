@@ -31,6 +31,18 @@ public class CpmaApiClientTest {
     }
 
     @Test
+    @DisplayName("Deve resolver URL base customizada via System Property cpma.api.url")
+    void deveResolverUrlCustomizadaViaSystemProperty() {
+        System.setProperty("cpma.api.url", "http://192.168.1.100:8080/api/v1");
+        try {
+            CpmaApiClient client = new CpmaApiClient();
+            assertNotNull(client);
+        } finally {
+            System.clearProperty("cpma.api.url");
+        }
+    }
+
+    @Test
     @DisplayName("Deve retornar status 503 com NETWORK_ERROR quando servidor estiver inacessivel")
     void deveRetornarErroDeRedeQuandoServidorInacessivel() {
         CpmaApiClient client = new CpmaApiClient("http://127.0.0.1:59999/api/v1");

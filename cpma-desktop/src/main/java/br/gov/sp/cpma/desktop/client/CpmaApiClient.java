@@ -20,7 +20,19 @@ public class CpmaApiClient {
     private final ObjectMapper objectMapper;
 
     public CpmaApiClient() {
-        this("http://localhost:8080/api/v1");
+        this(resolveDefaultBaseUrl());
+    }
+
+    private static String resolveDefaultBaseUrl() {
+        String prop = System.getProperty("cpma.api.url");
+        if (prop != null && !prop.isBlank()) {
+            return prop;
+        }
+        String env = System.getenv("CPMA_API_URL");
+        if (env != null && !env.isBlank()) {
+            return env;
+        }
+        return "http://localhost:8080/api/v1";
     }
 
     public CpmaApiClient(String baseUrl) {

@@ -13,14 +13,26 @@ public class CpmaDesktopApp extends Application {
     public void start(Stage primaryStage) throws Exception {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
-        Parent root = FXMLLoader.load(getClass().getResource("/br/gov/sp/cpma/desktop/view/loginView.fxml"));
-        Scene scene = new Scene(root, 880, 640);
+        boolean isKiosk = getParameters().getUnnamed().contains("--kiosk")
+                || getParameters().getUnnamed().contains("-kiosk")
+                || Boolean.getBoolean("cpma.kiosk");
 
-        primaryStage.setTitle("CPMA - Acesso Administrativo");
-        primaryStage.setScene(scene);
-        primaryStage.setMinWidth(700);
-        primaryStage.setMinHeight(550);
-        primaryStage.show();
+        if (isKiosk) {
+            Parent root = FXMLLoader.load(getClass().getResource("/br/gov/sp/cpma/desktop/view/totemKioskView.fxml"));
+            Scene scene = new Scene(root, 1024, 720);
+            primaryStage.setTitle("CPMA - Totem de Presenca Facial (Kiosk)");
+            primaryStage.setScene(scene);
+            primaryStage.setFullScreen(true);
+            primaryStage.show();
+        } else {
+            Parent root = FXMLLoader.load(getClass().getResource("/br/gov/sp/cpma/desktop/view/loginView.fxml"));
+            Scene scene = new Scene(root, 880, 640);
+            primaryStage.setTitle("CPMA - Acesso Administrativo");
+            primaryStage.setScene(scene);
+            primaryStage.setMinWidth(700);
+            primaryStage.setMinHeight(550);
+            primaryStage.show();
+        }
     }
 
     public static void main(String[] args) {
