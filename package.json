@@ -5,6 +5,7 @@
   "scripts": {
     "start:admin": "node scripts/launcher.js admin",
     "start:totem": "node scripts/launcher.js totem",
+    "start:totem:web": "node scripts/launcher.js totem-web",
     "test:all": "node scripts/launcher.js test"
   },
   "author": "Secretaria da Administracao Penitenciaria - SP",

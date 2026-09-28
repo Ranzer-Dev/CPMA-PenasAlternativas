@@ -22,6 +22,13 @@ if (target === 'admin') {
         cmd = 'bash';
         args = [path.join(rootDir, 'scripts', 'start_totem.sh')];
     }
+} else if (target === 'totem-web' || target === 'web') {
+    if (isWindows) {
+        cmd = path.join(rootDir, 'start_totem_web.bat');
+    } else {
+        cmd = 'bash';
+        args = [path.join(rootDir, 'scripts', 'start_totem_web.sh')];
+    }
 } else if (target === 'test') {
     if (isWindows) {
         cmd = path.join(rootDir, 'test_all.bat');
