@@ -5,7 +5,10 @@ import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.print.*;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -14,6 +17,8 @@ import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.stage.Window;
 
 import java.time.LocalDateTime;
@@ -63,9 +68,125 @@ public class RelatorioImpressaoService {
 
             Platform.runLater(() -> {
                 Node documento = criarDocumento(finalUser, finalPena, finalResumo, finalRegistros);
-                imprimir(owner, documento);
+                exibirPreVisualizacao(owner, documento);
             });
         }).start();
+    }
+
+    public static void exibirPreVisualizacao(Window owner, Node documento) {
+        Stage stage = new Stage();
+        stage.setTitle("CPMA - Pré-visualização de Impressão Oficial (A4)");
+        if (owner != null) {
+            stage.initOwner(owner);
+            stage.initModality(Modality.APPLICATION_MODAL);
+        }
+
+        BorderPane root = new BorderPane();
+        root.setStyle("-fx-background-color: #0f172a;");
+
+        HBox topBar = new HBox(14);
+        topBar.setAlignment(Pos.CENTER_LEFT);
+        topBar.setStyle("-fx-background-color: #1e293b; -fx-padding: 12px 20px; -fx-border-color: #334155; -fx-border-width: 0 0 1 0;");
+
+        VBox titulos = new VBox(2);
+        Text t1 = new Text("📄 PRÉ-VISUALIZAÇÃO DE IMPRESSÃO");
+        t1.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+        t1.setFill(Color.web("#f8fafc"));
+        Text t2 = new Text("Espelho oficial da folha de comparecimento e registros de trabalho.");
+        t2.setFont(Font.font("Segoe UI", 11));
+        t2.setFill(Color.web("#94a3b8"));
+        titulos.getChildren().addAll(t1, t2);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox zoomBox = new HBox(6);
+        zoomBox.setAlignment(Pos.CENTER);
+        zoomBox.setStyle("-fx-background-color: #0f172a; -fx-padding: 4px 8px; -fx-background-radius: 6px; -fx-border-color: #334155; -fx-border-radius: 6px;");
+
+        Button btnZoomMenos = new Button("−");
+        btnZoomMenos.setStyle("-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-font-size: 13px; -fx-cursor: hand;");
+
+        javafx.scene.control.Label lblZoom = new javafx.scene.control.Label("100%");
+        lblZoom.setStyle("-fx-text-fill: #e2e8f0; -fx-font-size: 12px; -fx-font-weight: 700; -fx-min-width: 42px; -fx-alignment: center;");
+
+        Button btnZoomMais = new Button("+");
+        btnZoomMais.setStyle("-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-font-size: 13px; -fx-cursor: hand;");
+
+        zoomBox.getChildren().addAll(btnZoomMenos, lblZoom, btnZoomMais);
+
+        Button btnImprimir = new Button("🖨️ Confirmar e Imprimir");
+        btnImprimir.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: 800; -fx-font-size: 13px; -fx-padding: 8px 18px; -fx-background-radius: 6px; -fx-cursor: hand;");
+
+        Button btnFechar = new Button("✖ Fechar");
+        btnFechar.setStyle("-fx-background-color: #334155; -fx-text-fill: white; -fx-font-weight: 700; -fx-font-size: 13px; -fx-padding: 8px 16px; -fx-background-radius: 6px; -fx-cursor: hand;");
+        btnFechar.setOnAction(e -> stage.close());
+
+        topBar.getChildren().addAll(titulos, spacer, zoomBox, btnImprimir, btnFechar);
+        root.setTop(topBar);
+
+        ScrollPane scroll = new ScrollPane();
+        scroll.setFitToWidth(true);
+        scroll.setStyle("-fx-background: #0f172a; -fx-background-color: #0f172a;");
+
+        StackPane folhaWrapper = new StackPane();
+        folhaWrapper.setAlignment(Pos.TOP_CENTER);
+        folhaWrapper.setStyle("-fx-padding: 24px; -fx-background-color: transparent;");
+
+        StackPane folhaA4 = new StackPane();
+        folhaA4.setMaxWidth(540);
+        folhaA4.setStyle("-fx-background-color: #ffffff; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 24, 0, 0, 8); -fx-background-radius: 4px;");
+        folhaA4.getChildren().add(documento);
+
+        final double[] zoomLevel = {1.0};
+        btnZoomMenos.setOnAction(e -> {
+            if (zoomLevel[0] > 0.6) {
+                zoomLevel[0] -= 0.15;
+                folhaA4.setScaleX(zoomLevel[0]);
+                folhaA4.setScaleY(zoomLevel[0]);
+                lblZoom.setText(String.format("%.0f%%", zoomLevel[0] * 100));
+            }
+        });
+
+        btnZoomMais.setOnAction(e -> {
+            if (zoomLevel[0] < 1.6) {
+                zoomLevel[0] += 0.15;
+                folhaA4.setScaleX(zoomLevel[0]);
+                folhaA4.setScaleY(zoomLevel[0]);
+                lblZoom.setText(String.format("%.0f%%", zoomLevel[0] * 100));
+            }
+        });
+
+        btnImprimir.setOnAction(e -> {
+            boolean sucesso = imprimir(stage, documento);
+            if (sucesso) {
+                stage.close();
+            }
+        });
+
+        folhaWrapper.getChildren().add(folhaA4);
+        scroll.setContent(folhaWrapper);
+        root.setCenter(scroll);
+
+        HBox barraStatus = new HBox(12);
+        barraStatus.setAlignment(Pos.CENTER);
+        barraStatus.setStyle("-fx-background-color: #1e293b; -fx-padding: 6px 16px; -fx-border-color: #334155; -fx-border-width: 1 0 0 0;");
+        Text txtStatus = new Text("Formato: Folha A4 Retrato (210 x 297 mm) • 1 Página • Pré-visualização Oficial");
+        txtStatus.setFont(Font.font("Segoe UI", 11));
+        txtStatus.setFill(Color.web("#94a3b8"));
+        barraStatus.getChildren().add(txtStatus);
+        root.setBottom(barraStatus);
+
+        javafx.geometry.Rectangle2D bounds = javafx.stage.Screen.getPrimary().getVisualBounds();
+        double w = Math.min(760, bounds.getWidth() * 0.9);
+        double h = Math.min(840, bounds.getHeight() * 0.92);
+
+        Scene scene = new Scene(root, w, h);
+        stage.setScene(scene);
+        stage.setMinWidth(620);
+        stage.setMinHeight(520);
+        stage.centerOnScreen();
+        stage.show();
     }
 
     public static Node criarDocumento(UsuarioDTO usuario, PenaDTO pena, ResumoCumprimentoDTO resumo, List<RegistroTrabalhoDTO> registros) {
@@ -317,11 +438,13 @@ public class RelatorioImpressaoService {
             double printableWidth = pageLayout.getPrintableWidth();
             double nodeWidth = 540;
             double scale = printableWidth / nodeWidth;
+            documento.getTransforms().clear();
             if (scale < 1.0) {
                 documento.getTransforms().add(new javafx.scene.transform.Scale(scale, scale));
             }
 
             boolean sucesso = job.printPage(pageLayout, documento);
+            documento.getTransforms().clear();
             if (sucesso) {
                 job.endJob();
                 mostrarAlerta(Alert.AlertType.INFORMATION, "Sucesso", "Documento enviado para a impressora com sucesso!");
