@@ -45,11 +45,34 @@ const dom = {
 };
 
 function init() {
+  setupKioskLockdown();
   setupKeypad();
   setupCameraButtons();
   setupProntuarioActions();
   verificarStatusServidor();
   setInterval(verificarStatusServidor, 15000);
+}
+
+function setupKioskLockdown() {
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  function requisitarFullscreen() {
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  }
+
+  document.addEventListener('click', requisitarFullscreen, { once: true });
+  document.addEventListener('touchstart', requisitarFullscreen, { once: true });
+
+  window.addEventListener('keydown', (e) => {
+    if (['F5', 'F12'].includes(e.key) ||
+        (e.ctrlKey && ['r', 'u', 'p', 's', 'o', 'h', 'j', 'n', 't', 'w'].includes(e.key.toLowerCase())) ||
+        (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(e.key.toLowerCase())) ||
+        (e.altKey && ['ArrowLeft', 'ArrowRight'].includes(e.key))) {
+      e.preventDefault();
+    }
+  });
 }
 
 function setupKeypad() {

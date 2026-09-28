@@ -1,0 +1,16 @@
+{
+  "name": "CPMA - Terminal de Autoatendimento",
+  "short_name": "CPMA Totem",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "portrait-primary",
+  "background_color": "#090d16",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "images/logo-sp.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
