@@ -48,7 +48,7 @@ if (-not $serverIp) {
         
         $jobs = foreach ($ip in $ips) {
             [System.Net.HttpWebRequest]$req = [System.Net.WebRequest]::Create("http://${ip}:8080/api/v1/totem/status")
-            $req.Timeout = 400
+            $req.Timeout = 1000
             [PSCustomObject]@{
                 IP = $ip
                 Request = $req
@@ -56,7 +56,7 @@ if (-not $serverIp) {
             }
         }
 
-        Start-Sleep -Milliseconds 600
+        Start-Sleep -Milliseconds 1200
 
         foreach ($j in $jobs) {
             if ($j.AsyncResult.IsCompleted) {
@@ -65,6 +65,7 @@ if (-not $serverIp) {
                     if ($response.StatusCode -eq 200) {
                         $serverIp = $j.IP
                         $response.Close()
+                        Write-Host "Servidor detectado automaticamente em $serverIp!" -ForegroundColor Green
                         break
                     }
                     $response.Close()
@@ -74,10 +75,24 @@ if (-not $serverIp) {
     }
 }
 
-if (-not $serverIp) {
+while (-not $serverIp) {
     Write-Host ""
     Write-Host "Nao foi possivel detectar o servidor automaticamente." -ForegroundColor Red
-    $serverIp = Read-Host "Digite o IP do Computador A (ex: 192.168.0.3)"
+    $digitado = Read-Host "Digite o IP do Computador A (ex: 192.168.0.3)"
+    if ($digitado) {
+        $digitado = $digitado.Trim()
+        Write-Host "Validando conexao em http://${digitado}:8080/api/v1/totem/status..." -ForegroundColor Yellow
+        try {
+            $respManual = Invoke-RestMethod -Uri "http://${digitado}:8080/api/v1/totem/status" -TimeoutSec 3 -ErrorAction Stop
+            if ($respManual) {
+                $serverIp = $digitado
+                Write-Host "Conexao estabelecida com sucesso com o servidor!" -ForegroundColor Green
+            }
+        } catch {
+            Write-Host "FALHA: Nao foi possivel conectar ao servidor em $digitado:8080 (erro: $($_.Exception.Message))" -ForegroundColor Red
+            Write-Host "Verifique se digitou o IP correto (ex: 192.168.x.x) e se o Computador A esta na mesma rede com o servidor ativo." -ForegroundColor Red
+        }
+    }
 }
 
 if ($serverIp) {
