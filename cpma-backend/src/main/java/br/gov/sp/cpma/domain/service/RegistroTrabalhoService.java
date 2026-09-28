@@ -91,23 +91,11 @@ public class RegistroTrabalhoService {
 
     private Double calcularHorasPelosHorarios(String inicio, String almoco, String volta, String saida) {
         try {
-            double total = 0.0;
-            if (inicio != null && !inicio.isBlank() && almoco != null && !almoco.isBlank()) {
-                LocalTime t1 = LocalTime.parse(inicio.trim());
-                LocalTime t2 = LocalTime.parse(almoco.trim());
-                total += Duration.between(t1, t2).toMinutes() / 60.0;
-            }
-            if (volta != null && !volta.isBlank() && saida != null && !saida.isBlank()) {
-                LocalTime t3 = LocalTime.parse(volta.trim());
-                LocalTime t4 = LocalTime.parse(saida.trim());
-                total += Duration.between(t3, t4).toMinutes() / 60.0;
-            }
-            if (total == 0.0 && inicio != null && !inicio.isBlank() && saida != null && !saida.isBlank()) {
-                LocalTime t1 = LocalTime.parse(inicio.trim());
-                LocalTime t4 = LocalTime.parse(saida.trim());
-                total = Duration.between(t1, t4).toMinutes() / 60.0;
-            }
-            return Math.max(0.0, total);
+            LocalTime tInicio = (inicio != null && !inicio.isBlank()) ? LocalTime.parse(inicio.trim()) : null;
+            LocalTime tAlmoco = (almoco != null && !almoco.isBlank()) ? LocalTime.parse(almoco.trim()) : null;
+            LocalTime tVolta = (volta != null && !volta.isBlank()) ? LocalTime.parse(volta.trim()) : null;
+            LocalTime tSaida = (saida != null && !saida.isBlank()) ? LocalTime.parse(saida.trim()) : null;
+            return br.gov.sp.cpma.domain.util.CalculadoraExecucaoPenal.calcularHorasPorTurnos(tInicio, tAlmoco, tVolta, tSaida);
         } catch (Exception ex) {
             return 0.0;
         }

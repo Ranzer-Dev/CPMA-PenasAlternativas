@@ -144,7 +144,7 @@ public class TotemServiceTest {
         codigo.setDataExpiracao(LocalDateTime.now().plusHours(2));
         codigo.setUsuario(usuario);
 
-        when(codigoAcessoRepository.findByCodigoAndStatus("123456", "ATIVO"))
+        when(codigoAcessoRepository.findByCodigoAndStatusWithLock("123456", "ATIVO"))
                 .thenReturn(Optional.of(codigo));
 
         ValidarAcessoResponse response = totemService.validarCodigoAcesso(request);
@@ -167,7 +167,7 @@ public class TotemServiceTest {
         codigoExpirado.setDataExpiracao(LocalDateTime.now().minusMinutes(5));
         codigoExpirado.setUsuario(usuario);
 
-        when(codigoAcessoRepository.findByCodigoAndStatus("654321", "ATIVO"))
+        when(codigoAcessoRepository.findByCodigoAndStatusWithLock("654321", "ATIVO"))
                 .thenReturn(Optional.of(codigoExpirado));
 
         DomainException ex = assertThrows(DomainException.class, () -> totemService.validarCodigoAcesso(request));

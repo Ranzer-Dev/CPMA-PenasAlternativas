@@ -94,7 +94,7 @@ public class TotemService {
     @Transactional
     public ValidarAcessoResponse validarCodigoAcesso(ValidarCodigoAcessoRequest request) {
         CodigoAcessoApenado codigoAcesso = codigoAcessoRepository
-                .findByCodigoAndStatus(request.getCodigo(), "ATIVO")
+                .findByCodigoAndStatusWithLock(request.getCodigo(), "ATIVO")
                 .orElse(null);
 
         if (codigoAcesso == null || codigoAcesso.getDataExpiracao().isBefore(LocalDateTime.now())) {

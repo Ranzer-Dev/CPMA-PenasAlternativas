@@ -50,8 +50,8 @@ public class PenaService {
 
         LocalDate dataTerminoCalculada = req.getDataTermino();
         if (dataTerminoCalculada == null && req.getDataInicio() != null) {
-            int dias = (int) Math.ceil((req.getHorasTotais() / (double) req.getHorasSemanais()) * 7.0);
-            dataTerminoCalculada = req.getDataInicio().plusDays(dias);
+            dataTerminoCalculada = br.gov.sp.cpma.domain.util.CalculadoraExecucaoPenal
+                    .calcularDataTerminoEstimada(req.getDataInicio(), req.getHorasTotais(), req.getHorasSemanais());
         }
 
         Pena pena = new Pena();
@@ -100,8 +100,8 @@ public class PenaService {
 
     public EstimativaPenaResponse calcularEstimativa(EstimativaPenaRequest req) {
         double meses = req.getHorasTotais() / (req.getHorasSemanais() * 4.0);
-        int dias = (int) Math.ceil((req.getHorasTotais() / (double) req.getHorasSemanais()) * 7.0);
-        LocalDate termino = req.getDataInicio().plusDays(dias);
+        LocalDate termino = br.gov.sp.cpma.domain.util.CalculadoraExecucaoPenal
+                .calcularDataTerminoEstimada(req.getDataInicio(), req.getHorasTotais(), req.getHorasSemanais());
         return new EstimativaPenaResponse(meses, termino);
     }
 }
