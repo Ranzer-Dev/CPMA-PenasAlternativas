@@ -17,9 +17,11 @@ import java.util.List;
 public class PenaController {
 
     private final PenaService penaService;
+    private final br.gov.sp.cpma.domain.service.RegistroTrabalhoService registroTrabalhoService;
 
-    public PenaController(PenaService penaService) {
+    public PenaController(PenaService penaService, br.gov.sp.cpma.domain.service.RegistroTrabalhoService registroTrabalhoService) {
         this.penaService = penaService;
+        this.registroTrabalhoService = registroTrabalhoService;
     }
 
     @PostMapping
@@ -31,6 +33,11 @@ public class PenaController {
     @GetMapping("/{id}")
     public ResponseEntity<PenaResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(penaService.buscarPorId(id));
+    }
+
+    @GetMapping("/{id}/resumo")
+    public ResponseEntity<br.gov.sp.cpma.api.dto.ResumoCumprimentoResponse> obterResumo(@PathVariable Long id) {
+        return ResponseEntity.ok(registroTrabalhoService.obterResumo(id));
     }
 
     @GetMapping("/usuario/{usuarioId}")

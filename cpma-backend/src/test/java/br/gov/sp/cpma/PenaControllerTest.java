@@ -44,6 +44,9 @@ public class PenaControllerTest {
     @MockBean
     private PenaService penaService;
 
+    @MockBean
+    private br.gov.sp.cpma.domain.service.RegistroTrabalhoService registroTrabalhoService;
+
     @Test
     @DisplayName("Deve cadastrar pena com sucesso retornando status 201")
     void deveCadastrarPenaComSucesso() throws Exception {

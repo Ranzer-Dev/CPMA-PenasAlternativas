@@ -271,30 +271,48 @@ async function carregarDadosCompletosProntuario() {
     }
 
     if (penaAtiva) {
-      dom.lblTipoPena.textContent = penaAtiva.tipoPena || 'Prestação de Serviços à Comunidade';
+      dom.lblTipoPena.textContent = penaAtiva.tipoPena || 'Prestação de Serviços à Comunidade (PSC)';
       dom.lblInstituicao.textContent = penaAtiva.instituicaoPrincipalNome || '-';
-      dom.lblHorasTotais.textContent = (penaAtiva.horasTotais || 0) + ' horas';
+      const totalHorasPena = penaAtiva.horasTotais || 0;
+      dom.lblHorasTotais.textContent = totalHorasPena + ' horas';
       dom.lblDataInicio.textContent = penaAtiva.dataInicio || '-';
 
-      const resResumo = await fetch('/api/v1/penas/' + penaAtiva.idPena + '/resumo');
-      if (resResumo.ok) {
-        const r = await resResumo.json();
-        const prev = r.horasTotais || penaAtiva.horasTotais || 0;
-        const cump = r.horasCumpridas || 0;
-        const rest = r.horasRestantes || Math.max(0, prev - cump);
-        const perc = prev > 0 ? (cump / prev) * 100 : 0;
-
-        dom.statPrevisto.textContent = prev.toFixed(0) + 'h';
-        dom.statCumpridas.textContent = cump.toFixed(1) + 'h';
-        dom.statRestantes.textContent = rest.toFixed(1) + 'h';
-        dom.statConclusao.textContent = perc.toFixed(1) + '%';
-        dom.progressFill.style.width = Math.min(100, perc) + '%';
-      }
+      let horasPrevistas = totalHorasPena;
+      let horasCumpridas = 0;
 
       const resRegs = await fetch('/api/v1/registros-trabalho/pena/' + penaAtiva.idPena);
+      let registros = [];
       if (resRegs.ok) {
-        const registros = await resRegs.json();
+        registros = await resRegs.json();
         renderizarTabelaRegistros(registros);
+        horasCumpridas = registros.reduce((acc, r) => acc + (r.horasCumpridas || 0), 0);
+      }
+
+      try {
+        const resResumo = await fetch('/api/v1/registros-trabalho/pena/' + penaAtiva.idPena + '/resumo');
+        if (resResumo.ok) {
+          const r = await resResumo.json();
+          if (r.horasTotais != null && r.horasTotais > 0) {
+            horasPrevistas = r.horasTotais;
+          }
+          if (r.horasCumpridas != null) {
+            horasCumpridas = r.horasCumpridas;
+          }
+        }
+      } catch (errResumo) {}
+
+      const horasRestantes = Math.max(0, horasPrevistas - horasCumpridas);
+      const percConclusao = horasPrevistas > 0 ? (horasCumpridas / horasPrevistas) * 100 : 0;
+
+      dom.statPrevisto.textContent = horasPrevistas.toFixed(0) + 'h';
+      dom.statCumpridas.textContent = horasCumpridas.toFixed(1) + 'h';
+      dom.statRestantes.textContent = horasRestantes.toFixed(1) + 'h';
+      dom.statConclusao.textContent = percConclusao.toFixed(1) + '%';
+      dom.progressFill.style.width = Math.min(100, percConclusao) + '%';
+
+      const elPrintData = document.getElementById('lblDataEmissaoPrint');
+      if (elPrintData) {
+        elPrintData.textContent = new Date().toLocaleString('pt-BR');
       }
     }
   } catch (err) {

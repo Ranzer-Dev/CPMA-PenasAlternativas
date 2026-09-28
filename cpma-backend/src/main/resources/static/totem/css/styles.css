@@ -576,6 +576,11 @@ body {
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 14mm;
+  }
+
   body {
     background: #ffffff !important;
     color: #000000 !important;
@@ -591,7 +596,9 @@ body {
   #stepKeypad,
   #stepCamera,
   .step-subtitle,
-  .alert-box {
+  .alert-box,
+  .success-banner,
+  .progress-track {
     display: none !important;
   }
 
@@ -690,9 +697,20 @@ body {
     border-top: 1pt solid #000000;
     margin-bottom: 4pt;
   }
+
+  .print-only-footer {
+    display: block !important;
+    text-align: center;
+    font-size: 8pt;
+    color: #64748b;
+    margin-top: 24pt;
+    border-top: 1pt solid #cbd5e1;
+    padding-top: 8pt;
+  }
 }
 
 .print-only-header,
-.print-only-signatures {
+.print-only-signatures,
+.print-only-footer {
   display: none;
 }
