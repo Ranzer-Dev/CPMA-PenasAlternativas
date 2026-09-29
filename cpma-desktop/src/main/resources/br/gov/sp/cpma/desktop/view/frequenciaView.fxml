@@ -6,18 +6,10 @@
 
 <ScrollPane fitToWidth="true" styleClass="scroll-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.FrequenciaController">
     <content>
-        <VBox spacing="18.0">
+        <VBox spacing="16.0">
             <padding>
                 <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
             </padding>
-
-            <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="hero-header">
-                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                    <Label styleClass="hero-title" text="Frequência, Folha de Ponto e Cumprimento de Pena" />
-                    <Label styleClass="hero-subtitle" text="Etapa 4: Fiscalização mensal dos comparecimentos, cálculo de horas executadas e atestados de cumprimento para a Vara de Execução Penal." />
-                </VBox>
-                <Label styleClass="hero-badge" text="Etapa 4: Fiscalização &amp; Ponto" />
-            </HBox>
 
             <VBox spacing="12.0" styleClass="card-container">
                 <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Localizar Apenado para Lancamento de Horas e Folha de Ponto" />
@@ -87,7 +79,7 @@
                     <Button onAction="#handleRemoverTudo" style="-fx-background-color: #fee2e2; -fx-text-fill: #dc2626; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #fca5a5; -fx-border-radius: 6px; -fx-font-size: 12px;" text="Limpar Grade" />
                 </HBox>
 
-                <TableView fx:id="tblFolhaMensal" editable="true" prefHeight="260.0">
+                <TableView fx:id="tblFolhaMensal" editable="true" prefHeight="280.0">
                     <columns>
                         <TableColumn fx:id="colLotePresente" prefWidth="75.0" text="Presente?" style="-fx-alignment: CENTER;" />
                         <TableColumn fx:id="colLoteData" prefWidth="100.0" text="Data" />

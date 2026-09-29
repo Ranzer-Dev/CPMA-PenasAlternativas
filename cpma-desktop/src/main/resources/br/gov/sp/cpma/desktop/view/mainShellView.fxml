@@ -58,8 +58,11 @@
     <top>
         <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="topbar">
             <VBox spacing="2.0">
-                <Label fx:id="lblSectionTitle" style="-fx-font-size: 20px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Visao Geral do Sistema" />
-                <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Central de Penas e Medidas Alternativas" />
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <Label fx:id="lblSectionTitle" style="-fx-font-size: 20px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Painel de Controle" />
+                    <Label fx:id="lblSectionBadge" styleClass="hero-badge" text="Visão Geral" />
+                </HBox>
+                <Label fx:id="lblSectionSubtitle" style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Central de Penas e Medidas Alternativas" />
             </VBox>
 
             <Region HBox.hgrow="ALWAYS" />

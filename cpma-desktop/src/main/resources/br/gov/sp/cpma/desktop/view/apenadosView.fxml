@@ -6,18 +6,10 @@
 
 <ScrollPane fitToWidth="true" styleClass="scroll-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.ApenadosController">
     <content>
-        <VBox spacing="18.0">
+        <VBox spacing="16.0">
             <padding>
                 <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
             </padding>
-
-            <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="hero-header">
-                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                    <Label styleClass="hero-title" text="Gestão de Apenados e Cadastro Biométrico" />
-                    <Label styleClass="hero-subtitle" text="Etapa 1: Qualificação civil dos sentenciados, fotos faciais para os totens e consulta de processos." />
-                </VBox>
-                <Label styleClass="hero-badge" text="Etapa 1: Identificação Civil" />
-            </HBox>
 
             <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="card-container">
                 <TextField fx:id="txtFiltro" prefWidth="280.0" promptText="Filtrar por nome ou CPF..." />
@@ -29,8 +21,12 @@
             </HBox>
 
             <VBox spacing="8.0" VBox.vgrow="ALWAYS" styleClass="card-container">
-                <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Lista de Apenados Cadastrados" />
-                <TableView fx:id="tblApenados" prefHeight="340.0">
+                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                    <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Lista de Apenados Cadastrados" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label style="-fx-font-size: 11px; -fx-text-fill: #64748b;" text="Dica: Selecione um sentenciado para ver a ficha completa e processos." />
+                </HBox>
+                <TableView fx:id="tblApenados" prefHeight="420.0">
                     <columns>
                         <TableColumn fx:id="colId" prefWidth="60.0" text="ID" />
                         <TableColumn fx:id="colCodigo" prefWidth="100.0" text="Codigo" />
