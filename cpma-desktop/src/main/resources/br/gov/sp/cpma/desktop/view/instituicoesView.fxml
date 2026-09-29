@@ -6,29 +6,10 @@
 
 <ScrollPane fx:id="scrollPaneInstituicoes" fitToWidth="true" styleClass="scroll-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.InstituicoesController">
     <content>
-        <VBox spacing="18.0">
+        <VBox spacing="16.0">
             <padding>
                 <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
             </padding>
-
-            <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="hero-header">
-                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                    <Label styleClass="hero-title" text="Instituições Parceiras e Gestão de Vagas" />
-                    <Label styleClass="hero-subtitle" text="Etapa 2: Credenciamento de órgãos acolhedores, postos de trabalho e horários disponíveis na semana." />
-                </VBox>
-                <Label styleClass="hero-badge" text="Etapa 2: Rede Parceira" />
-            </HBox>
-
-            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="card-container">
-                <VBox spacing="2.0">
-                    <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Rede de Instituicoes Parceiras" />
-                    <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Gerenciamento de entidades conveniadas, tipos e disponibilidade de turnos e vagas." />
-                </VBox>
-                <Region HBox.hgrow="ALWAYS" />
-                <Button onAction="#handleRecarregarInstituicoes" styleClass="btn-secondary" text="Atualizar" style="-fx-font-size: 12px; -fx-padding: 7px 14px;" />
-                <Button fx:id="btnEditarInstituicao" onAction="#handleEditarInstituicaoSelecionada" style="-fx-background-color: #0284c7; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 12px; -fx-padding: 7px 14px;" text="Editar Instituição" />
-                <Button fx:id="btnAlternarForm" onAction="#handleAlternarFormulario" prefHeight="36.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;" text="Nova Instituição" />
-            </HBox>
 
             <VBox fx:id="paneFormulario" spacing="14.0" styleClass="card-container" visible="false" managed="false">
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
@@ -150,13 +131,19 @@
                 </HBox>
             </VBox>
 
-            <VBox spacing="8.0" VBox.vgrow="ALWAYS" styleClass="card-container">
-                <HBox alignment="CENTER_LEFT" spacing="8.0">
-                    <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Entidades Conveniadas Ativas" />
+            <VBox spacing="10.0" VBox.vgrow="ALWAYS" styleClass="card-container">
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <VBox spacing="2.0">
+                        <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Entidades Conveniadas Ativas" />
+                        <Label style="-fx-font-size: 11px; -fx-text-fill: #64748b;" text="Dica: Dê duplo clique em uma linha para abrir a edição rápida." />
+                    </VBox>
                     <Region HBox.hgrow="ALWAYS" />
-                    <Label style="-fx-font-size: 11px; -fx-text-fill: #64748b;" text="Dica: Dê duplo clique em uma linha para abrir a edição rápida." />
+                    <Button onAction="#handleRecarregarInstituicoes" styleClass="btn-secondary" text="Atualizar" style="-fx-font-size: 12px; -fx-padding: 7px 14px;" />
+                    <Button fx:id="btnEditarInstituicao" onAction="#handleEditarInstituicaoSelecionada" style="-fx-background-color: #0284c7; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 12px; -fx-padding: 7px 14px;" text="Editar Instituição" />
+                    <Button fx:id="btnAlternarForm" onAction="#handleAlternarFormulario" prefHeight="36.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;" text="Nova Instituição" />
                 </HBox>
-                <TableView fx:id="tblInstituicoes" prefHeight="380.0">
+
+                <TableView fx:id="tblInstituicoes" prefHeight="440.0">
                     <columns>
                         <TableColumn fx:id="colId" prefWidth="50.0" text="ID" />
                         <TableColumn fx:id="colNome" prefWidth="210.0" text="Nome / Razao Social" />

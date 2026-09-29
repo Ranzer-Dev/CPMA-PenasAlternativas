@@ -11,6 +11,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
 import java.time.LocalDate;
@@ -18,6 +19,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class PenasController {
+
+    @FXML
+    private ScrollPane scrollPanePenas;
+
+    @FXML
+    private VBox paneFormularioPena;
 
     @FXML
     private Label lblTituloForm;
@@ -317,6 +324,14 @@ public class PenasController {
     public void carregarPenaParaEdicao(PenaDTO pena) {
         if (pena == null) return;
 
+        if (paneFormularioPena != null) {
+            paneFormularioPena.setVisible(true);
+            paneFormularioPena.setManaged(true);
+            if (scrollPanePenas != null) {
+                scrollPanePenas.setVvalue(0.0);
+            }
+        }
+
         this.penaIdEmEdicao = pena.getIdPena();
         lblTituloForm.setText("Editar Contrato / Medida Alternativa (#" + pena.getIdPena() + ")");
         lblSubtituloForm.setText("Ajuste os termos, instituicoes parceiras e contrato de trabalho acordado com o apenado.");
@@ -365,13 +380,44 @@ public class PenasController {
     }
 
     @FXML
+    public void handleAlternarFormularioPena() {
+        if (paneFormularioPena != null) {
+            boolean vis = !paneFormularioPena.isVisible();
+            paneFormularioPena.setVisible(vis);
+            paneFormularioPena.setManaged(vis);
+            if (vis) {
+                this.penaIdEmEdicao = null;
+                lblTituloForm.setText("Lancar Nova Pena Alternativa");
+                lblSubtituloForm.setText("Vincule o apenado a instituicoes parceiras e defina os termos e contrato de cumprimento.");
+                btnCancelarEdicao.setVisible(true);
+                btnCancelarEdicao.setManaged(true);
+                btnSalvarPena.setText("Salvar e Registrar Pena");
+                limparCamposFormulario();
+                if (scrollPanePenas != null) {
+                    scrollPanePenas.setVvalue(0.0);
+                }
+            }
+        }
+    }
+
+    @FXML
     public void handleCancelarEdicao() {
+        if (paneFormularioPena != null) {
+            paneFormularioPena.setVisible(false);
+            paneFormularioPena.setManaged(false);
+        }
+
         this.penaIdEmEdicao = null;
         lblTituloForm.setText("Lancar Nova Pena Alternativa");
         lblSubtituloForm.setText("Vincule o apenado a instituicoes parceiras e defina os termos e contrato de cumprimento.");
         btnCancelarEdicao.setVisible(false);
         btnCancelarEdicao.setManaged(false);
         btnSalvarPena.setText("Salvar e Registrar Pena");
+
+        limparCamposFormulario();
+    }
+
+    private void limparCamposFormulario() {
 
         txtCpfApenado.setDisable(false);
         btnBuscarApenado.setDisable(false);

@@ -38,6 +38,12 @@ public class MainShellController {
     private Label lblSectionTitle;
 
     @FXML
+    private Label lblSectionSubtitle;
+
+    @FXML
+    private Label lblSectionBadge;
+
+    @FXML
     private Label lblApiStatus;
 
     @FXML
@@ -100,13 +106,13 @@ public class MainShellController {
 
     @FXML
     public void navegarParaDashboard() {
-        ativarBotao(btnNavDashboard, "Visao Geral do Sistema");
+        ativarBotao(btnNavDashboard, "Painel de Controle", "Visão executiva em tempo real e indicadores do sistema.", "Visão Geral");
         carregarConteudo("/br/gov/sp/cpma/desktop/view/dashboardContentView.fxml");
     }
 
     @FXML
     public void navegarParaApenados() {
-        ativarBotao(btnNavApenados, "Gestao de Apenados");
+        ativarBotao(btnNavApenados, "Gestão de Apenados", "Qualificação civil dos sentenciados e cadastro biométrico facial.", "Etapa 1: Identificação");
         carregarConteudo("/br/gov/sp/cpma/desktop/view/apenadosView.fxml");
     }
 
@@ -129,25 +135,25 @@ public class MainShellController {
 
     @FXML
     public void navegarParaPenas() {
-        ativarBotao(btnNavPenas, "Gestao de Penas Alternativas");
+        ativarBotao(btnNavPenas, "Penas Alternativas", "Alocação do apenado, cálculo de carga horária e termos judiciais.", "Etapa 3: Contrato Judicial");
         carregarConteudo("/br/gov/sp/cpma/desktop/view/penasView.fxml");
     }
 
     @FXML
     public void navegarParaInstituicoes() {
-        ativarBotao(btnNavInstituicoes, "Instituicoes Parceiras");
+        ativarBotao(btnNavInstituicoes, "Instituições Parceiras", "Credenciamento de entidades conveniadas, vagas e turnos disponíveis.", "Etapa 2: Rede Parceira");
         carregarConteudo("/br/gov/sp/cpma/desktop/view/instituicoesView.fxml");
     }
 
     @FXML
     public void navegarParaFrequencia() {
-        ativarBotao(btnNavFrequencia, "Frequencia e Cumprimento de Trabalho");
+        ativarBotao(btnNavFrequencia, "Frequência e Trabalho", "Fiscalização mensal de comparecimentos e emissão de atestados judiciais.", "Etapa 4: Ponto & Fiscalização");
         carregarConteudo("/br/gov/sp/cpma/desktop/view/frequenciaView.fxml");
     }
 
     @FXML
     public void navegarParaTotem() {
-        ativarBotao(btnNavTotem, "Totem de Presenca Facial (Kiosk)");
+        ativarBotao(btnNavTotem, "Totem de Presença", "Terminal de autoatendimento para autenticação biométrica presencial.", "Terminal Kiosk");
         carregarConteudo("/br/gov/sp/cpma/desktop/view/totemKioskView.fxml");
     }
 
@@ -173,8 +179,14 @@ public class MainShellController {
         }
     }
 
-    private void ativarBotao(Button ativo, String tituloSecao) {
+    private void ativarBotao(Button ativo, String tituloSecao, String subtitulo, String badge) {
         lblSectionTitle.setText(tituloSecao);
+        if (lblSectionSubtitle != null) {
+            lblSectionSubtitle.setText(subtitulo);
+        }
+        if (lblSectionBadge != null) {
+            lblSectionBadge.setText(badge);
+        }
 
         Button[] botoes = {btnNavDashboard, btnNavApenados, btnNavPenas, btnNavInstituicoes, btnNavFrequencia, btnNavTotem};
         for (Button b : botoes) {
