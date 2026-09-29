@@ -45,88 +45,133 @@
                 </HBox>
             </VBox>
 
-            <VBox fx:id="boxLancamento" spacing="14.0" styleClass="card-container" visible="false" managed="false">
+            <VBox fx:id="boxFolhaMensal" spacing="14.0" styleClass="card-container" visible="false" managed="false">
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
                     <VBox spacing="2.0" HBox.hgrow="ALWAYS">
-                        <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Lançamento na Folha de Ponto / Frequência" />
-                        <Label style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="Informe os horários de entrada, almoço, volta e saída ou a carga horária direta para cálculo automático." />
+                        <Label style="-fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="📅 Geração da Folha de Ponto Mensal (Pelo Contrato Inicial)" />
+                        <Label style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="O sistema projeta todos os dias acordados no mês. Apenas desmarque os dias em que o apenado faltou." />
                     </VBox>
+                    <Label fx:id="lblTermosContrato" style="-fx-font-weight: 600; -fx-text-fill: #059669; -fx-background-color: #ecfdf5; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #a7f3d0; -fx-border-radius: 6px;" text="Contrato: ---" />
                 </HBox>
 
-                <Label fx:id="lblFeedbackLancamento" maxWidth="Infinity" visible="false" wrapText="true" />
+                <Label fx:id="lblFeedbackFolhaMensal" maxWidth="Infinity" visible="false" wrapText="true" />
 
-                <GridPane hgap="14.0" vgap="12.0">
-                    <columnConstraints>
-                        <ColumnConstraints percentWidth="30.0" />
-                        <ColumnConstraints percentWidth="35.0" />
-                        <ColumnConstraints percentWidth="35.0" />
-                    </columnConstraints>
+                <HBox alignment="CENTER_LEFT" spacing="14.0" style="-fx-background-color: #f8fafc; -fx-padding: 12px; -fx-background-radius: 6px; -fx-border-color: #e2e8f0; -fx-border-radius: 6px;">
+                    <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Mês de Referência:" />
+                    <ComboBox fx:id="cbMesReferencia" prefWidth="150.0" />
 
-                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Data da Atividade *" />
-                        <DatePicker fx:id="dpDataTrabalho" maxWidth="Infinity" />
-                    </VBox>
+                    <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Ano:" />
+                    <ComboBox fx:id="cbAnoReferencia" prefWidth="95.0" />
 
-                    <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="0">
-                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Instituição Parceira do Comparecimento" />
-                        <ComboBox fx:id="cbInstituicaoFrequencia" maxWidth="Infinity" promptText="Instituição da pena ativa..." />
-                    </VBox>
+                    <Button onAction="#handleGerarGradeMes" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6px 16px; -fx-background-radius: 6px;" text="⚡ Gerar Grade do Mês" />
 
-                    <VBox spacing="8.0" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="1" style="-fx-background-color: #f8fafc; -fx-padding: 12px; -fx-background-radius: 6px; -fx-border-color: #e2e8f0; -fx-border-radius: 6px;">
-                        <Label style="-fx-font-weight: 700; -fx-text-fill: #334155; -fx-font-size: 12px;" text="⏰ Batidas de Ponto e Intervalo de Trabalho" />
-                        
-                        <GridPane hgap="12.0" vgap="6.0">
-                            <columnConstraints>
-                                <ColumnConstraints percentWidth="20.0" />
-                                <ColumnConstraints percentWidth="20.0" />
-                                <ColumnConstraints percentWidth="20.0" />
-                                <ColumnConstraints percentWidth="20.0" />
-                                <ColumnConstraints percentWidth="20.0" />
-                            </columnConstraints>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button onAction="#handleMarcarTodos" styleClass="btn-secondary" text="Marcar Todos" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
+                    <Button onAction="#handleDesmarcarTodos" styleClass="btn-secondary" text="Desmarcar Todos" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
+                </HBox>
 
-                            <VBox spacing="4.0" GridPane.columnIndex="0">
-                                <Label style="-fx-font-weight: 600; -fx-text-fill: #475569; -fx-font-size: 11px;" text="1. Entrada" />
-                                <TextField fx:id="txtHorarioInicio" promptText="08:00" />
-                            </VBox>
+                <TableView fx:id="tblFolhaMensal" prefHeight="260.0">
+                    <columns>
+                        <TableColumn fx:id="colLotePresente" prefWidth="75.0" text="Presente?" style="-fx-alignment: CENTER;" />
+                        <TableColumn fx:id="colLoteData" prefWidth="100.0" text="Data" />
+                        <TableColumn fx:id="colLoteDia" prefWidth="110.0" text="Dia da Semana" />
+                        <TableColumn fx:id="colLoteEntrada" prefWidth="75.0" text="Entrada" />
+                        <TableColumn fx:id="colLoteAlmoco" prefWidth="75.0" text="Almoço" />
+                        <TableColumn fx:id="colLoteVolta" prefWidth="75.0" text="Retorno" />
+                        <TableColumn fx:id="colLoteSaida" prefWidth="75.0" text="Saída" />
+                        <TableColumn fx:id="colLoteHoras" prefWidth="75.0" text="Horas" />
+                        <TableColumn fx:id="colLoteStatus" prefWidth="95.0" text="Status" style="-fx-alignment: CENTER;" />
+                        <TableColumn fx:id="colLoteObs" prefWidth="240.0" text="Atividades" />
+                    </columns>
+                    <placeholder>
+                        <Label text="Clique em 'Gerar Grade do Mês' para carregar os dias previstos de trabalho." style="-fx-text-fill: #94a3b8;" />
+                    </placeholder>
+                </TableView>
 
-                            <VBox spacing="4.0" GridPane.columnIndex="1">
-                                <Label style="-fx-font-weight: 600; -fx-text-fill: #475569; -fx-font-size: 11px;" text="2. Saída Almoço" />
-                                <TextField fx:id="txtHorarioAlmoco" promptText="12:00" />
-                            </VBox>
-
-                            <VBox spacing="4.0" GridPane.columnIndex="2">
-                                <Label style="-fx-font-weight: 600; -fx-text-fill: #475569; -fx-font-size: 11px;" text="3. Retorno Almoço" />
-                                <TextField fx:id="txtHorarioVolta" promptText="13:00" />
-                            </VBox>
-
-                            <VBox spacing="4.0" GridPane.columnIndex="3">
-                                <Label style="-fx-font-weight: 600; -fx-text-fill: #475569; -fx-font-size: 11px;" text="4. Saída Definitiva" />
-                                <TextField fx:id="txtHorarioSaida" promptText="17:00" />
-                            </VBox>
-
-                            <VBox spacing="4.0" GridPane.columnIndex="4">
-                                <Label style="-fx-font-weight: 700; -fx-text-fill: #2563eb; -fx-font-size: 11px;" text="Horas Líquidas *" />
-                                <TextField fx:id="txtHorasCumpridas" promptText="Ex: 8.0" style="-fx-font-weight: bold;" />
-                            </VBox>
-                        </GridPane>
-
-                        <Label fx:id="lblCalculoAuto" style="-fx-text-fill: #059669; -fx-font-size: 11px; -fx-font-weight: 600;" text="Preencha os horários para cálculo automático de horas líquidas ou informe manualmente." />
-                    </VBox>
-
-                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="2">
-                        <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Atividades Desenvolvidas e Observações do Dia" />
-                        <TextField fx:id="txtAtividades" promptText="Ex: Serviços de manutenção predial, higienização, jardinagem, apoio em almoxarifado..." />
-                    </VBox>
-                </GridPane>
-
-                <HBox alignment="CENTER_RIGHT" spacing="12.0">
-                    <Button fx:id="btnSalvarRegistro" onAction="#handleSalvarRegistro" prefHeight="38.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 24px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Confirmar Presenca e Registrar Folha de Ponto" />
+                <HBox alignment="CENTER_LEFT" spacing="16.0">
+                    <Label fx:id="lblResumoFolhaMensal" style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 13px;" text="Total de dias: 0 | Presenças: 0 | Faltas: 0 | Horas apuradas: 0.0h" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button fx:id="btnConfirmarFolhaMensal" onAction="#handleConfirmarFolhaMensal" prefHeight="40.0" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 24px; -fx-background-radius: 6px; -fx-cursor: hand;" text="✔ Confirmar Presença e Registrar Folha de Ponto" />
                 </HBox>
             </VBox>
 
+            <TitledPane fx:id="paneAvulso" expanded="false" text="➕ Lançamento Avulso de Comparecimento (Registro Individual)" styleClass="card-container" visible="false" managed="false">
+                <VBox spacing="14.0">
+                    <Label fx:id="lblFeedbackLancamento" maxWidth="Infinity" visible="false" wrapText="true" />
+
+                    <GridPane hgap="14.0" vgap="12.0">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="30.0" />
+                            <ColumnConstraints percentWidth="35.0" />
+                            <ColumnConstraints percentWidth="35.0" />
+                        </columnConstraints>
+
+                        <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Data da Atividade *" />
+                            <DatePicker fx:id="dpDataTrabalho" maxWidth="Infinity" />
+                        </VBox>
+
+                        <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="0">
+                            <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Instituição Parceira do Comparecimento" />
+                            <ComboBox fx:id="cbInstituicaoFrequencia" maxWidth="Infinity" promptText="Instituição da pena ativa..." />
+                        </VBox>
+
+                        <VBox spacing="8.0" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="1" style="-fx-background-color: #f8fafc; -fx-padding: 12px; -fx-background-radius: 6px; -fx-border-color: #e2e8f0; -fx-border-radius: 6px;">
+                            <Label style="-fx-font-weight: 700; -fx-text-fill: #334155; -fx-font-size: 12px;" text="⏰ Batidas de Ponto e Intervalo de Trabalho" />
+                            
+                            <GridPane hgap="12.0" vgap="6.0">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="20.0" />
+                                    <ColumnConstraints percentWidth="20.0" />
+                                    <ColumnConstraints percentWidth="20.0" />
+                                    <ColumnConstraints percentWidth="20.0" />
+                                    <ColumnConstraints percentWidth="20.0" />
+                                </columnConstraints>
+
+                                <VBox spacing="4.0" GridPane.columnIndex="0">
+                                    <Label style="-fx-font-weight: 600; -fx-text-fill: #475569; -fx-font-size: 11px;" text="1. Entrada" />
+                                    <TextField fx:id="txtHorarioInicio" promptText="08:00" />
+                                </VBox>
+
+                                <VBox spacing="4.0" GridPane.columnIndex="1">
+                                    <Label style="-fx-font-weight: 600; -fx-text-fill: #475569; -fx-font-size: 11px;" text="2. Saída Almoço" />
+                                    <TextField fx:id="txtHorarioAlmoco" promptText="12:00" />
+                                </VBox>
+
+                                <VBox spacing="4.0" GridPane.columnIndex="2">
+                                    <Label style="-fx-font-weight: 600; -fx-text-fill: #475569; -fx-font-size: 11px;" text="3. Retorno Almoço" />
+                                    <TextField fx:id="txtHorarioVolta" promptText="13:00" />
+                                </VBox>
+
+                                <VBox spacing="4.0" GridPane.columnIndex="3">
+                                    <Label style="-fx-font-weight: 600; -fx-text-fill: #475569; -fx-font-size: 11px;" text="4. Saída Definitiva" />
+                                    <TextField fx:id="txtHorarioSaida" promptText="17:00" />
+                                </VBox>
+
+                                <VBox spacing="4.0" GridPane.columnIndex="4">
+                                    <Label style="-fx-font-weight: 700; -fx-text-fill: #2563eb; -fx-font-size: 11px;" text="Horas Líquidas *" />
+                                    <TextField fx:id="txtHorasCumpridas" promptText="Ex: 8.0" style="-fx-font-weight: bold;" />
+                                </VBox>
+                            </GridPane>
+
+                            <Label fx:id="lblCalculoAuto" style="-fx-text-fill: #059669; -fx-font-size: 11px; -fx-font-weight: 600;" text="Preencha os horários para cálculo automático de horas líquidas ou informe manualmente." />
+                        </VBox>
+
+                        <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="2">
+                            <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Atividades Desenvolvidas e Observações do Dia" />
+                            <TextField fx:id="txtAtividades" promptText="Ex: Serviços de manutenção predial, higienização, jardinagem, apoio em almoxarifado..." />
+                        </VBox>
+                    </GridPane>
+
+                    <HBox alignment="CENTER_RIGHT" spacing="12.0">
+                        <Button fx:id="btnSalvarRegistro" onAction="#handleSalvarRegistro" prefHeight="38.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 24px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Confirmar Presença Avulsa" />
+                    </HBox>
+                </VBox>
+            </TitledPane>
+
             <VBox fx:id="boxHistorico" spacing="8.0" styleClass="card-container" visible="false" managed="false">
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
-                    <Label style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Histórico Completo da Folha de Ponto desta Medida Alternativa" />
+                    <Label style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Histórico Completo de Comparecimentos Registrados" />
                 </HBox>
 
                 <TableView fx:id="tblHistorico" prefHeight="260.0">

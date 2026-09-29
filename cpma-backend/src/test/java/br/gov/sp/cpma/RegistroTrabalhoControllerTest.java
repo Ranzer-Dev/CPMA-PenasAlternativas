@@ -110,4 +110,42 @@ public class RegistroTrabalhoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].horasCumpridas").value(2.5));
     }
+
+    @Test
+    @DisplayName("Deve registrar horas de trabalho em lote com sucesso retornando status 201")
+    void deveRegistrarHorasEmLoteComSucesso() throws Exception {
+        CadastroRegistroTrabalhoRequest r1 = new CadastroRegistroTrabalhoRequest();
+        r1.setPenaId(1L);
+        r1.setDataTrabalho(LocalDate.of(2026, 3, 2));
+        r1.setHorasCumpridas(4.0);
+
+        CadastroRegistroTrabalhoRequest r2 = new CadastroRegistroTrabalhoRequest();
+        r2.setPenaId(1L);
+        r2.setDataTrabalho(LocalDate.of(2026, 3, 3));
+        r2.setHorasCumpridas(4.0);
+
+        RegistroDeTrabalho e1 = new RegistroDeTrabalho();
+        e1.setIdRegistro(101L);
+        e1.setDataTrabalho(r1.getDataTrabalho());
+        e1.setHorasCumpridas(4.0);
+
+        RegistroDeTrabalho e2 = new RegistroDeTrabalho();
+        e2.setIdRegistro(102L);
+        e2.setDataTrabalho(r2.getDataTrabalho());
+        e2.setHorasCumpridas(4.0);
+
+        when(registroService.registrarEmLote(any())).thenReturn(List.of(
+                new RegistroTrabalhoResponse(e1),
+                new RegistroTrabalhoResponse(e2)
+        ));
+
+        mockMvc.perform(post("/registros-trabalho/lote")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(List.of(r1, r2))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].idRegistro").value(101))
+                .andExpect(jsonPath("$[1].idRegistro").value(102));
+    }
 }
+
