@@ -73,6 +73,10 @@ public class CpmaApiClient {
         return executePost("/instituicoes", dto, InstituicaoDTO.class, null);
     }
 
+    public ApiResponse<InstituicaoDTO> atualizarInstituicao(Long id, CadastroInstituicaoDTO dto) {
+        return executePut("/instituicoes/" + id, dto, InstituicaoDTO.class, null);
+    }
+
     public ApiResponse<List<InstituicaoDTO>> listarInstituicoes() {
         return executeGet("/instituicoes", new TypeReference<List<InstituicaoDTO>>() {});
     }
