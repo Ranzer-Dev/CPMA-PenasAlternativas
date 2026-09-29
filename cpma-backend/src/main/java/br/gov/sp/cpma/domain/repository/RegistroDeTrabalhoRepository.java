@@ -13,6 +13,10 @@ public interface RegistroDeTrabalhoRepository extends JpaRepository<RegistroDeTr
 
     List<RegistroDeTrabalho> findByPena_IdPenaOrderByDataTrabalhoDesc(Long penaId);
 
+    java.util.Optional<RegistroDeTrabalho> findFirstByPena_IdPenaOrderByDataTrabalhoDesc(Long penaId);
+
+    List<RegistroDeTrabalho> findByPena_IdPenaAndDataTrabalhoBetweenOrderByDataTrabalhoAsc(Long penaId, java.time.LocalDate inicio, java.time.LocalDate fim);
+
     @Query("SELECT COALESCE(SUM(r.horasCumpridas), 0.0) FROM RegistroDeTrabalho r WHERE r.pena.idPena = :penaId")
     Double somarHorasCumpridasPorPena(@Param("penaId") Long penaId);
 }

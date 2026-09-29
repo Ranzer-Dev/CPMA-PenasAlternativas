@@ -70,7 +70,16 @@
                     <Button onAction="#handleDesmarcarTodos" styleClass="btn-secondary" text="Desmarcar Todos" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
                 </HBox>
 
-                <TableView fx:id="tblFolhaMensal" prefHeight="260.0">
+                <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 4px 0px;">
+                    <Button onAction="#handleAdicionarDia" style="-fx-background-color: #f1f5f9; -fx-text-fill: #1e293b; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-font-size: 12px;" text="➕ Adicionar Dia" />
+                    <Button onAction="#handleAdicionarMes" style="-fx-background-color: #f1f5f9; -fx-text-fill: #1e293b; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-font-size: 12px;" text="📅 Adicionar Mês (~22 dias)" />
+                    <Button onAction="#handlePreencherHorariosPena" style="-fx-background-color: #f1f5f9; -fx-text-fill: #1e293b; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-font-size: 12px;" text="⏰ Preencher Horários da Pena" />
+                    <Button onAction="#handleContinuarDeOndeParou" style="-fx-background-color: #eff6ff; -fx-text-fill: #2563eb; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #93c5fd; -fx-border-radius: 6px; -fx-font-size: 12px;" text="🔄 Continuar de Onde Parou" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button onAction="#handleRemoverTudo" style="-fx-background-color: #fee2e2; -fx-text-fill: #dc2626; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #fca5a5; -fx-border-radius: 6px; -fx-font-size: 12px;" text="🗑️ Limpar Grade" />
+                </HBox>
+
+                <TableView fx:id="tblFolhaMensal" editable="true" prefHeight="260.0">
                     <columns>
                         <TableColumn fx:id="colLotePresente" prefWidth="75.0" text="Presente?" style="-fx-alignment: CENTER;" />
                         <TableColumn fx:id="colLoteData" prefWidth="100.0" text="Data" />
