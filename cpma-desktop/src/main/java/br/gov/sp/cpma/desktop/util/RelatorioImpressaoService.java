@@ -89,7 +89,7 @@ public class RelatorioImpressaoService {
         topBar.setStyle("-fx-background-color: #1e293b; -fx-padding: 12px 20px; -fx-border-color: #334155; -fx-border-width: 0 0 1 0;");
 
         VBox titulos = new VBox(2);
-        Text t1 = new Text("📄 PRÉ-VISUALIZAÇÃO DE IMPRESSÃO");
+        Text t1 = new Text("PRÉ-VISUALIZAÇÃO DE IMPRESSÃO");
         t1.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
         t1.setFill(Color.web("#f8fafc"));
         Text t2 = new Text("Espelho oficial da folha de comparecimento e registros de trabalho.");
@@ -104,7 +104,7 @@ public class RelatorioImpressaoService {
         zoomBox.setAlignment(Pos.CENTER);
         zoomBox.setStyle("-fx-background-color: #0f172a; -fx-padding: 4px 8px; -fx-background-radius: 6px; -fx-border-color: #334155; -fx-border-radius: 6px;");
 
-        Button btnZoomMenos = new Button("−");
+        Button btnZoomMenos = new Button("-");
         btnZoomMenos.setStyle("-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-font-size: 13px; -fx-cursor: hand;");
 
         javafx.scene.control.Label lblZoom = new javafx.scene.control.Label("100%");
@@ -115,10 +115,10 @@ public class RelatorioImpressaoService {
 
         zoomBox.getChildren().addAll(btnZoomMenos, lblZoom, btnZoomMais);
 
-        Button btnImprimir = new Button("🖨️ Confirmar e Imprimir");
+        Button btnImprimir = new Button("Confirmar e Imprimir");
         btnImprimir.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: 800; -fx-font-size: 13px; -fx-padding: 8px 18px; -fx-background-radius: 6px; -fx-cursor: hand;");
 
-        Button btnFechar = new Button("✖ Fechar");
+        Button btnFechar = new Button("Fechar");
         btnFechar.setStyle("-fx-background-color: #334155; -fx-text-fill: white; -fx-font-weight: 700; -fx-font-size: 13px; -fx-padding: 8px 16px; -fx-background-radius: 6px; -fx-cursor: hand;");
         btnFechar.setOnAction(e -> stage.close());
 
