@@ -213,4 +213,8 @@ public class FormValidator {
             default -> mensagemBase + " (Codigo HTTP: " + statusCode + ")";
         };
     }
+
+    public static String interpretarMensagemErro(StandardApiError apiError, int statusCode) {
+        return formatarMensagemErro(apiError, statusCode);
+    }
 }
