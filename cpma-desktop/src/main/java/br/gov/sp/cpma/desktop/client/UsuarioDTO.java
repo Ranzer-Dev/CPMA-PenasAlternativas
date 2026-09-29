@@ -16,7 +16,16 @@ public class UsuarioDTO {
     private String cep;
     private String uf;
     private String telefone;
+    private String foto;
     private String observacao;
+
+    public String getFoto() {
+        return foto;
+    }
+
+    public void setFoto(String foto) {
+        this.foto = foto;
+    }
 
     public Long getIdUsuario() {
         return idUsuario;
