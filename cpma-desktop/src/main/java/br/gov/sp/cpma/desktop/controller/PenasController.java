@@ -9,12 +9,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 public class PenasController {
 
@@ -52,6 +53,9 @@ public class PenasController {
     private Label lblInstituicaoError;
 
     @FXML
+    private FlowPane paneOutrasInstituicoes;
+
+    @FXML
     private ComboBox<String> cbTipoPena;
 
     @FXML
@@ -83,30 +87,33 @@ public class PenasController {
 
     @FXML
     private CheckBox chkSeg;
+    @FXML
+    private TextField txtSegIni1, txtSegFim1, txtSegIni2, txtSegFim2;
 
     @FXML
     private CheckBox chkTer;
+    @FXML
+    private TextField txtTerIni1, txtTerFim1, txtTerIni2, txtTerFim2;
 
     @FXML
     private CheckBox chkQua;
+    @FXML
+    private TextField txtQuaIni1, txtQuaFim1, txtQuaIni2, txtQuaFim2;
 
     @FXML
     private CheckBox chkQui;
+    @FXML
+    private TextField txtQuiIni1, txtQuiFim1, txtQuiIni2, txtQuiFim2;
 
     @FXML
     private CheckBox chkSex;
+    @FXML
+    private TextField txtSexIni1, txtSexFim1, txtSexIni2, txtSexFim2;
 
     @FXML
     private CheckBox chkSab;
-
     @FXML
-    private CheckBox chkDom;
-
-    @FXML
-    private TextField txtHorasDiarias;
-
-    @FXML
-    private TextField txtTurnoAcordado;
+    private TextField txtSabIni1, txtSabFim1, txtSabIni2, txtSabFim2;
 
     @FXML
     private TextArea txtAtividades;
@@ -149,6 +156,9 @@ public class PenasController {
 
     private final CpmaApiClient apiClient = new CpmaApiClient();
     private final ObservableList<PenaDTO> masterPenas = FXCollections.observableArrayList();
+    private final List<InstituicaoDTO> listaInstituicoesTodas = new ArrayList<>();
+    private final Map<Long, CheckBox> mapCheckboxesInstituicoes = new LinkedHashMap<>();
+
     private UsuarioDTO apenadoSelecionado;
     private Long penaIdEmEdicao = null;
 
@@ -174,6 +184,10 @@ public class PenasController {
         FormValidator.vincularLimpezaAoInteragir(txtHorasTotais, lblHorasTotaisError);
         FormValidator.vincularLimpezaAoInteragir(txtHorasSemanais, lblHorasSemanaisError);
         FormValidator.vincularLimpezaAoInteragir(dpDataInicio, lblDataInicioError);
+
+        txtHorasTotais.textProperty().addListener((obs, oldVal, newVal) -> calcularEstimativaAutomatica());
+        txtHorasSemanais.textProperty().addListener((obs, oldVal, newVal) -> calcularEstimativaAutomatica());
+        dpDataInicio.valueProperty().addListener((obs, oldVal, newVal) -> calcularEstimativaAutomatica());
 
         tblPenasGeral.setRowFactory(tv -> {
             TableRow<PenaDTO> row = new TableRow<>();
@@ -205,6 +219,21 @@ public class PenasController {
                 return null;
             }
         });
+
+        cbInstituicao.valueProperty().addListener((obs, oldVal, newVal) -> {
+            atualizarVisibilidadeCheckboxesOutrasInstituicoes(newVal);
+        });
+    }
+
+    private void atualizarVisibilidadeCheckboxesOutrasInstituicoes(InstituicaoDTO principal) {
+        Long idPrincipal = principal != null ? principal.getIdInstituicao() : null;
+        for (Map.Entry<Long, CheckBox> entry : mapCheckboxesInstituicoes.entrySet()) {
+            boolean isPrincipal = entry.getKey().equals(idPrincipal);
+            entry.getValue().setDisable(isPrincipal);
+            if (isPrincipal) {
+                entry.getValue().setSelected(false);
+            }
+        }
     }
 
     private void configurarTabelaPenas() {
@@ -226,10 +255,30 @@ public class PenasController {
             ApiResponse<List<InstituicaoDTO>> resp = apiClient.listarInstituicoes();
             Platform.runLater(() -> {
                 if (resp.isSuccess() && resp.getData() != null) {
-                    cbInstituicao.setItems(FXCollections.observableArrayList(resp.getData()));
+                    listaInstituicoesTodas.clear();
+                    listaInstituicoesTodas.addAll(resp.getData());
+                    cbInstituicao.setItems(FXCollections.observableArrayList(listaInstituicoesTodas));
+                    renderizarCheckboxesOutrasInstituicoes();
                 }
             });
         }).start();
+    }
+
+    private void renderizarCheckboxesOutrasInstituicoes() {
+        paneOutrasInstituicoes.getChildren().clear();
+        mapCheckboxesInstituicoes.clear();
+
+        InstituicaoDTO principal = cbInstituicao.getValue();
+        Long idPrincipal = principal != null ? principal.getIdInstituicao() : null;
+
+        for (InstituicaoDTO inst : listaInstituicoesTodas) {
+            CheckBox cb = new CheckBox(inst.getNome());
+            cb.setStyle("-fx-font-size: 11px; -fx-text-fill: #334155;");
+            boolean isPrincipal = inst.getIdInstituicao().equals(idPrincipal);
+            cb.setDisable(isPrincipal);
+            mapCheckboxesInstituicoes.put(inst.getIdInstituicao(), cb);
+            paneOutrasInstituicoes.getChildren().add(cb);
+        }
     }
 
     public void carregarPenas() {
@@ -265,10 +314,10 @@ public class PenasController {
 
         this.penaIdEmEdicao = pena.getIdPena();
         lblTituloForm.setText("Editar Contrato / Medida Alternativa (#" + pena.getIdPena() + ")");
-        lblSubtituloForm.setText("Ajuste os termos, dias de comparecimento e carga horária acordada com o apenado.");
+        lblSubtituloForm.setText("Ajuste os termos, instituicoes parceiras e contrato de trabalho acordado com o apenado.");
         btnCancelarEdicao.setVisible(true);
         btnCancelarEdicao.setManaged(true);
-        btnSalvarPena.setText("Salvar Alterações do Contrato");
+        btnSalvarPena.setText("Salvar Alteracoes do Contrato");
 
         txtCpfApenado.setText("");
         txtCpfApenado.setDisable(true);
@@ -293,6 +342,11 @@ public class PenasController {
             }
         }
 
+        for (Map.Entry<Long, CheckBox> entry : mapCheckboxesInstituicoes.entrySet()) {
+            boolean vinculada = pena.getInstituicoesVinculadasIds() != null && pena.getInstituicoesVinculadasIds().contains(entry.getKey());
+            entry.getValue().setSelected(vinculada);
+        }
+
         cbTipoPena.setValue(pena.getTipoPena());
         txtHorasTotais.setText(String.valueOf(pena.getHorasTotais()));
         txtHorasSemanais.setText(String.valueOf(pena.getHorasSemanais()));
@@ -301,6 +355,7 @@ public class PenasController {
         txtAtividades.setText(pena.getAtividadesAcordadas() != null ? pena.getAtividadesAcordadas() : "");
 
         desmontarContratoDiasHorarios(pena.getDiasSemanaEHorariosDisponivel());
+        calcularEstimativaAutomatica();
         lblFeedback.setVisible(false);
     }
 
@@ -308,7 +363,7 @@ public class PenasController {
     public void handleCancelarEdicao() {
         this.penaIdEmEdicao = null;
         lblTituloForm.setText("Lancar Nova Pena Alternativa");
-        lblSubtituloForm.setText("Vincule o apenado a uma instituicao parceira e defina os termos e contrato de cumprimento.");
+        lblSubtituloForm.setText("Vincule o apenado a instituicoes parceiras e defina os termos e contrato de cumprimento.");
         btnCancelarEdicao.setVisible(false);
         btnCancelarEdicao.setManaged(false);
         btnSalvarPena.setText("Salvar e Registrar Pena");
@@ -321,77 +376,209 @@ public class PenasController {
         this.apenadoSelecionado = null;
 
         cbInstituicao.getSelectionModel().clearSelection();
+        for (CheckBox cb : mapCheckboxesInstituicoes.values()) {
+            cb.setSelected(false);
+            cb.setDisable(false);
+        }
+
         txtHorasTotais.clear();
         txtHorasSemanais.clear();
         dpDataInicio.setValue(LocalDate.now());
         dpDataTermino.setValue(null);
         txtAtividades.clear();
-        txtHorasDiarias.setText("4");
-        txtTurnoAcordado.setText("08:00 às 12:00");
-        chkSeg.setSelected(true);
-        chkTer.setSelected(true);
-        chkQua.setSelected(true);
-        chkQui.setSelected(true);
-        chkSex.setSelected(true);
-        chkSab.setSelected(false);
-        chkDom.setSelected(false);
+        lblEstimativaTexto.setText("");
+
+        handlePreencherComercial();
         lblFeedback.setVisible(false);
     }
 
+    private void calcularEstimativaAutomatica() {
+        try {
+            String totStr = txtHorasTotais.getText();
+            String semStr = txtHorasSemanais.getText();
+            LocalDate ini = dpDataInicio.getValue();
+
+            if (totStr == null || totStr.isBlank() || semStr == null || semStr.isBlank() || ini == null) {
+                return;
+            }
+
+            int horasTotais = Integer.parseInt(totStr.trim());
+            int horasSemanais = Integer.parseInt(semStr.trim());
+
+            if (horasTotais <= 0 || horasSemanais <= 0) {
+                return;
+            }
+
+            double mesesEstimados = horasTotais / (horasSemanais * 4.0);
+            long diasEstimados = (long) Math.ceil((horasTotais / (double) horasSemanais) * 7.0);
+            LocalDate termino = ini.plusDays(diasEstimados);
+            dpDataTermino.setValue(termino);
+
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            lblEstimativaTexto.setText("Estimativa: " + String.format(Locale.US, "%.1f", mesesEstimados) + " meses (~" + Math.round(horasTotais / (double) horasSemanais) + " semanas). Conclusao prevista: " + termino.format(fmt));
+        } catch (NumberFormatException ignored) {
+        }
+    }
+
+    @FXML
+    public void handlePreencherComercial() {
+        chkSeg.setSelected(true);
+        txtSegIni1.setText("08:00"); txtSegFim1.setText("12:00"); txtSegIni2.setText("13:00"); txtSegFim2.setText("17:00");
+
+        chkTer.setSelected(true);
+        txtTerIni1.setText("08:00"); txtTerFim1.setText("12:00"); txtTerIni2.setText("13:00"); txtTerFim2.setText("17:00");
+
+        chkQua.setSelected(true);
+        txtQuaIni1.setText("08:00"); txtQuaFim1.setText("12:00"); txtQuaIni2.setText("13:00"); txtQuaFim2.setText("17:00");
+
+        chkQui.setSelected(true);
+        txtQuiIni1.setText("08:00"); txtQuiFim1.setText("12:00"); txtQuiIni2.setText("13:00"); txtQuiFim2.setText("17:00");
+
+        chkSex.setSelected(true);
+        txtSexIni1.setText("08:00"); txtSexFim1.setText("12:00"); txtSexIni2.setText("13:00"); txtSexFim2.setText("17:00");
+
+        chkSab.setSelected(false);
+        txtSabIni1.setText(""); txtSabFim1.setText(""); txtSabIni2.setText(""); txtSabFim2.setText("");
+    }
+
+    @FXML
+    public void handlePreencherMeioPeriodo() {
+        chkSeg.setSelected(true);
+        txtSegIni1.setText("08:00"); txtSegFim1.setText("12:00"); txtSegIni2.setText(""); txtSegFim2.setText("");
+
+        chkTer.setSelected(true);
+        txtTerIni1.setText("08:00"); txtTerFim1.setText("12:00"); txtTerIni2.setText(""); txtTerFim2.setText("");
+
+        chkQua.setSelected(true);
+        txtQuaIni1.setText("08:00"); txtQuaFim1.setText("12:00"); txtQuaIni2.setText(""); txtQuaFim2.setText("");
+
+        chkQui.setSelected(true);
+        txtQuiIni1.setText("08:00"); txtQuiFim1.setText("12:00"); txtQuiIni2.setText(""); txtQuiFim2.setText("");
+
+        chkSex.setSelected(true);
+        txtSexIni1.setText("08:00"); txtSexFim1.setText("12:00"); txtSexIni2.setText(""); txtSexFim2.setText("");
+
+        chkSab.setSelected(false);
+        txtSabIni1.setText(""); txtSabFim1.setText(""); txtSabIni2.setText(""); txtSabFim2.setText("");
+    }
+
+    @FXML
+    public void handlePreencherFimDeSemana() {
+        chkSeg.setSelected(false);
+        txtSegIni1.setText(""); txtSegFim1.setText(""); txtSegIni2.setText(""); txtSegFim2.setText("");
+
+        chkTer.setSelected(false);
+        txtTerIni1.setText(""); txtTerFim1.setText(""); txtTerIni2.setText(""); txtTerFim2.setText("");
+
+        chkQua.setSelected(false);
+        txtQuaIni1.setText(""); txtQuaFim1.setText(""); txtQuaIni2.setText(""); txtQuaFim2.setText("");
+
+        chkQui.setSelected(false);
+        txtQuiIni1.setText(""); txtQuiFim1.setText(""); txtQuiIni2.setText(""); txtQuiFim2.setText("");
+
+        chkSex.setSelected(false);
+        txtSexIni1.setText(""); txtSexFim1.setText(""); txtSexIni2.setText(""); txtSexFim2.setText("");
+
+        chkSab.setSelected(true);
+        txtSabIni1.setText("08:00"); txtSabFim1.setText("14:00"); txtSabIni2.setText(""); txtSabFim2.setText("");
+    }
+
     private String montarContratoDiasHorarios() {
-        List<String> dias = new ArrayList<>();
-        if (chkSeg.isSelected()) dias.add("Seg");
-        if (chkTer.isSelected()) dias.add("Ter");
-        if (chkQua.isSelected()) dias.add("Qua");
-        if (chkQui.isSelected()) dias.add("Qui");
-        if (chkSex.isSelected()) dias.add("Sex");
-        if (chkSab.isSelected()) dias.add("Sáb");
-        if (chkDom.isSelected()) dias.add("Dom");
+        List<String> partes = new ArrayList<>();
+        appendTurnosDia(partes, "Segunda", chkSeg, txtSegIni1, txtSegFim1, txtSegIni2, txtSegFim2);
+        appendTurnosDia(partes, "Terça", chkTer, txtTerIni1, txtTerFim1, txtTerIni2, txtTerFim2);
+        appendTurnosDia(partes, "Quarta", chkQua, txtQuaIni1, txtQuaFim1, txtQuaIni2, txtQuaFim2);
+        appendTurnosDia(partes, "Quinta", chkQui, txtQuiIni1, txtQuiFim1, txtQuiIni2, txtQuiFim2);
+        appendTurnosDia(partes, "Sexta", chkSex, txtSexIni1, txtSexFim1, txtSexIni2, txtSexFim2);
+        appendTurnosDia(partes, "Sábado", chkSab, txtSabIni1, txtSabFim1, txtSabIni2, txtSabFim2);
 
-        String strDias = dias.isEmpty() ? "A definir" : String.join(", ", dias);
-        String hDiarias = txtHorasDiarias.getText().trim();
-        if (hDiarias.isEmpty()) hDiarias = "4";
-        String turno = txtTurnoAcordado.getText().trim();
-        if (turno.isEmpty()) turno = "Horário regular";
+        if (partes.isEmpty()) {
+            return "Segunda a Sexta (Horário regular)";
+        }
+        return String.join(", ", partes);
+    }
 
-        return strDias + " | " + hDiarias + "h/dia (" + turno + ")";
+    private void appendTurnosDia(List<String> partes, String dia, CheckBox chk, TextField i1, TextField f1, TextField i2, TextField f2) {
+        if (!chk.isSelected()) return;
+        StringBuilder sb = new StringBuilder(dia);
+        String hi1 = i1.getText() != null ? i1.getText().trim() : "";
+        String hf1 = f1.getText() != null ? f1.getText().trim() : "";
+        String hi2 = i2.getText() != null ? i2.getText().trim() : "";
+        String hf2 = f2.getText() != null ? f2.getText().trim() : "";
+
+        if (!hi1.isEmpty() && !hf1.isEmpty()) {
+            sb.append(" ").append(hi1).append("-").append(hf1);
+        }
+        if (!hi2.isEmpty() && !hf2.isEmpty()) {
+            sb.append(" ").append(hi2).append("-").append(hf2);
+        }
+        partes.add(sb.toString());
     }
 
     private void desmontarContratoDiasHorarios(String valor) {
         if (valor == null || valor.isBlank()) {
-            chkSeg.setSelected(true);
-            chkTer.setSelected(true);
-            chkQua.setSelected(true);
-            chkQui.setSelected(true);
-            chkSex.setSelected(true);
-            chkSab.setSelected(false);
-            chkDom.setSelected(false);
-            txtHorasDiarias.setText("4");
-            txtTurnoAcordado.setText("08:00 às 12:00");
+            handlePreencherComercial();
             return;
         }
 
-        chkSeg.setSelected(valor.contains("Seg"));
-        chkTer.setSelected(valor.contains("Ter"));
-        chkQua.setSelected(valor.contains("Qua"));
-        chkQui.setSelected(valor.contains("Qui"));
-        chkSex.setSelected(valor.contains("Sex"));
-        chkSab.setSelected(valor.contains("Sáb") || valor.contains("Sab"));
-        chkDom.setSelected(valor.contains("Dom"));
+        chkSeg.setSelected(false);
+        chkTer.setSelected(false);
+        chkQua.setSelected(false);
+        chkQui.setSelected(false);
+        chkSex.setSelected(false);
+        chkSab.setSelected(false);
 
-        if (valor.contains("|")) {
-            String[] partes = valor.split("\\|");
-            if (partes.length > 1) {
-                String dadosHorario = partes[1].trim();
-                if (dadosHorario.contains("h/dia")) {
-                    String[] tokens = dadosHorario.split("h/dia");
-                    txtHorasDiarias.setText(tokens[0].trim());
-                    if (tokens.length > 1) {
-                        String turnoLimpo = tokens[1].replace("(", "").replace(")", "").trim();
-                        txtTurnoAcordado.setText(turnoLimpo);
-                    }
-                }
+        String[] itens = valor.split(",\\s*");
+        for (String item : itens) {
+            String lower = item.toLowerCase();
+            if (lower.contains("seg")) {
+                preencherCamposDia(chkSeg, txtSegIni1, txtSegFim1, txtSegIni2, txtSegFim2, item);
+            } else if (lower.contains("ter")) {
+                preencherCamposDia(chkTer, txtTerIni1, txtTerFim1, txtTerIni2, txtTerFim2, item);
+            } else if (lower.contains("qua")) {
+                preencherCamposDia(chkQua, txtQuaIni1, txtQuaFim1, txtQuaIni2, txtQuaFim2, item);
+            } else if (lower.contains("qui")) {
+                preencherCamposDia(chkQui, txtQuiIni1, txtQuiFim1, txtQuiIni2, txtQuiFim2, item);
+            } else if (lower.contains("sex")) {
+                preencherCamposDia(chkSex, txtSexIni1, txtSexFim1, txtSexIni2, txtSexFim2, item);
+            } else if (lower.contains("sáb") || lower.contains("sab")) {
+                preencherCamposDia(chkSab, txtSabIni1, txtSabFim1, txtSabIni2, txtSabFim2, item);
             }
+        }
+    }
+
+    private void preencherCamposDia(CheckBox chk, TextField i1, TextField f1, TextField i2, TextField f2, String texto) {
+        chk.setSelected(true);
+        i1.clear(); f1.clear(); i2.clear(); f2.clear();
+
+        String[] tokens = texto.trim().split("\\s+");
+        List<String> faixas = new ArrayList<>();
+        for (int i = 1; i < tokens.length; i++) {
+            faixas.add(tokens[i]);
+        }
+
+        if (faixas.size() == 1 && faixas.get(0).contains("-")) {
+            String[] p = faixas.get(0).split("-");
+            if (p.length > 0) i1.setText(p[0]);
+            if (p.length > 1) f1.setText(p[1]);
+        } else if (faixas.size() >= 2 && faixas.get(0).contains("-") && faixas.get(1).contains("-")) {
+            String[] p1 = faixas.get(0).split("-");
+            if (p1.length > 0) i1.setText(p1[0]);
+            if (p1.length > 1) f1.setText(p1[1]);
+
+            String[] p2 = faixas.get(1).split("-");
+            if (p2.length > 0) i2.setText(p2[0]);
+            if (p2.length > 1) f2.setText(p2[1]);
+        } else if (faixas.size() >= 2) {
+            i1.setText(faixas.get(0));
+            f1.setText(faixas.get(1));
+            if (faixas.size() >= 4) {
+                i2.setText(faixas.get(2));
+                f2.setText(faixas.get(3));
+            }
+        } else {
+            i1.setText("08:00");
+            f1.setText("12:00");
         }
     }
 
@@ -524,6 +711,14 @@ public class PenasController {
         dto.setDataTermino(dpDataTermino.getValue());
         dto.setDiasSemanaEHorariosDisponivel(montarContratoDiasHorarios());
         dto.setAtividadesAcordadas(txtAtividades.getText());
+
+        List<Long> outrasInstIds = new ArrayList<>();
+        for (Map.Entry<Long, CheckBox> entry : mapCheckboxesInstituicoes.entrySet()) {
+            if (entry.getValue().isSelected() && !entry.getKey().equals(instituicao.getIdInstituicao())) {
+                outrasInstIds.add(entry.getKey());
+            }
+        }
+        dto.setOutrasInstituicoesIds(outrasInstIds);
 
         final boolean isEdicao = (penaIdEmEdicao != null);
         final Long idPenaAtual = penaIdEmEdicao;
