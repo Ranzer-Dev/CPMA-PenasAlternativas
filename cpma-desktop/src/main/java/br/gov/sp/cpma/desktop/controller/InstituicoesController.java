@@ -18,6 +18,9 @@ import java.util.List;
 public class InstituicoesController {
 
     @FXML
+    private ScrollPane scrollPaneInstituicoes;
+
+    @FXML
     private VBox paneFormulario;
 
     @FXML
@@ -308,6 +311,9 @@ public class InstituicoesController {
         limparForm();
         paneFormulario.setVisible(true);
         paneFormulario.setManaged(true);
+        if (scrollPaneInstituicoes != null) {
+            scrollPaneInstituicoes.setVvalue(0.0);
+        }
     }
 
     @FXML
@@ -356,6 +362,9 @@ public class InstituicoesController {
         lblFeedbackForm.setVisible(false);
         paneFormulario.setVisible(true);
         paneFormulario.setManaged(true);
+        if (scrollPaneInstituicoes != null) {
+            scrollPaneInstituicoes.setVvalue(0.0);
+        }
     }
 
     @FXML

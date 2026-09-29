@@ -7,14 +7,12 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane prefHeight="820.0" prefWidth="1320.0" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.MainShellController">
-    <!-- Lateral Esquerda: Sidebar Limpa e Fiel ao Padrao Governamental -->
     <left>
         <VBox prefWidth="255.0" spacing="12.0" styleClass="sidebar">
             <padding>
                 <Insets bottom="20.0" left="16.0" right="16.0" top="18.0" />
             </padding>
 
-            <!-- Brand Header com Brasao Oficial Colorido de SP -->
             <HBox alignment="CENTER_LEFT" spacing="12.0">
                 <ImageView fitHeight="48.0" fitWidth="48.0" pickOnBounds="true" preserveRatio="true" smooth="true">
                     <image>
@@ -29,7 +27,6 @@
 
             <Separator />
 
-            <!-- Card Admin Logado (Simples e Direto sem Ruido) -->
             <VBox spacing="4.0" style="-fx-background-color: #f8fafc; -fx-padding: 10px 12px; -fx-background-radius: 8px; -fx-border-color: #e2e8f0; -fx-border-radius: 8px;">
                 <HBox alignment="CENTER_LEFT" spacing="8.0">
                     <Label style="-fx-font-size: 16px;" text="👤" />
@@ -42,7 +39,6 @@
 
             <Separator />
 
-            <!-- Menus de Navegacao com espacamento confortavel e sem emojis corrompidos -->
             <VBox spacing="6.0" VBox.vgrow="ALWAYS">
                 <Button fx:id="btnNavDashboard" maxWidth="Infinity" onAction="#navegarParaDashboard" styleClass="nav-button-active" text="📊  Dashboard" />
                 <Button fx:id="btnNavApenados" maxWidth="Infinity" onAction="#navegarParaApenados" styleClass="nav-button" text="👥  Apenados" />
@@ -52,7 +48,6 @@
                 <Button fx:id="btnNavTotem" maxWidth="Infinity" onAction="#navegarParaTotem" styleClass="nav-button" text="📸  Totem de Presenca" />
             </VBox>
 
-            <!-- Rodape da Sidebar: Status e Botao Sair -->
             <VBox spacing="10.0">
                 <Label fx:id="lblApiStatus" styleClass="status-badge-online" text="● Servidor Conectado" />
                 <Button fx:id="btnSair" maxWidth="Infinity" onAction="#handleLogout" prefHeight="38.0" styleClass="btn-secondary" text="Sair do Sistema" />
@@ -60,7 +55,6 @@
         </VBox>
     </left>
 
-    <!-- Topo: Topbar com Titulo e Busca Rapida -->
     <top>
         <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="topbar">
             <VBox spacing="2.0">
@@ -77,12 +71,7 @@
         </HBox>
     </top>
 
-    <!-- Centro: ContentArea SPA dinamica -->
     <center>
-        <StackPane fx:id="contentArea" style="-fx-background-color: #f8fafc;">
-            <padding>
-                <Insets bottom="24.0" left="24.0" right="24.0" top="20.0" />
-            </padding>
-        </StackPane>
+        <StackPane fx:id="contentArea" style="-fx-background-color: #f8fafc;" />
     </center>
 </BorderPane>
