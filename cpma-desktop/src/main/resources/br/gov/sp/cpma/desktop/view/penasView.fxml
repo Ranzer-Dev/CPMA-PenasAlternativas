@@ -157,6 +157,12 @@
                             <TextField fx:id="txtSabFim1" promptText="14:00" GridPane.columnIndex="2" GridPane.rowIndex="6" />
                             <TextField fx:id="txtSabIni2" promptText="" GridPane.columnIndex="3" GridPane.rowIndex="6" />
                             <TextField fx:id="txtSabFim2" promptText="" GridPane.columnIndex="4" GridPane.rowIndex="6" />
+
+                            <CheckBox fx:id="chkDom" text="Domingo" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+                            <TextField fx:id="txtDomIni1" promptText="08:00" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                            <TextField fx:id="txtDomFim1" promptText="14:00" GridPane.columnIndex="2" GridPane.rowIndex="7" />
+                            <TextField fx:id="txtDomIni2" promptText="" GridPane.columnIndex="3" GridPane.rowIndex="7" />
+                            <TextField fx:id="txtDomFim2" promptText="" GridPane.columnIndex="4" GridPane.rowIndex="7" />
                         </GridPane>
                     </VBox>
 

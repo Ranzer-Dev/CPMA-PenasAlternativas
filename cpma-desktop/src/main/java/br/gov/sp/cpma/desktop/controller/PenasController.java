@@ -116,6 +116,11 @@ public class PenasController {
     private TextField txtSabIni1, txtSabFim1, txtSabIni2, txtSabFim2;
 
     @FXML
+    private CheckBox chkDom;
+    @FXML
+    private TextField txtDomIni1, txtDomFim1, txtDomIni2, txtDomFim2;
+
+    @FXML
     private TextArea txtAtividades;
 
     @FXML
@@ -439,6 +444,9 @@ public class PenasController {
 
         chkSab.setSelected(false);
         txtSabIni1.setText(""); txtSabFim1.setText(""); txtSabIni2.setText(""); txtSabFim2.setText("");
+
+        chkDom.setSelected(false);
+        txtDomIni1.setText(""); txtDomFim1.setText(""); txtDomIni2.setText(""); txtDomFim2.setText("");
     }
 
     @FXML
@@ -460,6 +468,9 @@ public class PenasController {
 
         chkSab.setSelected(false);
         txtSabIni1.setText(""); txtSabFim1.setText(""); txtSabIni2.setText(""); txtSabFim2.setText("");
+
+        chkDom.setSelected(false);
+        txtDomIni1.setText(""); txtDomFim1.setText(""); txtDomIni2.setText(""); txtDomFim2.setText("");
     }
 
     @FXML
@@ -481,6 +492,9 @@ public class PenasController {
 
         chkSab.setSelected(true);
         txtSabIni1.setText("08:00"); txtSabFim1.setText("14:00"); txtSabIni2.setText(""); txtSabFim2.setText("");
+
+        chkDom.setSelected(true);
+        txtDomIni1.setText("08:00"); txtDomFim1.setText("14:00"); txtDomIni2.setText(""); txtDomFim2.setText("");
     }
 
     private String montarContratoDiasHorarios() {
@@ -491,6 +505,7 @@ public class PenasController {
         appendTurnosDia(partes, "Quinta", chkQui, txtQuiIni1, txtQuiFim1, txtQuiIni2, txtQuiFim2);
         appendTurnosDia(partes, "Sexta", chkSex, txtSexIni1, txtSexFim1, txtSexIni2, txtSexFim2);
         appendTurnosDia(partes, "Sábado", chkSab, txtSabIni1, txtSabFim1, txtSabIni2, txtSabFim2);
+        appendTurnosDia(partes, "Domingo", chkDom, txtDomIni1, txtDomFim1, txtDomIni2, txtDomFim2);
 
         if (partes.isEmpty()) {
             return "Segunda a Sexta (Horário regular)";
@@ -527,6 +542,7 @@ public class PenasController {
         chkQui.setSelected(false);
         chkSex.setSelected(false);
         chkSab.setSelected(false);
+        chkDom.setSelected(false);
 
         String[] itens = valor.split(",\\s*");
         for (String item : itens) {
@@ -543,6 +559,8 @@ public class PenasController {
                 preencherCamposDia(chkSex, txtSexIni1, txtSexFim1, txtSexIni2, txtSexFim2, item);
             } else if (lower.contains("sáb") || lower.contains("sab")) {
                 preencherCamposDia(chkSab, txtSabIni1, txtSabFim1, txtSabIni2, txtSabFim2, item);
+            } else if (lower.contains("dom")) {
+                preencherCamposDia(chkDom, txtDomIni1, txtDomFim1, txtDomIni2, txtDomFim2, item);
             }
         }
     }
