@@ -9,6 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
@@ -227,12 +228,55 @@ public class FrequenciaController {
 
         colLoteData.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getData().toString()));
         colLoteDia.setCellValueFactory(c -> c.getValue().diaSemanaProperty());
+
         colLoteEntrada.setCellValueFactory(c -> c.getValue().horarioInicioProperty());
+        colLoteEntrada.setCellFactory(TextFieldTableCell.forTableColumn());
+        colLoteEntrada.setOnEditCommit(ev -> {
+            ItemFolhaPontoMensal it = ev.getRowValue();
+            it.setHorarioInicio(ev.getNewValue());
+            it.recalcularHorasPelosHorarios();
+            tblFolhaMensal.refresh();
+            atualizarTotaisFolhaMensal();
+        });
+
         colLoteAlmoco.setCellValueFactory(c -> c.getValue().horarioAlmocoProperty());
+        colLoteAlmoco.setCellFactory(TextFieldTableCell.forTableColumn());
+        colLoteAlmoco.setOnEditCommit(ev -> {
+            ItemFolhaPontoMensal it = ev.getRowValue();
+            it.setHorarioAlmoco(ev.getNewValue());
+            it.recalcularHorasPelosHorarios();
+            tblFolhaMensal.refresh();
+            atualizarTotaisFolhaMensal();
+        });
+
         colLoteVolta.setCellValueFactory(c -> c.getValue().horarioVoltaProperty());
+        colLoteVolta.setCellFactory(TextFieldTableCell.forTableColumn());
+        colLoteVolta.setOnEditCommit(ev -> {
+            ItemFolhaPontoMensal it = ev.getRowValue();
+            it.setHorarioVolta(ev.getNewValue());
+            it.recalcularHorasPelosHorarios();
+            tblFolhaMensal.refresh();
+            atualizarTotaisFolhaMensal();
+        });
+
         colLoteSaida.setCellValueFactory(c -> c.getValue().horarioSaidaProperty());
+        colLoteSaida.setCellFactory(TextFieldTableCell.forTableColumn());
+        colLoteSaida.setOnEditCommit(ev -> {
+            ItemFolhaPontoMensal it = ev.getRowValue();
+            it.setHorarioSaida(ev.getNewValue());
+            it.recalcularHorasPelosHorarios();
+            tblFolhaMensal.refresh();
+            atualizarTotaisFolhaMensal();
+        });
+
         colLoteHoras.setCellValueFactory(c -> new SimpleStringProperty(String.format("%.1fh", c.getValue().getHorasCumpridas())));
+
         colLoteObs.setCellValueFactory(c -> c.getValue().atividadesProperty());
+        colLoteObs.setCellFactory(TextFieldTableCell.forTableColumn());
+        colLoteObs.setOnEditCommit(ev -> {
+            ItemFolhaPontoMensal it = ev.getRowValue();
+            it.setAtividades(ev.getNewValue());
+        });
 
         colLoteStatus.setCellValueFactory(c -> c.getValue().statusTextoProperty());
         colLoteStatus.setCellFactory(col -> new TableCell<ItemFolhaPontoMensal, String>() {
@@ -409,6 +453,186 @@ public class FrequenciaController {
         }
         atualizarTotaisFolhaMensal();
         tblFolhaMensal.refresh();
+    }
+
+    private String[] decomporTurnoContrato(PenaDTO pena) {
+        double horasPadrao = 4.0;
+        String hInicio = "08:00";
+        String hAlmoco = "";
+        String hVolta = "";
+        String hSaida = "12:00";
+
+        if (pena != null) {
+            String contrato = pena.getDiasSemanaEHorariosDisponivel();
+            if (contrato != null && contrato.contains("h/dia")) {
+                try {
+                    String[] p = contrato.split("\\|");
+                    if (p.length > 1) {
+                        String dadosH = p[1].trim();
+                        String[] tokens = dadosH.split("h/dia");
+                        horasPadrao = Double.parseDouble(tokens[0].trim());
+                        if (tokens.length > 1) {
+                            String turno = tokens[1].replace("(", "").replace(")", "").trim();
+                            if (turno.contains("às")) {
+                                String[] horasTurno = turno.split("às");
+                                hInicio = horasTurno[0].trim();
+                                hSaida = horasTurno[1].trim();
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+        return new String[]{hInicio, hAlmoco, hVolta, hSaida, String.valueOf(horasPadrao)};
+    }
+
+    @FXML
+    public void handleAdicionarDia() {
+        PenaDTO pena = cbPenas.getValue();
+        LocalDate proxima = LocalDate.now();
+        if (!listaGradeMensal.isEmpty()) {
+            proxima = listaGradeMensal.get(listaGradeMensal.size() - 1).getData().plusDays(1);
+        }
+        String[] t = decomporTurnoContrato(pena);
+        double horas = Double.parseDouble(t[4]);
+        ItemFolhaPontoMensal it = new ItemFolhaPontoMensal(
+                proxima, formatarDiaSemana(proxima.getDayOfWeek()), t[0], t[1], t[2], t[3], horas,
+                pena != null && pena.getAtividadesAcordadas() != null ? pena.getAtividadesAcordadas() : "Prestação de Serviços à Comunidade"
+        );
+        it.presenteProperty().addListener((o, oldV, newV) -> {
+            atualizarTotaisFolhaMensal();
+            tblFolhaMensal.refresh();
+        });
+        listaGradeMensal.add(it);
+        tblFolhaMensal.refresh();
+        atualizarTotaisFolhaMensal();
+    }
+
+    @FXML
+    public void handleAdicionarMes() {
+        PenaDTO pena = cbPenas.getValue();
+        LocalDate cur = LocalDate.now();
+        if (!listaGradeMensal.isEmpty()) {
+            cur = listaGradeMensal.get(listaGradeMensal.size() - 1).getData().plusDays(1);
+        }
+        String[] t = decomporTurnoContrato(pena);
+        double horas = Double.parseDouble(t[4]);
+        String ativ = pena != null && pena.getAtividadesAcordadas() != null ? pena.getAtividadesAcordadas() : "Prestação de Serviços à Comunidade";
+
+        int adicionados = 0;
+        while (adicionados < 22) {
+            DayOfWeek dow = cur.getDayOfWeek();
+            if (isDiaContratado(dow, pena != null ? pena.getDiasSemanaEHorariosDisponivel() : null)) {
+                ItemFolhaPontoMensal it = new ItemFolhaPontoMensal(
+                        cur, formatarDiaSemana(dow), t[0], t[1], t[2], t[3], horas, ativ
+                );
+                it.presenteProperty().addListener((o, oldV, newV) -> {
+                    atualizarTotaisFolhaMensal();
+                    tblFolhaMensal.refresh();
+                });
+                listaGradeMensal.add(it);
+                adicionados++;
+            }
+            cur = cur.plusDays(1);
+        }
+        tblFolhaMensal.refresh();
+        atualizarTotaisFolhaMensal();
+    }
+
+    @FXML
+    public void handlePreencherHorariosPena() {
+        PenaDTO pena = cbPenas.getValue();
+        if (pena == null || listaGradeMensal.isEmpty()) return;
+        String[] t = decomporTurnoContrato(pena);
+
+        for (ItemFolhaPontoMensal it : listaGradeMensal) {
+            it.setHorarioInicio(t[0]);
+            it.setHorarioAlmoco(t[1]);
+            it.setHorarioVolta(t[2]);
+            it.setHorarioSaida(t[3]);
+            if (it.isPresente()) {
+                it.recalcularHorasPelosHorarios();
+            }
+        }
+        tblFolhaMensal.refresh();
+        atualizarTotaisFolhaMensal();
+    }
+
+    @FXML
+    public void handleContinuarDeOndeParou() {
+        PenaDTO pena = cbPenas.getValue();
+        if (pena == null) {
+            lblFeedbackFolhaMensal.setText("Selecione um apenado e uma pena primeiro.");
+            lblFeedbackFolhaMensal.getStyleClass().setAll("banner-error");
+            lblFeedbackFolhaMensal.setVisible(true);
+            return;
+        }
+
+        int mesIndex = cbMesReferencia.getSelectionModel().getSelectedIndex() + 1;
+        Integer ano = cbAnoReferencia.getValue();
+        if (ano == null) ano = LocalDate.now().getYear();
+
+        final int finalAno = ano;
+        final int finalMes = mesIndex;
+
+        new Thread(() -> {
+            ApiResponse<List<RegistroTrabalhoDTO>> respMes = apiClient.listarRegistrosPorPenaEMes(pena.getIdPena(), finalAno, finalMes);
+            if (respMes.isSuccess() && respMes.getData() != null && !respMes.getData().isEmpty()) {
+                Platform.runLater(() -> {
+                    listaGradeMensal.clear();
+                    for (RegistroTrabalhoDTO reg : respMes.getData()) {
+                        LocalDate d = reg.getDataTrabalho();
+                        String diaSemana = d != null ? formatarDiaSemana(d.getDayOfWeek()) : "-";
+                        ItemFolhaPontoMensal it = new ItemFolhaPontoMensal(
+                                d, diaSemana, reg.getHorarioInicio(), reg.getHorarioAlmoco(), reg.getHorarioVolta(), reg.getHorarioSaida(),
+                                reg.getHorasCumpridas() != null ? reg.getHorasCumpridas() : 4.0, reg.getAtividades()
+                        );
+                        it.presenteProperty().addListener((o, oldV, newV) -> {
+                            atualizarTotaisFolhaMensal();
+                            tblFolhaMensal.refresh();
+                        });
+                        listaGradeMensal.add(it);
+                    }
+                    tblFolhaMensal.refresh();
+                    atualizarTotaisFolhaMensal();
+                    lblFeedbackFolhaMensal.setText("Registros existentes do mês carregados para conferência e edição.");
+                    lblFeedbackFolhaMensal.getStyleClass().setAll("banner-success");
+                    lblFeedbackFolhaMensal.setVisible(true);
+                });
+            } else {
+                ApiResponse<RegistroTrabalhoDTO> respUltimo = apiClient.buscarUltimoRegistroPorPena(pena.getIdPena());
+                Platform.runLater(() -> {
+                    LocalDate proximaData = LocalDate.now();
+                    if (respUltimo.isSuccess() && respUltimo.getData() != null && respUltimo.getData().getDataTrabalho() != null) {
+                        proximaData = respUltimo.getData().getDataTrabalho().plusDays(1);
+                    }
+                    listaGradeMensal.clear();
+                    String[] t = decomporTurnoContrato(pena);
+                    double horas = Double.parseDouble(t[4]);
+                    ItemFolhaPontoMensal it = new ItemFolhaPontoMensal(
+                            proximaData, formatarDiaSemana(proximaData.getDayOfWeek()), t[0], t[1], t[2], t[3], horas,
+                            pena.getAtividadesAcordadas() != null ? pena.getAtividadesAcordadas() : "Prestação de Serviços à Comunidade"
+                    );
+                    it.presenteProperty().addListener((o, oldV, newV) -> {
+                        atualizarTotaisFolhaMensal();
+                        tblFolhaMensal.refresh();
+                    });
+                    listaGradeMensal.add(it);
+                    tblFolhaMensal.refresh();
+                    atualizarTotaisFolhaMensal();
+                    lblFeedbackFolhaMensal.setText("Iniciando a partir do dia seguinte ao último registro (" + proximaData + ").");
+                    lblFeedbackFolhaMensal.getStyleClass().setAll("banner-success");
+                    lblFeedbackFolhaMensal.setVisible(true);
+                });
+            }
+        }).start();
+    }
+
+    @FXML
+    public void handleRemoverTudo() {
+        listaGradeMensal.clear();
+        tblFolhaMensal.refresh();
+        atualizarTotaisFolhaMensal();
     }
 
     @FXML

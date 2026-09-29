@@ -121,6 +121,29 @@ public class RegistroTrabalhoService {
     }
 
     @Transactional(readOnly = true)
+    public List<RegistroTrabalhoResponse> listarPorPenaEMes(Long penaId, int ano, int mes) {
+        if (!penaRepository.existsById(penaId)) {
+            throw new DomainException("PENA_NOT_FOUND", "Pena nao encontrada", HttpStatus.NOT_FOUND);
+        }
+        java.time.LocalDate inicio = java.time.LocalDate.of(ano, mes, 1);
+        java.time.LocalDate fim = inicio.withDayOfMonth(inicio.lengthOfMonth());
+        return registroRepository.findByPena_IdPenaAndDataTrabalhoBetweenOrderByDataTrabalhoAsc(penaId, inicio, fim)
+                .stream()
+                .map(RegistroTrabalhoResponse::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public RegistroTrabalhoResponse buscarUltimoRegistro(Long penaId) {
+        if (!penaRepository.existsById(penaId)) {
+            throw new DomainException("PENA_NOT_FOUND", "Pena nao encontrada", HttpStatus.NOT_FOUND);
+        }
+        return registroRepository.findFirstByPena_IdPenaOrderByDataTrabalhoDesc(penaId)
+                .map(RegistroTrabalhoResponse::new)
+                .orElse(null);
+    }
+
+    @Transactional(readOnly = true)
     public ResumoCumprimentoResponse obterResumo(Long penaId) {
         Pena pena = penaRepository.findById(penaId)
                 .orElseThrow(() -> new DomainException("PENA_NOT_FOUND", "Pena nao encontrada", HttpStatus.NOT_FOUND));

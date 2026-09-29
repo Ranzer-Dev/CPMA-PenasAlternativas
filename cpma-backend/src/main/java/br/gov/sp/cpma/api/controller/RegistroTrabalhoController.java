@@ -38,6 +38,20 @@ public class RegistroTrabalhoController {
         return ResponseEntity.ok(registroService.listarPorPena(penaId));
     }
 
+    @GetMapping("/pena/{penaId}/mes/{ano}/{mes}")
+    public ResponseEntity<List<RegistroTrabalhoResponse>> listarPorPenaEMes(
+            @PathVariable Long penaId,
+            @PathVariable int ano,
+            @PathVariable int mes) {
+        return ResponseEntity.ok(registroService.listarPorPenaEMes(penaId, ano, mes));
+    }
+
+    @GetMapping("/pena/{penaId}/ultimo")
+    public ResponseEntity<RegistroTrabalhoResponse> buscarUltimoRegistro(@PathVariable Long penaId) {
+        RegistroTrabalhoResponse res = registroService.buscarUltimoRegistro(penaId);
+        return res != null ? ResponseEntity.ok(res) : ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/pena/{penaId}/resumo")
     public ResponseEntity<ResumoCumprimentoResponse> obterResumo(@PathVariable Long penaId) {
         return ResponseEntity.ok(registroService.obterResumo(penaId));

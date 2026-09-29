@@ -78,6 +78,35 @@ public class ItemFolhaPontoMensal {
     public StringProperty statusTextoProperty() { return statusTexto; }
     public String getStatusTexto() { return statusTexto.get(); }
     public void setStatusTexto(String s) { statusTexto.set(s); }
-
     public double getHorasPadraoDia() { return horasPadraoDia; }
+
+    public void recalcularHorasPelosHorarios() {
+        if (!isPresente()) {
+            horasCumpridas.set(0.0);
+            return;
+        }
+        try {
+            String ini = getHorarioInicio();
+            String alm = getHorarioAlmoco();
+            String vol = getHorarioVolta();
+            String sai = getHorarioSaida();
+            if (ini != null && !ini.isBlank() && sai != null && !sai.isBlank()) {
+                java.time.LocalTime tIni = java.time.LocalTime.parse(ini.trim());
+                java.time.LocalTime tSai = java.time.LocalTime.parse(sai.trim());
+                double diff = java.time.Duration.between(tIni, tSai).toMinutes() / 60.0;
+                if (alm != null && !alm.isBlank() && vol != null && !vol.isBlank()) {
+                    java.time.LocalTime tAlm = java.time.LocalTime.parse(alm.trim());
+                    java.time.LocalTime tVol = java.time.LocalTime.parse(vol.trim());
+                    double pausa = java.time.Duration.between(tAlm, tVol).toMinutes() / 60.0;
+                    if (pausa > 0) {
+                        diff -= pausa;
+                    }
+                }
+                if (diff > 0) {
+                    this.horasPadraoDia = diff;
+                    this.horasCumpridas.set(diff);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
 }

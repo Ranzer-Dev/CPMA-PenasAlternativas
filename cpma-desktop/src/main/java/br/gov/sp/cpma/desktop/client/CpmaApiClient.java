@@ -113,6 +113,14 @@ public class CpmaApiClient {
         return executeGet("/registros-trabalho/pena/" + penaId, new TypeReference<List<RegistroTrabalhoDTO>>() {});
     }
 
+    public ApiResponse<List<RegistroTrabalhoDTO>> listarRegistrosPorPenaEMes(Long penaId, int ano, int mes) {
+        return executeGet("/registros-trabalho/pena/" + penaId + "/mes/" + ano + "/" + mes, new TypeReference<List<RegistroTrabalhoDTO>>() {});
+    }
+
+    public ApiResponse<RegistroTrabalhoDTO> buscarUltimoRegistroPorPena(Long penaId) {
+        return executeGetSingle("/registros-trabalho/pena/" + penaId + "/ultimo", RegistroTrabalhoDTO.class);
+    }
+
     public ApiResponse<ResumoCumprimentoDTO> obterResumoCumprimento(Long penaId) {
         return executeGetSingle("/registros-trabalho/pena/" + penaId + "/resumo", ResumoCumprimentoDTO.class);
     }
