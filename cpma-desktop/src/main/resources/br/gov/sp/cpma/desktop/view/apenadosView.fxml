@@ -4,25 +4,33 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.ApenadosController">
+<ScrollPane fitToWidth="true" styleClass="scroll-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.ApenadosController">
     <content>
-        <VBox spacing="16.0">
+        <VBox spacing="18.0">
             <padding>
                 <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
             </padding>
 
+            <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="hero-header">
+                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                    <Label styleClass="hero-title" text="Gestão de Apenados e Cadastro Biométrico" />
+                    <Label styleClass="hero-subtitle" text="Etapa 1: Qualificação civil dos sentenciados, fotos faciais para os totens e consulta de processos." />
+                </VBox>
+                <Label styleClass="hero-badge" text="Etapa 1: Identificação Civil" />
+            </HBox>
+
             <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="card-container">
-                <TextField fx:id="txtFiltro" prefWidth="260.0" promptText="Filtrar por nome ou CPF..." />
+                <TextField fx:id="txtFiltro" prefWidth="280.0" promptText="Filtrar por nome ou CPF..." />
                 <Button onAction="#handleLimparFiltro" style="-fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-text-fill: #64748b; -fx-cursor: hand;" text="Limpar" />
-                <Button onAction="#handleRecarregar" style="-fx-background-color: #f1f5f9; -fx-border-color: #2563eb; -fx-border-radius: 6px; -fx-text-fill: #2563eb; -fx-font-weight: 600; -fx-cursor: hand;" text="🔄 Atualizar" />
+                <Button onAction="#handleRecarregar" style="-fx-background-color: #f1f5f9; -fx-border-color: #2563eb; -fx-border-radius: 6px; -fx-text-fill: #2563eb; -fx-font-weight: 600; -fx-cursor: hand;" text="Atualizar" />
                 <Region HBox.hgrow="ALWAYS" />
-                <Button fx:id="btnGerarCodigoTotem" onAction="#handleGerarCodigoTotem" prefHeight="36.0" styleClass="btn-secondary" style="-fx-font-weight: bold; -fx-text-fill: #059669; -fx-border-color: #059669;" text="🔑 Gerar Código Totem" />
-                <Button onAction="#handleNovoApenado" prefHeight="36.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;" text="➕ Cadastrar Novo Apenado" />
+                <Button fx:id="btnGerarCodigoTotem" onAction="#handleGerarCodigoTotem" prefHeight="36.0" styleClass="btn-secondary" style="-fx-font-weight: bold; -fx-text-fill: #059669; -fx-border-color: #059669;" text="Gerar Código Totem" />
+                <Button onAction="#handleNovoApenado" prefHeight="36.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;" text="Cadastrar Novo Apenado" />
             </HBox>
 
             <VBox spacing="8.0" VBox.vgrow="ALWAYS" styleClass="card-container">
                 <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Lista de Apenados Cadastrados" />
-                <TableView fx:id="tblApenados" prefHeight="320.0">
+                <TableView fx:id="tblApenados" prefHeight="340.0">
                     <columns>
                         <TableColumn fx:id="colId" prefWidth="60.0" text="ID" />
                         <TableColumn fx:id="colCodigo" prefWidth="100.0" text="Codigo" />
@@ -44,8 +52,8 @@
                     <Label fx:id="lblDetalheNome" style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="---" />
                     <Region HBox.hgrow="ALWAYS" />
                     <Label fx:id="lblDetalheCpf" style="-fx-text-fill: #64748b; -fx-font-weight: 600;" text="---" />
-                    <Button onAction="#handleImprimirDadosTrabalho" styleClass="btn-secondary" style="-fx-font-size: 11px; -fx-padding: 5px 12px; -fx-text-fill: #2563eb; -fx-border-color: #2563eb;" text="🖨️ Imprimir Dados e Trabalho" />
-                    <Button onAction="#handleGerarCodigoTotem" styleClass="btn-secondary" style="-fx-font-size: 11px; -fx-padding: 5px 12px; -fx-text-fill: #059669; -fx-border-color: #059669;" text="🔑 Gerar Código Totem" />
+                    <Button onAction="#handleImprimirDadosTrabalho" styleClass="btn-secondary" style="-fx-font-size: 11px; -fx-padding: 5px 12px; -fx-text-fill: #2563eb; -fx-border-color: #2563eb;" text="Imprimir Ficha Completa" />
+                    <Button onAction="#handleGerarCodigoTotem" styleClass="btn-secondary" style="-fx-font-size: 11px; -fx-padding: 5px 12px; -fx-text-fill: #059669; -fx-border-color: #059669;" text="Gerar Código Totem" />
                 </HBox>
 
                 <GridPane hgap="16.0" vgap="6.0">
@@ -73,7 +81,7 @@
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
                     <Label style="-fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Penas e Contratos Atribuidos a este Apenado" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button fx:id="btnEditarPenaApenado" onAction="#handleEditarPenaApenado" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 11px; -fx-padding: 4px 12px; -fx-background-radius: 4px; -fx-cursor: hand;" text="✏️ Editar Contrato Selecionado" />
+                    <Button fx:id="btnEditarPenaApenado" onAction="#handleEditarPenaApenado" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 11px; -fx-padding: 4px 12px; -fx-background-radius: 4px; -fx-cursor: hand;" text="Editar Contrato Selecionado" />
                 </HBox>
                 <TableView fx:id="tblPenasApenado" prefHeight="140.0">
                     <columns>

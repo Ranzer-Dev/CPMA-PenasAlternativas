@@ -4,12 +4,20 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.PenasController">
+<ScrollPane fitToWidth="true" styleClass="scroll-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.PenasController">
     <content>
         <VBox spacing="18.0">
             <padding>
                 <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
             </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="hero-header">
+                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                    <Label styleClass="hero-title" text="Gestão de Penas Alternativas e Termos Judiciais" />
+                    <Label styleClass="hero-subtitle" text="Etapa 3: Alocação do apenado a instituições conveniadas, cálculo da carga horária e definição do contrato de trabalho." />
+                </VBox>
+                <Label styleClass="hero-badge" text="Etapa 3: Contrato Judicial" />
+            </HBox>
 
             <VBox spacing="16.0" styleClass="card-container">
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
@@ -17,7 +25,7 @@
                         <Label fx:id="lblTituloForm" style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="Lancar Nova Pena Alternativa" />
                         <Label fx:id="lblSubtituloForm" style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Vincule o apenado a instituicoes parceiras e defina os termos e contrato de cumprimento." />
                     </VBox>
-                    <Button fx:id="btnCancelarEdicao" onAction="#handleCancelarEdicao" text="✖ Cancelar Edição" visible="false" managed="false" style="-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6px; -fx-padding: 6px 14px;" />
+                    <Button fx:id="btnCancelarEdicao" onAction="#handleCancelarEdicao" text="Cancelar Edição" visible="false" managed="false" style="-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6px; -fx-padding: 6px 14px;" />
                 </HBox>
 
                 <Label fx:id="lblFeedback" maxWidth="Infinity" visible="false" wrapText="true" />
@@ -54,13 +62,13 @@
                         <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Tipo de Medida Alternativa *" />
                         <HBox spacing="8.0">
                             <ComboBox fx:id="cbTipoPena" editable="true" maxWidth="Infinity" HBox.hgrow="ALWAYS" promptText="Selecione ou digite o tipo..." />
-                            <Button onAction="#handleNovoTipoPena" styleClass="btn-secondary" text="➕ Novo Tipo" style="-fx-font-size: 12px; -fx-padding: 6px 12px;" />
+                            <Button onAction="#handleNovoTipoPena" styleClass="btn-secondary" text="Novo Tipo" style="-fx-font-size: 12px; -fx-padding: 6px 12px;" />
                         </HBox>
                         <Label fx:id="lblTipoPenaError" />
                     </VBox>
 
                     <VBox spacing="6.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1" style="-fx-background-color: #f8fafc; -fx-padding: 12px; -fx-background-radius: 6px; -fx-border-color: #e2e8f0; -fx-border-radius: 6px;">
-                        <Label style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 12px;" text="🏢 Instituicoes Parceiras Adicionais (Vinculo Simultaneo / Multiplas Entidades)" />
+                        <Label style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 12px;" text="Instituicoes Parceiras Adicionais (Vinculo Simultaneo / Multiplas Entidades)" />
                         <Label style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="Marque abaixo outras entidades conveniadas onde o apenado tambem podera prestar servicos comunitarios." />
                         <ScrollPane fitToWidth="true" prefHeight="70.0" style="-fx-background-color: transparent;">
                             <content>
@@ -90,7 +98,7 @@
                     <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                         <HBox alignment="CENTER_LEFT" spacing="8.0">
                             <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Data de Termino Estimada" />
-                            <Button onAction="#handleCalcularEstimativa" style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand;" text="⚡ Recalcular" />
+                            <Button onAction="#handleCalcularEstimativa" style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand;" text="Recalcular" />
                         </HBox>
                         <DatePicker fx:id="dpDataTermino" maxWidth="Infinity" />
                         <Label fx:id="lblEstimativaTexto" style="-fx-text-fill: #0284c7; -fx-font-weight: 600; -fx-font-size: 11px;" text="" />
@@ -99,12 +107,12 @@
                     <VBox spacing="10.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="4" style="-fx-background-color: #f8fafc; -fx-padding: 14px; -fx-background-radius: 8px; -fx-border-color: #e2e8f0; -fx-border-radius: 8px;">
                         <HBox alignment="CENTER_LEFT" spacing="12.0">
                             <VBox spacing="2.0" HBox.hgrow="ALWAYS">
-                                <Label style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 13px;" text="📋 Contrato Inicial de Trabalho do Apenado (Jornada e Horarios por Dia)" />
+                                <Label style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 13px;" text="Contrato Inicial de Trabalho do Apenado (Jornada e Horarios por Dia)" />
                                 <Label style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="Configure os dias e turnos especificos em que o apenado cumprira sua carga horaria." />
                             </VBox>
-                            <Button onAction="#handlePreencherComercial" styleClass="btn-secondary" text="⚡ Seg-Sex Comercial" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
-                            <Button onAction="#handlePreencherMeioPeriodo" styleClass="btn-secondary" text="⚡ Seg-Sex Matutino (08h-12h)" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
-                            <Button onAction="#handlePreencherFimDeSemana" styleClass="btn-secondary" text="⚡ Sábados (08h-14h)" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
+                            <Button onAction="#handlePreencherComercial" styleClass="btn-secondary" text="Padrão Seg-Sex (08h-17h)" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
+                            <Button onAction="#handlePreencherMeioPeriodo" styleClass="btn-secondary" text="Matutino Seg-Sex (08h-12h)" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
+                            <Button onAction="#handlePreencherFimDeSemana" styleClass="btn-secondary" text="Sábados (08h-14h)" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
                         </HBox>
 
                         <GridPane hgap="12.0" vgap="8.0">
@@ -183,8 +191,8 @@
                         <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Penas e Contratos Cadastrados no Sistema" />
                         <Label style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="Selecione uma pena na tabela abaixo para editar seus termos, instituicoes parceiras ou contrato de horarios." />
                     </VBox>
-                    <Button onAction="#handleRecarregarPenas" styleClass="btn-secondary" text="🔄 Atualizar Lista" style="-fx-font-size: 11px; -fx-padding: 6px 12px;" />
-                    <Button fx:id="btnEditarPenaTabela" onAction="#handleEditarPenaSelecionada" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 6px 16px; -fx-background-radius: 6px; -fx-cursor: hand;" text="✏️ Editar Contrato da Pena" />
+                    <Button onAction="#handleRecarregarPenas" styleClass="btn-secondary" text="Atualizar Lista" style="-fx-font-size: 11px; -fx-padding: 6px 12px;" />
+                    <Button fx:id="btnEditarPenaTabela" onAction="#handleEditarPenaSelecionada" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 6px 16px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Editar Contrato da Pena" />
                 </HBox>
 
                 <TableView fx:id="tblPenasGeral" prefHeight="260.0">
