@@ -4,6 +4,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
+<?import javafx.scene.image.ImageView?>
+
 <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.TotemKioskController">
     <content>
         <VBox alignment="TOP_CENTER" spacing="20.0" style="-fx-background-color: #f8fafc;">
@@ -79,43 +81,50 @@
                 <VBox spacing="14.0" style="-fx-background-color: #ffffff; -fx-padding: 16px; -fx-background-radius: 8px; -fx-border-color: #e2e8f0; -fx-border-radius: 8px;">
                     <Label style="-fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: #0f172a;" text="👤 Informações Pessoais e Processuais do Apenado" />
 
-                    <GridPane hgap="20.0" vgap="10.0">
-                        <columnConstraints>
-                            <ColumnConstraints percentWidth="33.33" />
-                            <ColumnConstraints percentWidth="33.33" />
-                            <ColumnConstraints percentWidth="33.33" />
-                        </columnConstraints>
-
-                        <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="NOME COMPLETO" />
-                            <Label fx:id="lblProntuarioNome" style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #1e293b;" text="-" />
+                    <HBox alignment="CENTER_LEFT" spacing="20.0">
+                        <VBox alignment="CENTER" spacing="6.0" style="-fx-background-color: #f8fafc; -fx-padding: 10px; -fx-background-radius: 8px; -fx-border-color: #cbd5e1; -fx-border-radius: 8px;">
+                            <ImageView fx:id="imgProntuarioFoto" fitHeight="130.0" fitWidth="110.0" pickOnBounds="true" preserveRatio="true" />
+                            <Label style="-fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: #64748b;" text="Foto Oficial" />
                         </VBox>
 
-                        <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="CPF" />
-                            <Label fx:id="lblProntuarioCpf" style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #1e293b;" text="-" />
-                        </VBox>
+                        <GridPane hgap="20.0" vgap="10.0" HBox.hgrow="ALWAYS">
+                            <columnConstraints>
+                                <ColumnConstraints percentWidth="33.33" />
+                                <ColumnConstraints percentWidth="33.33" />
+                                <ColumnConstraints percentWidth="33.33" />
+                            </columnConstraints>
 
-                        <VBox spacing="4.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="MATRÍCULA / CÓDIGO" />
-                            <Label fx:id="lblProntuarioMatricula" style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #1e293b;" text="-" />
-                        </VBox>
+                            <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="NOME COMPLETO" />
+                                <Label fx:id="lblProntuarioNome" style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #1e293b;" text="-" />
+                            </VBox>
 
-                        <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="MEDIDA ALTERNATIVA" />
-                            <Label fx:id="lblProntuarioMedida" style="-fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: #334155;" text="Prestação de Serviços à Comunidade (PSC)" />
-                        </VBox>
+                            <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="CPF" />
+                                <Label fx:id="lblProntuarioCpf" style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #1e293b;" text="-" />
+                            </VBox>
 
-                        <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="INSTITUIÇÃO PARCEIRA" />
-                            <Label fx:id="lblProntuarioInstituicao" style="-fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: #334155;" text="-" />
-                        </VBox>
+                            <VBox spacing="4.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="MATRÍCULA / CÓDIGO" />
+                                <Label fx:id="lblProntuarioMatricula" style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #1e293b;" text="-" />
+                            </VBox>
 
-                        <VBox spacing="4.0" GridPane.columnIndex="2" GridPane.rowIndex="1">
-                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="DATA DE INÍCIO" />
-                            <Label fx:id="lblProntuarioDataInicio" style="-fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: #334155;" text="-" />
-                        </VBox>
-                    </GridPane>
+                            <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="MEDIDA ALTERNATIVA" />
+                                <Label fx:id="lblProntuarioMedida" style="-fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: #334155;" text="Prestação de Serviços à Comunidade (PSC)" />
+                            </VBox>
+
+                            <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="INSTITUIÇÃO PARCEIRA" />
+                                <Label fx:id="lblProntuarioInstituicao" style="-fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: #334155;" text="-" />
+                            </VBox>
+
+                            <VBox spacing="4.0" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="DATA DE INÍCIO" />
+                                <Label fx:id="lblProntuarioDataInicio" style="-fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: #334155;" text="-" />
+                            </VBox>
+                        </GridPane>
+                    </HBox>
                 </VBox>
 
                 <VBox spacing="10.0" style="-fx-background-color: #f8fafc; -fx-padding: 16px; -fx-background-radius: 8px; -fx-border-color: #e2e8f0; -fx-border-radius: 8px;">
@@ -166,6 +175,11 @@
                             <Label style="-fx-text-fill: #94a3b8; -fx-font-size: 13px;" text="Nenhum registro de comparecimento anterior cadastrado." />
                         </placeholder>
                     </TableView>
+                </VBox>
+
+                <VBox alignment="CENTER" maxWidth="500.0" spacing="6.0" style="-fx-padding: 4px 0px;">
+                    <Label fx:id="lblTimeoutContador" style="-fx-font-size: 12px; -fx-text-fill: #64748b; -fx-font-weight: 700;" text="Retorno automático ao início em 30s" />
+                    <ProgressBar fx:id="progressoTimeout" maxWidth="400.0" prefHeight="6.0" progress="1.0" style="-fx-accent: #f59e0b;" />
                 </VBox>
 
                 <HBox alignment="CENTER" spacing="18.0" style="-fx-padding: 8px 0px;">

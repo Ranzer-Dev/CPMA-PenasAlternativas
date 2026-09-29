@@ -430,6 +430,31 @@ body {
   color: #f1f5f9;
 }
 
+.dados-apenado-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.prontuario-photo-box {
+  width: 96px;
+  height: 120px;
+  border-radius: 10px;
+  border: 1px solid var(--bg-card-border);
+  background: #1e293b;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.prontuario-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

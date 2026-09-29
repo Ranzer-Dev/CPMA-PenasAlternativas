@@ -9,6 +9,8 @@ import br.gov.sp.cpma.desktop.client.UsuarioDTO;
 import br.gov.sp.cpma.desktop.client.ValidarAcessoDTO;
 import br.gov.sp.cpma.desktop.util.FormValidator;
 import br.gov.sp.cpma.desktop.util.RelatorioImpressaoService;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -17,14 +19,20 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
+import java.io.ByteArrayInputStream;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
@@ -46,6 +54,7 @@ public class TotemKioskController implements Initializable {
 
     @FXML private VBox cardProntuarioApenado;
     @FXML private Label lblTimestampPresenca;
+    @FXML private ImageView imgProntuarioFoto;
 
     @FXML private Label lblProntuarioNome;
     @FXML private Label lblProntuarioCpf;
@@ -66,11 +75,15 @@ public class TotemKioskController implements Initializable {
     @FXML private TableColumn<RegistroTrabalhoDTO, String> colRegistroHoras;
     @FXML private TableColumn<RegistroTrabalhoDTO, String> colRegistroAtividades;
 
+    @FXML private Label lblTimeoutContador;
+    @FXML private ProgressBar progressoTimeout;
     @FXML private Button btnImprimirComprovante;
 
     private final CpmaApiClient apiClient = new CpmaApiClient();
     private Long usuarioLogadoId;
     private Long penaLogadaId;
+    private Timeline timelineTimeout;
+    private int segundosRestantes = 30;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -219,6 +232,19 @@ public class TotemKioskController implements Initializable {
                     lblProntuarioNome.setText(finalUser.getNome() != null ? finalUser.getNome().toUpperCase() : "-");
                     lblProntuarioCpf.setText(formatarCpf(finalUser.getCpf()));
                     lblProntuarioMatricula.setText(finalUser.getCodigo() != null ? finalUser.getCodigo() : "-");
+
+                    if (imgProntuarioFoto != null) {
+                        if (finalUser.getFoto() != null && !finalUser.getFoto().isBlank()) {
+                            try {
+                                byte[] bytes = Base64.getDecoder().decode(finalUser.getFoto());
+                                imgProntuarioFoto.setImage(new Image(new ByteArrayInputStream(bytes)));
+                            } catch (Exception e) {
+                                imgProntuarioFoto.setImage(null);
+                            }
+                        } else {
+                            imgProntuarioFoto.setImage(null);
+                        }
+                    }
                 }
 
                 if (finalPena != null) {
@@ -244,8 +270,41 @@ public class TotemKioskController implements Initializable {
                 } else {
                     tblRegistrosTotem.setItems(FXCollections.observableArrayList());
                 }
+
+                iniciarContadorRegressivo();
             });
         }).start();
+    }
+
+    private void iniciarContadorRegressivo() {
+        pararContadorRegressivo();
+        segundosRestantes = 30;
+        atualizarUiTimeout();
+        timelineTimeout = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            segundosRestantes--;
+            atualizarUiTimeout();
+            if (segundosRestantes <= 0) {
+                handleNovoAcesso();
+            }
+        }));
+        timelineTimeout.setCycleCount(30);
+        timelineTimeout.play();
+    }
+
+    private void atualizarUiTimeout() {
+        if (lblTimeoutContador != null) {
+            lblTimeoutContador.setText("Retorno automático ao início em " + segundosRestantes + "s");
+        }
+        if (progressoTimeout != null) {
+            progressoTimeout.setProgress((double) segundosRestantes / 30.0);
+        }
+    }
+
+    private void pararContadorRegressivo() {
+        if (timelineTimeout != null) {
+            timelineTimeout.stop();
+            timelineTimeout = null;
+        }
     }
 
     private String formatarCpf(String cpf) {
@@ -280,6 +339,10 @@ public class TotemKioskController implements Initializable {
 
     @FXML
     public void handleNovoAcesso() {
+        pararContadorRegressivo();
+        if (imgProntuarioFoto != null) {
+            imgProntuarioFoto.setImage(null);
+        }
         usuarioLogadoId = null;
         penaLogadaId = null;
         txtCodigoAcesso.clear();
@@ -293,6 +356,7 @@ public class TotemKioskController implements Initializable {
     }
 
     private void exibirErro(String titulo, String detalhe) {
+        pararContadorRegressivo();
         cardEntradaCodigo.setVisible(false);
         cardEntradaCodigo.setManaged(false);
         cardProntuarioApenado.setVisible(false);

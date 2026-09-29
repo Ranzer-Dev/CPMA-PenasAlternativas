@@ -8,7 +8,7 @@ const state = {
   penaId: null,
   cameraStream: null,
   timeoutTimer: null,
-  timeoutSeconds: 60
+  timeoutSeconds: 30
 };
 
 const dom = {
@@ -41,7 +41,8 @@ const dom = {
   tabelaRegistrosCorpo: document.getElementById('tabelaRegistrosCorpo'),
   timeoutFill: document.getElementById('timeoutFill'),
   timeoutContador: document.getElementById('timeoutContador'),
-  badgeOnline: document.getElementById('badgeOnline')
+  badgeOnline: document.getElementById('badgeOnline'),
+  imgFotoApenado: document.getElementById('imgFotoApenado')
 };
 
 function init() {
@@ -321,6 +322,13 @@ async function carregarDadosCompletosProntuario() {
       dom.lblCpf.textContent = formatarCpf(u.cpf);
       dom.lblTelefone.textContent = u.telefone || '-';
       dom.lblEndereco.textContent = (u.endereco || '') + (u.bairro ? ' - ' + u.bairro : '');
+      if (dom.imgFotoApenado) {
+        if (u.foto && u.foto.trim()) {
+          dom.imgFotoApenado.src = 'data:image/jpeg;base64,' + u.foto.trim();
+        } else {
+          dom.imgFotoApenado.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+        }
+      }
     }
 
     const resPenas = await fetch('/api/v1/penas/usuario/' + state.usuarioId);
@@ -435,14 +443,14 @@ function abrirEtapaKeypad() {
 
 function iniciarTimerInatividade() {
   pararTimerInatividade();
-  state.timeoutSeconds = 60;
+  state.timeoutSeconds = 30;
   dom.timeoutContador.textContent = state.timeoutSeconds;
   dom.timeoutFill.style.width = '100%';
 
   state.timeoutTimer = setInterval(() => {
     state.timeoutSeconds--;
     dom.timeoutContador.textContent = state.timeoutSeconds;
-    const perc = (state.timeoutSeconds / 60) * 100;
+    const perc = (state.timeoutSeconds / 30) * 100;
     dom.timeoutFill.style.width = perc + '%';
 
     if (state.timeoutSeconds <= 0) {
