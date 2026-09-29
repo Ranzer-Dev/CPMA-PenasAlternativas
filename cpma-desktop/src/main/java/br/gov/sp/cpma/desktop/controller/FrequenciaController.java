@@ -5,14 +5,15 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FrequenciaController {
@@ -48,7 +49,61 @@ public class FrequenciaController {
     private Label lblPercentual;
 
     @FXML
-    private VBox boxLancamento;
+    private VBox boxFolhaMensal;
+
+    @FXML
+    private Label lblTermosContrato;
+
+    @FXML
+    private Label lblFeedbackFolhaMensal;
+
+    @FXML
+    private ComboBox<String> cbMesReferencia;
+
+    @FXML
+    private ComboBox<Integer> cbAnoReferencia;
+
+    @FXML
+    private TableView<ItemFolhaPontoMensal> tblFolhaMensal;
+
+    @FXML
+    private TableColumn<ItemFolhaPontoMensal, Boolean> colLotePresente;
+
+    @FXML
+    private TableColumn<ItemFolhaPontoMensal, String> colLoteData;
+
+    @FXML
+    private TableColumn<ItemFolhaPontoMensal, String> colLoteDia;
+
+    @FXML
+    private TableColumn<ItemFolhaPontoMensal, String> colLoteEntrada;
+
+    @FXML
+    private TableColumn<ItemFolhaPontoMensal, String> colLoteAlmoco;
+
+    @FXML
+    private TableColumn<ItemFolhaPontoMensal, String> colLoteVolta;
+
+    @FXML
+    private TableColumn<ItemFolhaPontoMensal, String> colLoteSaida;
+
+    @FXML
+    private TableColumn<ItemFolhaPontoMensal, String> colLoteHoras;
+
+    @FXML
+    private TableColumn<ItemFolhaPontoMensal, String> colLoteStatus;
+
+    @FXML
+    private TableColumn<ItemFolhaPontoMensal, String> colLoteObs;
+
+    @FXML
+    private Label lblResumoFolhaMensal;
+
+    @FXML
+    private Button btnConfirmarFolhaMensal;
+
+    @FXML
+    private TitledPane paneAvulso;
 
     @FXML
     private Label lblFeedbackLancamento;
@@ -117,12 +172,15 @@ public class FrequenciaController {
     private TableColumn<RegistroTrabalhoDTO, String> colHistObs;
 
     private final CpmaApiClient apiClient = new CpmaApiClient();
+    private final ObservableList<ItemFolhaPontoMensal> listaGradeMensal = FXCollections.observableArrayList();
     private UsuarioDTO apenadoAtual;
 
     @FXML
     public void initialize() {
         dpDataTrabalho.setValue(LocalDate.now());
+        configurarMesesEAno();
         configurarColunasHistorico();
+        configurarColunasGradeMensal();
         configurarComboBoxPena();
         configurarComboBoxInstituicao();
         carregarInstituicoes();
@@ -132,8 +190,282 @@ public class FrequenciaController {
             if (newVal != null) {
                 carregarResumoEHistorico(newVal.getIdPena());
                 preSelecionarInstituicao(newVal);
+                exibirTermosContrato(newVal);
             }
         });
+    }
+
+    private void configurarMesesEAno() {
+        cbMesReferencia.setItems(FXCollections.observableArrayList(
+                "01 - Janeiro", "02 - Fevereiro", "03 - Março", "04 - Abril",
+                "05 - Maio", "06 - Junho", "07 - Julho", "08 - Agosto",
+                "09 - Setembro", "10 - Outubro", "11 - Novembro", "12 - Dezembro"
+        ));
+        int mesAtual = LocalDate.now().getMonthValue();
+        cbMesReferencia.getSelectionModel().select(mesAtual - 1);
+
+        int anoAtual = LocalDate.now().getYear();
+        cbAnoReferencia.setItems(FXCollections.observableArrayList(anoAtual - 1, anoAtual, anoAtual + 1));
+        cbAnoReferencia.setValue(anoAtual);
+    }
+
+    private void configurarColunasGradeMensal() {
+        tblFolhaMensal.setEditable(true);
+
+        colLotePresente.setCellValueFactory(cellData -> cellData.getValue().presenteProperty());
+        colLotePresente.setCellFactory(tc -> new CheckBoxTableCell<ItemFolhaPontoMensal, Boolean>() {
+            @Override
+            public void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (!empty && getTableRow() != null && getTableRow().getItem() != null) {
+                    ItemFolhaPontoMensal rowItem = getTableRow().getItem();
+                    rowItem.presenteProperty().removeListener((o, oldV, newV) -> atualizarTotaisFolhaMensal());
+                    rowItem.presenteProperty().addListener((o, oldV, newV) -> atualizarTotaisFolhaMensal());
+                }
+            }
+        });
+
+        colLoteData.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getData().toString()));
+        colLoteDia.setCellValueFactory(c -> c.getValue().diaSemanaProperty());
+        colLoteEntrada.setCellValueFactory(c -> c.getValue().horarioInicioProperty());
+        colLoteAlmoco.setCellValueFactory(c -> c.getValue().horarioAlmocoProperty());
+        colLoteVolta.setCellValueFactory(c -> c.getValue().horarioVoltaProperty());
+        colLoteSaida.setCellValueFactory(c -> c.getValue().horarioSaidaProperty());
+        colLoteHoras.setCellValueFactory(c -> new SimpleStringProperty(String.format("%.1fh", c.getValue().getHorasCumpridas())));
+        colLoteObs.setCellValueFactory(c -> c.getValue().atividadesProperty());
+
+        colLoteStatus.setCellValueFactory(c -> c.getValue().statusTextoProperty());
+        colLoteStatus.setCellFactory(col -> new TableCell<ItemFolhaPontoMensal, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+                    if ("PRESENTE".equalsIgnoreCase(item)) {
+                        setStyle("-fx-text-fill: #059669; -fx-font-weight: bold;");
+                    } else {
+                        setStyle("-fx-text-fill: #dc2626; -fx-font-weight: bold;");
+                    }
+                }
+            }
+        });
+
+        tblFolhaMensal.setItems(listaGradeMensal);
+    }
+
+    private void exibirTermosContrato(PenaDTO pena) {
+        if (pena == null) return;
+        String termos = pena.getDiasSemanaEHorariosDisponivel();
+        if (termos == null || termos.isBlank()) {
+            lblTermosContrato.setText("Contrato: Seg a Sex • 4.0h/dia (08:00 às 12:00)");
+        } else {
+            lblTermosContrato.setText("Contrato: " + termos);
+        }
+    }
+
+    @FXML
+    public void handleGerarGradeMes() {
+        PenaDTO pena = cbPenas.getValue();
+        if (pena == null) {
+            lblFeedbackFolhaMensal.setText("Selecione um apenado e uma pena ativa primeiro.");
+            lblFeedbackFolhaMensal.getStyleClass().setAll("banner-error");
+            lblFeedbackFolhaMensal.setVisible(true);
+            return;
+        }
+
+        int mesIndex = cbMesReferencia.getSelectionModel().getSelectedIndex() + 1;
+        Integer ano = cbAnoReferencia.getValue();
+        if (ano == null) ano = LocalDate.now().getYear();
+
+        YearMonth ym = YearMonth.of(ano, mesIndex);
+        int totalDiasMes = ym.lengthOfMonth();
+
+        String contrato = pena.getDiasSemanaEHorariosDisponivel();
+        double horasPadrao = 4.0;
+        String hInicio = "08:00";
+        String hAlmoco = "";
+        String hVolta = "";
+        String hSaida = "12:00";
+
+        if (contrato != null && contrato.contains("h/dia")) {
+            try {
+                String[] p = contrato.split("\\|");
+                if (p.length > 1) {
+                    String dadosH = p[1].trim();
+                    String[] tokens = dadosH.split("h/dia");
+                    horasPadrao = Double.parseDouble(tokens[0].trim());
+                    if (tokens.length > 1) {
+                        String turno = tokens[1].replace("(", "").replace(")", "").trim();
+                        if (turno.contains("às")) {
+                            String[] horasTurno = turno.split("às");
+                            hInicio = horasTurno[0].trim();
+                            hSaida = horasTurno[1].trim();
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        listaGradeMensal.clear();
+
+        for (int dia = 1; dia <= totalDiasMes; dia++) {
+            LocalDate data = ym.atDay(dia);
+            DayOfWeek dow = data.getDayOfWeek();
+
+            boolean diaContratado = isDiaContratado(dow, contrato);
+            if (diaContratado) {
+                String diaNome = formatarDiaSemana(dow);
+                ItemFolhaPontoMensal item = new ItemFolhaPontoMensal(
+                        data, diaNome, hInicio, hAlmoco, hVolta, hSaida, horasPadrao,
+                        "Cumprimento de Medida Alternativa (" + pena.getTipoPena() + ")"
+                );
+                item.presenteProperty().addListener((obs, oldV, newV) -> {
+                    atualizarTotaisFolhaMensal();
+                    tblFolhaMensal.refresh();
+                });
+                listaGradeMensal.add(item);
+            }
+        }
+
+        lblFeedbackFolhaMensal.setVisible(false);
+        atualizarTotaisFolhaMensal();
+    }
+
+    private boolean isDiaContratado(DayOfWeek dow, String contrato) {
+        if (contrato == null || contrato.isBlank()) {
+            return dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY;
+        }
+
+        boolean seg = contrato.contains("Seg");
+        boolean ter = contrato.contains("Ter");
+        boolean qua = contrato.contains("Qua");
+        boolean qui = contrato.contains("Qui");
+        boolean sex = contrato.contains("Sex");
+        boolean sab = contrato.contains("Sáb") || contrato.contains("Sab");
+        boolean dom = contrato.contains("Dom");
+
+        switch (dow) {
+            case MONDAY: return seg;
+            case TUESDAY: return ter;
+            case WEDNESDAY: return qua;
+            case THURSDAY: return qui;
+            case FRIDAY: return sex;
+            case SATURDAY: return sab;
+            case SUNDAY: return dom;
+            default: return false;
+        }
+    }
+
+    private String formatarDiaSemana(DayOfWeek dow) {
+        switch (dow) {
+            case MONDAY: return "Segunda-feira";
+            case TUESDAY: return "Terça-feira";
+            case WEDNESDAY: return "Quarta-feira";
+            case THURSDAY: return "Quinta-feira";
+            case FRIDAY: return "Sexta-feira";
+            case SATURDAY: return "Sábado";
+            case SUNDAY: return "Domingo";
+            default: return dow.toString();
+        }
+    }
+
+    private void atualizarTotaisFolhaMensal() {
+        int totalDias = listaGradeMensal.size();
+        int presencas = 0;
+        int faltas = 0;
+        double horasTotais = 0.0;
+
+        for (ItemFolhaPontoMensal item : listaGradeMensal) {
+            if (item.isPresente()) {
+                presencas++;
+                horasTotais += item.getHorasCumpridas();
+            } else {
+                faltas++;
+            }
+        }
+
+        lblResumoFolhaMensal.setText(String.format(
+                "Dias previstos no mês: %d | Presenças a confirmar: %d | Faltas: %d | Horas apuradas: %.1fh",
+                totalDias, presencas, faltas, horasTotais
+        ));
+    }
+
+    @FXML
+    public void handleMarcarTodos() {
+        for (ItemFolhaPontoMensal item : listaGradeMensal) {
+            item.setPresente(true);
+        }
+        atualizarTotaisFolhaMensal();
+        tblFolhaMensal.refresh();
+    }
+
+    @FXML
+    public void handleDesmarcarTodos() {
+        for (ItemFolhaPontoMensal item : listaGradeMensal) {
+            item.setPresente(false);
+        }
+        atualizarTotaisFolhaMensal();
+        tblFolhaMensal.refresh();
+    }
+
+    @FXML
+    public void handleConfirmarFolhaMensal() {
+        PenaDTO pena = cbPenas.getValue();
+        if (pena == null) {
+            return;
+        }
+
+        List<RegistroTrabalhoDTO> lote = new ArrayList<>();
+        InstituicaoDTO inst = cbInstituicaoFrequencia.getValue();
+        Long instId = inst != null ? inst.getIdInstituicao() : pena.getInstituicaoPrincipalId();
+
+        for (ItemFolhaPontoMensal item : listaGradeMensal) {
+            if (item.isPresente() && item.getHorasCumpridas() > 0) {
+                RegistroTrabalhoDTO r = new RegistroTrabalhoDTO();
+                r.setPenaId(pena.getIdPena());
+                r.setInstituicaoId(instId);
+                r.setDataTrabalho(item.getData());
+                r.setHorasCumpridas(item.getHorasCumpridas());
+                r.setHorarioInicio(item.getHorarioInicio());
+                r.setHorarioAlmoco(item.getHorarioAlmoco());
+                r.setHorarioVolta(item.getHorarioVolta());
+                r.setHorarioSaida(item.getHorarioSaida());
+                r.setAtividades(item.getAtividades());
+                lote.add(r);
+            }
+        }
+
+        if (lote.isEmpty()) {
+            lblFeedbackFolhaMensal.setText("Nenhum dia de presença marcado para lançamento.");
+            lblFeedbackFolhaMensal.getStyleClass().setAll("banner-error");
+            lblFeedbackFolhaMensal.setVisible(true);
+            return;
+        }
+
+        btnConfirmarFolhaMensal.setDisable(true);
+
+        new Thread(() -> {
+            ApiResponse<List<RegistroTrabalhoDTO>> resp = apiClient.registrarTrabalhoEmLote(lote);
+            Platform.runLater(() -> {
+                btnConfirmarFolhaMensal.setDisable(false);
+                if (resp.isSuccess()) {
+                    int salvos = resp.getData() != null ? resp.getData().size() : lote.size();
+                    lblFeedbackFolhaMensal.setText("Folha de ponto mensal confirmada: " + salvos + " comparecimentos registrados com sucesso!");
+                    lblFeedbackFolhaMensal.getStyleClass().setAll("banner-success");
+                    lblFeedbackFolhaMensal.setVisible(true);
+
+                    listaGradeMensal.clear();
+                    carregarResumoEHistorico(pena.getIdPena());
+                } else {
+                    lblFeedbackFolhaMensal.setText("Erro ao salvar folha mensal: " + (resp.getError() != null ? resp.getError().getMessage() : ""));
+                    lblFeedbackFolhaMensal.getStyleClass().setAll("banner-error");
+                    lblFeedbackFolhaMensal.setVisible(true);
+                }
+            });
+        }).start();
     }
 
     private void configurarColunasHistorico() {
@@ -298,8 +630,10 @@ public class FrequenciaController {
     private void mostrarSecoes() {
         boxResumo.setVisible(true);
         boxResumo.setManaged(true);
-        boxLancamento.setVisible(true);
-        boxLancamento.setManaged(true);
+        boxFolhaMensal.setVisible(true);
+        boxFolhaMensal.setManaged(true);
+        paneAvulso.setVisible(true);
+        paneAvulso.setManaged(true);
         boxHistorico.setVisible(true);
         boxHistorico.setManaged(true);
     }
@@ -383,7 +717,7 @@ public class FrequenciaController {
             Platform.runLater(() -> {
                 btnSalvarRegistro.setDisable(false);
                 if (resp.isSuccess()) {
-                    lblFeedbackLancamento.setText("Presenca e batidas de ponto registradas com sucesso (" + horas + "h)!");
+                    lblFeedbackLancamento.setText("Presenca avulsa registrada com sucesso (" + horas + "h)!");
                     lblFeedbackLancamento.getStyleClass().setAll("banner-success");
                     lblFeedbackLancamento.setVisible(true);
 
@@ -408,8 +742,10 @@ public class FrequenciaController {
     private void esconderSecoes() {
         boxResumo.setVisible(false);
         boxResumo.setManaged(false);
-        boxLancamento.setVisible(false);
-        boxLancamento.setManaged(false);
+        boxFolhaMensal.setVisible(false);
+        boxFolhaMensal.setManaged(false);
+        paneAvulso.setVisible(false);
+        paneAvulso.setManaged(false);
         boxHistorico.setVisible(false);
         boxHistorico.setManaged(false);
     }

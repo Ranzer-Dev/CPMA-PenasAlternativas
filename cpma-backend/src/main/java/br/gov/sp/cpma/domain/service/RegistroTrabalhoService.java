@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -64,6 +65,48 @@ public class RegistroTrabalhoService {
 
         RegistroDeTrabalho salvo = registroRepository.save(reg);
         return new RegistroTrabalhoResponse(salvo);
+    }
+
+    @Transactional
+    public List<RegistroTrabalhoResponse> registrarEmLote(List<CadastroRegistroTrabalhoRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return List.of();
+        }
+
+        List<RegistroDeTrabalho> registros = new ArrayList<>();
+        for (CadastroRegistroTrabalhoRequest req : requests) {
+            Pena pena = penaRepository.findById(req.getPenaId())
+                    .orElseThrow(() -> new DomainException("PENA_NOT_FOUND", "Pena nao encontrada", HttpStatus.NOT_FOUND));
+
+            Instituicao instituicao = null;
+            if (req.getInstituicaoId() != null) {
+                instituicao = instituicaoRepository.findById(req.getInstituicaoId())
+                        .orElse(pena.getInstituicaoPrincipal());
+            } else {
+                instituicao = pena.getInstituicaoPrincipal();
+            }
+
+            Double horas = req.getHorasCumpridas();
+            if (horas == null || horas <= 0.0) {
+                horas = calcularHorasPelosHorarios(req.getHorarioInicio(), req.getHorarioAlmoco(), req.getHorarioVolta(), req.getHorarioSaida());
+            }
+
+            RegistroDeTrabalho reg = new RegistroDeTrabalho();
+            reg.setPena(pena);
+            reg.setInstituicao(instituicao);
+            reg.setDataTrabalho(req.getDataTrabalho());
+            reg.setHorasCumpridas(horas);
+            reg.setAtividades(req.getAtividades());
+            reg.setHorarioInicio(req.getHorarioInicio());
+            reg.setHorarioAlmoco(req.getHorarioAlmoco());
+            reg.setHorarioVolta(req.getHorarioVolta());
+            reg.setHorarioSaida(req.getHorarioSaida());
+
+            registros.add(reg);
+        }
+
+        List<RegistroDeTrabalho> salvos = registroRepository.saveAll(registros);
+        return salvos.stream().map(RegistroTrabalhoResponse::new).toList();
     }
 
     @Transactional(readOnly = true)

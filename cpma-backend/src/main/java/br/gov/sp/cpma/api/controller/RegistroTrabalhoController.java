@@ -27,6 +27,12 @@ public class RegistroTrabalhoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
+    @PostMapping("/lote")
+    public ResponseEntity<List<RegistroTrabalhoResponse>> registrarEmLote(@RequestBody List<CadastroRegistroTrabalhoRequest> requests) {
+        List<RegistroTrabalhoResponse> res = registroService.registrarEmLote(requests);
+        return ResponseEntity.status(HttpStatus.CREATED).body(res);
+    }
+
     @GetMapping("/pena/{penaId}")
     public ResponseEntity<List<RegistroTrabalhoResponse>> listarPorPena(@PathVariable Long penaId) {
         return ResponseEntity.ok(registroService.listarPorPena(penaId));

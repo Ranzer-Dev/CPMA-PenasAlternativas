@@ -105,6 +105,10 @@ public class CpmaApiClient {
         return executePost("/registros-trabalho", dto, RegistroTrabalhoDTO.class, null);
     }
 
+    public ApiResponse<List<RegistroTrabalhoDTO>> registrarTrabalhoEmLote(List<RegistroTrabalhoDTO> lista) {
+        return executePostList("/registros-trabalho/lote", lista, new TypeReference<List<RegistroTrabalhoDTO>>() {}, null);
+    }
+
     public ApiResponse<List<RegistroTrabalhoDTO>> listarRegistrosPorPena(Long penaId) {
         return executeGet("/registros-trabalho/pena/" + penaId, new TypeReference<List<RegistroTrabalhoDTO>>() {});
     }
@@ -247,6 +251,35 @@ public class CpmaApiClient {
             return new ApiResponse<>(503, createNetworkError(e));
         }
     }
+
+    private <T> ApiResponse<T> executePostList(String endpoint, Object body, TypeReference<T> typeRef, String bearerToken) {
+        try {
+            String jsonBody = objectMapper.writeValueAsString(body);
+
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(URI.create(baseUrl + endpoint))
+                    .header("Content-Type", "application/json")
+                    .timeout(Duration.ofSeconds(15))
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+
+            if (bearerToken != null && !bearerToken.isBlank()) {
+                builder.header("Authorization", bearerToken.startsWith("Bearer ") ? bearerToken : "Bearer " + bearerToken);
+            }
+
+            HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                T data = objectMapper.readValue(response.body(), typeRef);
+                return new ApiResponse<>(response.statusCode(), data);
+            } else {
+                StandardApiError error = parseError(response.body(), response.statusCode());
+                return new ApiResponse<>(response.statusCode(), error);
+            }
+        } catch (Exception e) {
+            return new ApiResponse<>(503, createNetworkError(e));
+        }
+    }
+
 
 
     private StandardApiError createNetworkError(Exception e) {
