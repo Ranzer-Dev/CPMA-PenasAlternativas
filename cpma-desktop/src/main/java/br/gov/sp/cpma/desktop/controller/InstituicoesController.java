@@ -24,6 +24,9 @@ public class InstituicoesController {
     private VBox paneFormulario;
 
     @FXML
+    private VBox paneListaInstituicoes;
+
+    @FXML
     private Label lblTituloForm;
 
     @FXML
@@ -231,10 +234,10 @@ public class InstituicoesController {
         colDispFim2.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getHoraFim2() != null ? c.getValue().getHoraFim2() : "-"));
 
         colDispAcao.setCellFactory(param -> new TableCell<>() {
-            private final Button btnRemover = new Button("🗑️");
+            private final Button btnRemover = new Button("Excluir");
 
             {
-                btnRemover.setStyle("-fx-background-color: transparent; -fx-text-fill: #dc2626; -fx-cursor: hand; -fx-font-size: 13px; -fx-padding: 2px 6px;");
+                btnRemover.setStyle("-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: 700; -fx-font-size: 11px; -fx-background-radius: 4px; -fx-cursor: hand; -fx-padding: 3px 10px;");
                 btnRemover.setOnAction(event -> {
                     DisponibilidadeItemDTO item = getTableView().getItems().get(getIndex());
                     listaDisponibilidades.remove(item);
@@ -311,6 +314,10 @@ public class InstituicoesController {
         limparForm();
         paneFormulario.setVisible(true);
         paneFormulario.setManaged(true);
+        if (paneListaInstituicoes != null) {
+            paneListaInstituicoes.setVisible(false);
+            paneListaInstituicoes.setManaged(false);
+        }
         if (scrollPaneInstituicoes != null) {
             scrollPaneInstituicoes.setVvalue(0.0);
         }
@@ -362,6 +369,10 @@ public class InstituicoesController {
         lblFeedbackForm.setVisible(false);
         paneFormulario.setVisible(true);
         paneFormulario.setManaged(true);
+        if (paneListaInstituicoes != null) {
+            paneListaInstituicoes.setVisible(false);
+            paneListaInstituicoes.setManaged(false);
+        }
         if (scrollPaneInstituicoes != null) {
             scrollPaneInstituicoes.setVvalue(0.0);
         }
@@ -372,6 +383,10 @@ public class InstituicoesController {
         this.instituicaoIdEmEdicao = null;
         paneFormulario.setVisible(false);
         paneFormulario.setManaged(false);
+        if (paneListaInstituicoes != null) {
+            paneListaInstituicoes.setVisible(true);
+            paneListaInstituicoes.setManaged(true);
+        }
         lblFeedbackForm.setVisible(false);
         limparForm();
     }
