@@ -18,8 +18,8 @@
 
     <center>
         <TabPane tabClosingPolicy="UNAVAILABLE" style="-fx-background-color: #f8fafc;">
-            <Tab fx:id="tabCadastro" text="👤 Cadastro de Apenados" />
-            <Tab fx:id="tabTotem" text="🖥 Terminal Totem (Entrada)" />
+            <Tab fx:id="tabCadastro" text="Cadastro de Apenados" />
+            <Tab fx:id="tabTotem" text="Terminal Totem (Entrada)" />
         </TabPane>
     </center>
 </BorderPane>

@@ -6,16 +6,24 @@
 
 <ScrollPane fitToWidth="true" styleClass="scroll-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.DashboardContentController">
     <content>
-        <VBox spacing="20.0">
+        <VBox spacing="18.0">
             <padding>
                 <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
             </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="hero-header">
+                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                    <Label styleClass="hero-title" text="Painel Geral de Controle e Monitoramento" />
+                    <Label styleClass="hero-subtitle" text="Visão executiva em tempo real dos apenados, instituições conveniadas e processos ativos." />
+                </VBox>
+                <Label styleClass="hero-badge" text="Módulo Executivo" />
+            </HBox>
 
             <HBox spacing="16.0">
                 <VBox HBox.hgrow="ALWAYS" spacing="8.0" styleClass="stat-card">
                     <HBox alignment="CENTER_LEFT" spacing="14.0">
                         <StackPane styleClass="icon-circle, icon-circle-blue">
-                            <Label style="-fx-font-size: 22px;" text="👥" />
+                            <Label styleClass="icon-text-badge" text="AP" />
                         </StackPane>
                         <VBox spacing="2.0">
                             <Label styleClass="stat-label" text="TOTAL DE APENADOS" />
@@ -29,7 +37,7 @@
                 <VBox HBox.hgrow="ALWAYS" spacing="8.0" styleClass="stat-card">
                     <HBox alignment="CENTER_LEFT" spacing="14.0">
                         <StackPane styleClass="icon-circle, icon-circle-green">
-                            <Label style="-fx-font-size: 22px;" text="🏢" />
+                            <Label style="-fx-text-fill: #059669; -fx-font-weight: 800; -fx-font-size: 13px;" text="IP" />
                         </StackPane>
                         <VBox spacing="2.0">
                             <Label styleClass="stat-label" text="INSTITUICOES PARCEIRAS" />
@@ -43,7 +51,7 @@
                 <VBox HBox.hgrow="ALWAYS" spacing="8.0" styleClass="stat-card">
                     <HBox alignment="CENTER_LEFT" spacing="14.0">
                         <StackPane styleClass="icon-circle, icon-circle-amber">
-                            <Label style="-fx-font-size: 22px;" text="📸" />
+                            <Label style="-fx-text-fill: #d97706; -fx-font-weight: 800; -fx-font-size: 13px;" text="TK" />
                         </StackPane>
                         <VBox spacing="2.0">
                             <Label styleClass="stat-label" text="TOTEM BIOMETRICO" />
@@ -73,7 +81,7 @@
                     <VBox spacing="12.0" styleClass="management-card" GridPane.columnIndex="0" GridPane.rowIndex="0">
                         <HBox alignment="CENTER_LEFT" spacing="14.0">
                             <StackPane styleClass="icon-circle, icon-circle-blue">
-                                <Label style="-fx-font-size: 22px;" text="👥" />
+                                <Label styleClass="icon-text-badge" text="AP" />
                             </StackPane>
                             <VBox spacing="2.0" HBox.hgrow="ALWAYS">
                                 <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Apenados" />
@@ -87,7 +95,7 @@
                     <VBox spacing="12.0" styleClass="management-card" GridPane.columnIndex="1" GridPane.rowIndex="0">
                         <HBox alignment="CENTER_LEFT" spacing="14.0">
                             <StackPane styleClass="icon-circle, icon-circle-green">
-                                <Label style="-fx-font-size: 22px;" text="🏢" />
+                                <Label style="-fx-text-fill: #059669; -fx-font-weight: 800; -fx-font-size: 13px;" text="IP" />
                             </StackPane>
                             <VBox spacing="2.0" HBox.hgrow="ALWAYS">
                                 <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Instituicoes Parceiras" />
@@ -101,7 +109,7 @@
                     <VBox spacing="12.0" styleClass="management-card" GridPane.columnIndex="0" GridPane.rowIndex="1">
                         <HBox alignment="CENTER_LEFT" spacing="14.0">
                             <StackPane styleClass="icon-circle, icon-circle-purple">
-                                <Label style="-fx-font-size: 22px;" text="⚖" />
+                                <Label style="-fx-text-fill: #7c3aed; -fx-font-weight: 800; -fx-font-size: 13px;" text="PA" />
                             </StackPane>
                             <VBox spacing="2.0" HBox.hgrow="ALWAYS">
                                 <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Penas Alternativas" />
@@ -115,7 +123,7 @@
                     <VBox spacing="12.0" styleClass="management-card" GridPane.columnIndex="1" GridPane.rowIndex="1">
                         <HBox alignment="CENTER_LEFT" spacing="14.0">
                             <StackPane styleClass="icon-circle, icon-circle-amber">
-                                <Label style="-fx-font-size: 22px;" text="⏱" />
+                                <Label style="-fx-text-fill: #d97706; -fx-font-weight: 800; -fx-font-size: 13px;" text="FT" />
                             </StackPane>
                             <VBox spacing="2.0" HBox.hgrow="ALWAYS">
                                 <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Frequencia e Cumprimento" />

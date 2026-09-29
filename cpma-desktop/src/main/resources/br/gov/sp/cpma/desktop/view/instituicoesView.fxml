@@ -4,22 +4,30 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane fx:id="scrollPaneInstituicoes" fitToWidth="true" style="-fx-background-color: transparent;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.InstituicoesController">
+<ScrollPane fx:id="scrollPaneInstituicoes" fitToWidth="true" styleClass="scroll-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.InstituicoesController">
     <content>
-        <VBox spacing="16.0">
+        <VBox spacing="18.0">
             <padding>
                 <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
             </padding>
 
+            <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="hero-header">
+                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                    <Label styleClass="hero-title" text="Instituições Parceiras e Gestão de Vagas" />
+                    <Label styleClass="hero-subtitle" text="Etapa 2: Credenciamento de órgãos acolhedores, postos de trabalho e horários disponíveis na semana." />
+                </VBox>
+                <Label styleClass="hero-badge" text="Etapa 2: Rede Parceira" />
+            </HBox>
+
             <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="card-container">
                 <VBox spacing="2.0">
-                    <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Rede de Instituicoes Parceiras" />
-                    <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Gerenciamento de entidades conveniadas, tipos e disponibilidade de turnos/vagas." />
+                    <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Rede de Instituicoes Parceiras" />
+                    <Label style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Gerenciamento de entidades conveniadas, tipos e disponibilidade de turnos e vagas." />
                 </VBox>
                 <Region HBox.hgrow="ALWAYS" />
-                <Button onAction="#handleRecarregarInstituicoes" styleClass="btn-secondary" text="🔄 Atualizar" style="-fx-font-size: 12px; -fx-padding: 7px 14px;" />
-                <Button fx:id="btnEditarInstituicao" onAction="#handleEditarInstituicaoSelecionada" style="-fx-background-color: #0284c7; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 12px; -fx-padding: 7px 14px;" text="✏️ Editar Instituicao" />
-                <Button fx:id="btnAlternarForm" onAction="#handleAlternarFormulario" prefHeight="36.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;" text="➕ Cadastrar Nova Instituicao" />
+                <Button onAction="#handleRecarregarInstituicoes" styleClass="btn-secondary" text="Atualizar" style="-fx-font-size: 12px; -fx-padding: 7px 14px;" />
+                <Button fx:id="btnEditarInstituicao" onAction="#handleEditarInstituicaoSelecionada" style="-fx-background-color: #0284c7; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 12px; -fx-padding: 7px 14px;" text="Editar Instituição" />
+                <Button fx:id="btnAlternarForm" onAction="#handleAlternarFormulario" prefHeight="36.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;" text="Nova Instituição" />
             </HBox>
 
             <VBox fx:id="paneFormulario" spacing="14.0" styleClass="card-container" visible="false" managed="false">
@@ -28,7 +36,7 @@
                         <Label fx:id="lblTituloForm" style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #2563eb;" text="Cadastro de Nova Instituicao Parceira" />
                         <Label fx:id="lblSubtituloForm" style="-fx-font-size: 12px; -fx-text-fill: #64748b;" text="Preencha os dados da instituicao e defina o quadro de disponibilidade semanal." />
                     </VBox>
-                    <Button onAction="#handleCancelarFormulario" style="-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6px; -fx-padding: 6px 14px;" text="✖ Fechar" />
+                    <Button onAction="#handleCancelarFormulario" style="-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6px; -fx-padding: 6px 14px;" text="Fechar Formulário" />
                 </HBox>
 
                 <Label fx:id="lblFeedbackForm" maxWidth="Infinity" visible="false" wrapText="true" />
@@ -80,7 +88,7 @@
                         <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Tipo de Instituicao *" />
                         <HBox spacing="8.0">
                             <ComboBox fx:id="cbTipoInstituicao" maxWidth="Infinity" HBox.hgrow="ALWAYS" promptText="Selecione o tipo..." />
-                            <Button onAction="#handleNovoTipoInstituicao" styleClass="btn-secondary" text="➕ Novo Tipo" style="-fx-font-size: 12px; -fx-padding: 6px 12px;" />
+                            <Button onAction="#handleNovoTipoInstituicao" styleClass="btn-secondary" text="Novo Tipo" style="-fx-font-size: 12px; -fx-padding: 6px 12px;" />
                         </HBox>
                         <Label fx:id="lblTipoInstituicaoError" />
                     </VBox>
@@ -89,10 +97,10 @@
                 <VBox spacing="10.0" style="-fx-background-color: #f8fafc; -fx-padding: 14px; -fx-background-radius: 8px; -fx-border-color: #e2e8f0; -fx-border-radius: 8px;">
                     <HBox alignment="CENTER_LEFT" spacing="12.0">
                         <VBox spacing="2.0" HBox.hgrow="ALWAYS">
-                            <Label style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 13px;" text="📅 Disponibilidade de Turnos e Vagas Semanais" />
+                            <Label style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 13px;" text="Disponibilidade de Turnos e Vagas Semanais" />
                             <Label style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="Configure os dias e turnos em que a instituicao acolhe apenados para cumprimento de pena." />
                         </VBox>
-                        <Button onAction="#handlePreencherPadraoComercial" styleClass="btn-secondary" text="⚡ Padrão Seg-Sex (08h às 17h)" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
+                        <Button onAction="#handlePreencherPadraoComercial" styleClass="btn-secondary" text="Padrão Seg-Sex (08h às 17h)" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
                     </HBox>
 
                     <HBox alignment="CENTER_LEFT" spacing="10.0">
@@ -117,7 +125,7 @@
                             <TextField fx:id="txtDispHoraFim2" promptText="17:00" />
                         </VBox>
                         <VBox alignment="BOTTOM_LEFT" spacing="3.0">
-                            <Button onAction="#handleAdicionarDisponibilidade" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7px 14px; -fx-background-radius: 6px; -fx-cursor: hand;" text="➕ Adicionar" />
+                            <Button onAction="#handleAdicionarDisponibilidade" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 7px 14px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Adicionar Dia" />
                         </VBox>
                     </HBox>
 

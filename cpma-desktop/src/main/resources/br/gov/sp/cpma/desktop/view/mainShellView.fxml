@@ -28,8 +28,8 @@
             <Separator />
 
             <VBox spacing="4.0" style="-fx-background-color: #f8fafc; -fx-padding: 10px 12px; -fx-background-radius: 8px; -fx-border-color: #e2e8f0; -fx-border-radius: 8px;">
-                <HBox alignment="CENTER_LEFT" spacing="8.0">
-                    <Label style="-fx-font-size: 16px;" text="👤" />
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <Label style="-fx-font-weight: 800; -fx-font-size: 11px; -fx-text-fill: #1d4ed8; -fx-background-color: #dbeafe; -fx-padding: 6px 8px; -fx-background-radius: 20px;" text="ADM" />
                     <VBox spacing="1.0">
                         <Label fx:id="lblAdminNome" style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 13px;" text="Administrador" />
                         <Label fx:id="lblAdminCpf" style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="123.456.789-00" />
@@ -40,12 +40,12 @@
             <Separator />
 
             <VBox spacing="6.0" VBox.vgrow="ALWAYS">
-                <Button fx:id="btnNavDashboard" maxWidth="Infinity" onAction="#navegarParaDashboard" styleClass="nav-button-active" text="📊  Dashboard" />
-                <Button fx:id="btnNavApenados" maxWidth="Infinity" onAction="#navegarParaApenados" styleClass="nav-button" text="👥  Apenados" />
-                <Button fx:id="btnNavPenas" maxWidth="Infinity" onAction="#navegarParaPenas" styleClass="nav-button" text="⚖  Penas Alternativas" />
-                <Button fx:id="btnNavInstituicoes" maxWidth="Infinity" onAction="#navegarParaInstituicoes" styleClass="nav-button" text="🏢  Instituicoes Parceiras" />
-                <Button fx:id="btnNavFrequencia" maxWidth="Infinity" onAction="#navegarParaFrequencia" styleClass="nav-button" text="⏱  Frequencia e Trabalho" />
-                <Button fx:id="btnNavTotem" maxWidth="Infinity" onAction="#navegarParaTotem" styleClass="nav-button" text="📸  Totem de Presenca" />
+                <Button fx:id="btnNavDashboard" maxWidth="Infinity" onAction="#navegarParaDashboard" styleClass="nav-button-active" text="Dashboard" />
+                <Button fx:id="btnNavApenados" maxWidth="Infinity" onAction="#navegarParaApenados" styleClass="nav-button" text="Apenados" />
+                <Button fx:id="btnNavPenas" maxWidth="Infinity" onAction="#navegarParaPenas" styleClass="nav-button" text="Penas Alternativas" />
+                <Button fx:id="btnNavInstituicoes" maxWidth="Infinity" onAction="#navegarParaInstituicoes" styleClass="nav-button" text="Instituicoes Parceiras" />
+                <Button fx:id="btnNavFrequencia" maxWidth="Infinity" onAction="#navegarParaFrequencia" styleClass="nav-button" text="Frequencia e Trabalho" />
+                <Button fx:id="btnNavTotem" maxWidth="Infinity" onAction="#navegarParaTotem" styleClass="nav-button" text="Totem de Presenca" />
             </VBox>
 
             <VBox spacing="10.0">

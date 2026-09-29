@@ -4,15 +4,23 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.FrequenciaController">
+<ScrollPane fitToWidth="true" styleClass="scroll-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.FrequenciaController">
     <content>
-        <VBox spacing="16.0">
+        <VBox spacing="18.0">
             <padding>
                 <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
             </padding>
 
+            <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="hero-header">
+                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                    <Label styleClass="hero-title" text="Frequência, Folha de Ponto e Cumprimento de Pena" />
+                    <Label styleClass="hero-subtitle" text="Etapa 4: Fiscalização mensal dos comparecimentos, cálculo de horas executadas e atestados de cumprimento para a Vara de Execução Penal." />
+                </VBox>
+                <Label styleClass="hero-badge" text="Etapa 4: Fiscalização &amp; Ponto" />
+            </HBox>
+
             <VBox spacing="12.0" styleClass="card-container">
-                <Label style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Localizar Apenado para Lancamento de Horas e Folha de Ponto" />
+                <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Localizar Apenado para Lancamento de Horas e Folha de Ponto" />
 
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
                     <TextField fx:id="txtCpfBusca" prefWidth="250.0" promptText="CPF do Apenado (apenas numeros)" />
@@ -48,7 +56,7 @@
             <VBox fx:id="boxFolhaMensal" spacing="14.0" styleClass="card-container" visible="false" managed="false">
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
                     <VBox spacing="2.0" HBox.hgrow="ALWAYS">
-                        <Label style="-fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="📅 Geração da Folha de Ponto Mensal (Pelo Contrato Inicial)" />
+                        <Label style="-fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="Geração da Folha de Ponto Mensal (Pelo Contrato Inicial)" />
                         <Label style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="O sistema projeta todos os dias acordados no mês. Apenas desmarque os dias em que o apenado faltou." />
                     </VBox>
                     <Label fx:id="lblTermosContrato" style="-fx-font-weight: 600; -fx-text-fill: #059669; -fx-background-color: #ecfdf5; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #a7f3d0; -fx-border-radius: 6px;" text="Contrato: ---" />
@@ -63,7 +71,7 @@
                     <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Ano:" />
                     <ComboBox fx:id="cbAnoReferencia" prefWidth="95.0" />
 
-                    <Button onAction="#handleGerarGradeMes" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6px 16px; -fx-background-radius: 6px;" text="⚡ Gerar Grade do Mês" />
+                    <Button onAction="#handleGerarGradeMes" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6px 16px; -fx-background-radius: 6px;" text="Gerar Grade do Mês" />
 
                     <Region HBox.hgrow="ALWAYS" />
                     <Button onAction="#handleMarcarTodos" styleClass="btn-secondary" text="Marcar Todos" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
@@ -71,12 +79,12 @@
                 </HBox>
 
                 <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 4px 0px;">
-                    <Button onAction="#handleAdicionarDia" style="-fx-background-color: #f1f5f9; -fx-text-fill: #1e293b; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-font-size: 12px;" text="➕ Adicionar Dia" />
-                    <Button onAction="#handleAdicionarMes" style="-fx-background-color: #f1f5f9; -fx-text-fill: #1e293b; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-font-size: 12px;" text="📅 Adicionar Mês (~22 dias)" />
-                    <Button onAction="#handlePreencherHorariosPena" style="-fx-background-color: #f1f5f9; -fx-text-fill: #1e293b; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-font-size: 12px;" text="⏰ Preencher Horários da Pena" />
-                    <Button onAction="#handleContinuarDeOndeParou" style="-fx-background-color: #eff6ff; -fx-text-fill: #2563eb; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #93c5fd; -fx-border-radius: 6px; -fx-font-size: 12px;" text="🔄 Continuar de Onde Parou" />
+                    <Button onAction="#handleAdicionarDia" style="-fx-background-color: #f1f5f9; -fx-text-fill: #1e293b; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-font-size: 12px;" text="Adicionar Dia" />
+                    <Button onAction="#handleAdicionarMes" style="-fx-background-color: #f1f5f9; -fx-text-fill: #1e293b; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-font-size: 12px;" text="Adicionar Mês Inteiro" />
+                    <Button onAction="#handlePreencherHorariosPena" style="-fx-background-color: #f1f5f9; -fx-text-fill: #1e293b; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-font-size: 12px;" text="Preencher Horários da Pena" />
+                    <Button onAction="#handleContinuarDeOndeParou" style="-fx-background-color: #eff6ff; -fx-text-fill: #2563eb; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #93c5fd; -fx-border-radius: 6px; -fx-font-size: 12px;" text="Continuar de Onde Parou" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button onAction="#handleRemoverTudo" style="-fx-background-color: #fee2e2; -fx-text-fill: #dc2626; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #fca5a5; -fx-border-radius: 6px; -fx-font-size: 12px;" text="🗑️ Limpar Grade" />
+                    <Button onAction="#handleRemoverTudo" style="-fx-background-color: #fee2e2; -fx-text-fill: #dc2626; -fx-font-weight: 700; -fx-cursor: hand; -fx-padding: 6px 12px; -fx-background-radius: 6px; -fx-border-color: #fca5a5; -fx-border-radius: 6px; -fx-font-size: 12px;" text="Limpar Grade" />
                 </HBox>
 
                 <TableView fx:id="tblFolhaMensal" editable="true" prefHeight="260.0">
@@ -100,11 +108,11 @@
                 <HBox alignment="CENTER_LEFT" spacing="16.0">
                     <Label fx:id="lblResumoFolhaMensal" style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 13px;" text="Total de dias: 0 | Presenças: 0 | Faltas: 0 | Horas apuradas: 0.0h" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button fx:id="btnConfirmarFolhaMensal" onAction="#handleConfirmarFolhaMensal" prefHeight="40.0" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 24px; -fx-background-radius: 6px; -fx-cursor: hand;" text="✔ Confirmar Presença e Registrar Folha de Ponto" />
+                    <Button fx:id="btnConfirmarFolhaMensal" onAction="#handleConfirmarFolhaMensal" prefHeight="40.0" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 24px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Confirmar Presença e Registrar Folha de Ponto" />
                 </HBox>
             </VBox>
 
-            <TitledPane fx:id="paneAvulso" expanded="false" text="➕ Lançamento Avulso de Comparecimento (Registro Individual)" styleClass="card-container" visible="false" managed="false">
+            <TitledPane fx:id="paneAvulso" expanded="false" text="Lançamento Avulso de Comparecimento (Registro Individual)" styleClass="card-container" visible="false" managed="false">
                 <VBox spacing="14.0">
                     <Label fx:id="lblFeedbackLancamento" maxWidth="Infinity" visible="false" wrapText="true" />
 
@@ -126,7 +134,7 @@
                         </VBox>
 
                         <VBox spacing="8.0" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="1" style="-fx-background-color: #f8fafc; -fx-padding: 12px; -fx-background-radius: 6px; -fx-border-color: #e2e8f0; -fx-border-radius: 6px;">
-                            <Label style="-fx-font-weight: 700; -fx-text-fill: #334155; -fx-font-size: 12px;" text="⏰ Batidas de Ponto e Intervalo de Trabalho" />
+                            <Label style="-fx-font-weight: 700; -fx-text-fill: #334155; -fx-font-size: 12px;" text="Batidas de Ponto e Intervalo de Trabalho" />
                             
                             <GridPane hgap="12.0" vgap="6.0">
                                 <columnConstraints>
