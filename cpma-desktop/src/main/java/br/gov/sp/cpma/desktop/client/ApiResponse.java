@@ -33,4 +33,8 @@ public class ApiResponse<T> {
     public StandardApiError getError() {
         return error;
     }
+
+    public String getErrorMessage() {
+        return error != null && error.getMessage() != null ? error.getMessage() : "Erro desconhecido";
+    }
 }
