@@ -1,7 +1,15 @@
 br\gov\sp\cpma\AuthControllerTest.class
+br\gov\sp\cpma\CalculadoraExecucaoPenalTest.class
+br\gov\sp\cpma\TotemServiceTest.class
+br\gov\sp\cpma\BiometriaResilienceTest.class
+br\gov\sp\cpma\TotemControllerTest.class
+br\gov\sp\cpma\InstituicaoControllerTest.class
+br\gov\sp\cpma\TokenServiceTest.class
 br\gov\sp\cpma\RegistroTrabalhoControllerTest.class
 br\gov\sp\cpma\UsuarioControllerTest.class
 br\gov\sp\cpma\CodigoPenaCalculatorTest.class
+br\gov\sp\cpma\E2EWorkflowIntegrationTest.class
 br\gov\sp\cpma\PenaControllerTest.class
-br\gov\sp\cpma\TotemControllerTest.class
-br\gov\sp\cpma\InstituicaoControllerTest.class
+br\gov\sp\cpma\PostgresIntegrationTest.class
+br\gov\sp\cpma\GlobalExceptionHandlerTest.class
+br\gov\sp\cpma\TotemConcurrencyTest.class

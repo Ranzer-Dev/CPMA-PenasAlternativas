@@ -15,6 +15,7 @@ br\gov\sp\cpma\domain\service\TokenService.class
 br\gov\sp\cpma\domain\entity\Administrador.class
 br\gov\sp\cpma\domain\util\CodigoPenaCalculator.class
 br\gov\sp\cpma\domain\service\UsuarioService.class
+br\gov\sp\cpma\domain\util\CalculadoraExecucaoPenal.class
 br\gov\sp\cpma\domain\entity\Instituicao.class
 br\gov\sp\cpma\domain\entity\RegistroDeTrabalho.class
 br\gov\sp\cpma\api\dto\CadastroPenaRequest.class

@@ -60,5 +60,6 @@ D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\main\java\br\gov\sp\cpma\dom
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\main\java\br\gov\sp\cpma\domain\service\TokenService.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\main\java\br\gov\sp\cpma\domain\service\TotemService.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\main\java\br\gov\sp\cpma\domain\service\UsuarioService.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\main\java\br\gov\sp\cpma\domain\util\CalculadoraExecucaoPenal.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\main\java\br\gov\sp\cpma\domain\util\CodigoPenaCalculator.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\main\java\br\gov\sp\cpma\domain\util\PasswordHasher.java
