@@ -4,29 +4,35 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.PenasController">
+<ScrollPane fx:id="scrollPanePenas" fitToWidth="true" styleClass="scroll-pane" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.PenasController">
     <content>
-        <VBox spacing="18.0">
-            <!-- Formulario de Cadastro de Pena -->
-            <VBox spacing="16.0" styleClass="card-container">
-                <Label style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="Lancar Nova Pena Alternativa" />
-                <Label style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Vincule o apenado a uma instituicao cadastrada e defina a carga horaria e tipo de pena." />
+        <VBox spacing="16.0">
+            <padding>
+                <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+            </padding>
+
+            <VBox fx:id="paneFormularioPena" spacing="16.0" styleClass="card-container" visible="false" managed="false">
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                        <Label fx:id="lblTituloForm" style="-fx-font-size: 17px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="Lancar Nova Pena Alternativa" />
+                        <Label fx:id="lblSubtituloForm" style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Vincule o apenado a instituicoes parceiras e defina os termos e contrato de cumprimento." />
+                    </VBox>
+                    <Button fx:id="btnCancelarEdicao" onAction="#handleCancelarEdicao" text="Fechar Formulário" style="-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6px; -fx-padding: 6px 14px;" />
+                </HBox>
 
                 <Label fx:id="lblFeedback" maxWidth="Infinity" visible="false" wrapText="true" />
 
-                <!-- Busca do Apenado por CPF -->
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
                     <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                         <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="CPF do Apenado *" />
                         <HBox spacing="8.0">
                             <TextField fx:id="txtCpfApenado" promptText="000.000.000-00" HBox.hgrow="ALWAYS" />
-                            <Button onAction="#handleBuscarApenado" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-cursor: hand;" text="Localizar Apenado" />
+                            <Button fx:id="btnBuscarApenado" onAction="#handleBuscarApenado" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-cursor: hand;" text="Localizar Apenado" />
                         </HBox>
                         <Label fx:id="lblCpfError" />
                     </VBox>
                 </HBox>
 
-                <!-- Nome do Apenado Encontrado -->
                 <HBox fx:id="boxApenadoEncontrado" alignment="CENTER_LEFT" spacing="12.0" style="-fx-background-color: #f1f5f9; -fx-padding: 10px 14px; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px;" visible="false" managed="false">
                     <Label style="-fx-font-weight: bold; -fx-text-fill: #059669;" text="Apenado Selecionado:" />
                     <Label fx:id="lblNomeApenado" style="-fx-font-weight: bold; -fx-text-fill: #1e293b;" text="---" />
@@ -38,64 +44,168 @@
                         <ColumnConstraints percentWidth="50.0" />
                     </columnConstraints>
 
-                    <!-- Instituicao -->
                     <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
                         <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Instituicao Parceira Principal *" />
-                        <ComboBox fx:id="cbInstituicao" maxWidth="Infinity" promptText="Selecione a instituicao parceira..." />
+                        <ComboBox fx:id="cbInstituicao" maxWidth="Infinity" promptText="Selecione a instituicao principal..." />
                         <Label fx:id="lblInstituicaoError" />
                     </VBox>
 
-                    <!-- Tipo de Pena -->
                     <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
                         <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Tipo de Medida Alternativa *" />
                         <HBox spacing="8.0">
                             <ComboBox fx:id="cbTipoPena" editable="true" maxWidth="Infinity" HBox.hgrow="ALWAYS" promptText="Selecione ou digite o tipo..." />
-                            <Button onAction="#handleNovoTipoPena" styleClass="btn-secondary" text="➕ Novo Tipo" style="-fx-font-size: 12px; -fx-padding: 6px 12px;" />
+                            <Button onAction="#handleNovoTipoPena" styleClass="btn-secondary" text="Novo Tipo" style="-fx-font-size: 12px; -fx-padding: 6px 12px;" />
                         </HBox>
                         <Label fx:id="lblTipoPenaError" />
                     </VBox>
 
-                    <!-- Horas Totais -->
-                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                    <VBox spacing="6.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1" style="-fx-background-color: #f8fafc; -fx-padding: 12px; -fx-background-radius: 6px; -fx-border-color: #e2e8f0; -fx-border-radius: 6px;">
+                        <Label style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 12px;" text="Instituicoes Parceiras Adicionais (Vinculo Simultaneo / Multiplas Entidades)" />
+                        <Label style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="Marque abaixo outras entidades conveniadas onde o apenado tambem podera prestar servicos comunitarios." />
+                        <ScrollPane fitToWidth="true" prefHeight="70.0" style="-fx-background-color: transparent;">
+                            <content>
+                                <FlowPane fx:id="paneOutrasInstituicoes" hgap="16.0" vgap="8.0" style="-fx-padding: 4px;" />
+                            </content>
+                        </ScrollPane>
+                    </VBox>
+
+                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="2">
                         <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Total de Horas a Cumprir *" />
                         <TextField fx:id="txtHorasTotais" promptText="Ex: 160" />
                         <Label fx:id="lblHorasTotaisError" />
                     </VBox>
 
-                    <!-- Horas Semanais -->
-                    <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                         <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Carga Horaria Semanal (Horas) *" />
                         <TextField fx:id="txtHorasSemanais" promptText="Ex: 8" />
                         <Label fx:id="lblHorasSemanaisError" />
                     </VBox>
 
-                    <!-- Data Inicio -->
-                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="3">
                         <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Data de Inicio *" />
                         <DatePicker fx:id="dpDataInicio" maxWidth="Infinity" />
                         <Label fx:id="lblDataInicioError" />
                     </VBox>
 
-                    <!-- Data Termino Estimada -->
-                    <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                    <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                         <HBox alignment="CENTER_LEFT" spacing="8.0">
                             <Label style="-fx-font-weight: 600; -fx-text-fill: #1e293b;" text="Data de Termino Estimada" />
-                            <Button onAction="#handleCalcularEstimativa" style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand;" text="⚡ Calcular" />
+                            <Button onAction="#handleCalcularEstimativa" style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand;" text="Recalcular" />
                         </HBox>
                         <DatePicker fx:id="dpDataTermino" maxWidth="Infinity" />
-                        <Label fx:id="lblEstimativaTexto" style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="" />
+                        <Label fx:id="lblEstimativaTexto" style="-fx-text-fill: #0284c7; -fx-font-weight: 600; -fx-font-size: 11px;" text="" />
                     </VBox>
 
-                    <!-- Atividades Acordadas -->
-                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3">
-                        <Label style="-fx-text-fill: #1e293b;" text="Atividades Acordadas e Observacoes" />
-                        <TextArea fx:id="txtAtividades" prefRowCount="3" promptText="Descricao dos servicos e regras especificadas..." />
+                    <VBox spacing="10.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="4" style="-fx-background-color: #f8fafc; -fx-padding: 14px; -fx-background-radius: 8px; -fx-border-color: #e2e8f0; -fx-border-radius: 8px;">
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                            <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                <Label style="-fx-font-weight: 700; -fx-text-fill: #1e293b; -fx-font-size: 13px;" text="Contrato Inicial de Trabalho do Apenado (Jornada e Horarios por Dia)" />
+                                <Label style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="Configure os dias e turnos especificos em que o apenado cumprira sua carga horaria." />
+                            </VBox>
+                            <Button onAction="#handlePreencherComercial" styleClass="btn-secondary" text="Padrão Seg-Sex (08h-17h)" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
+                            <Button onAction="#handlePreencherMeioPeriodo" styleClass="btn-secondary" text="Matutino Seg-Sex (08h-12h)" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
+                            <Button onAction="#handlePreencherFimDeSemana" styleClass="btn-secondary" text="Sábados (08h-14h)" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" />
+                        </HBox>
+
+                        <GridPane hgap="12.0" vgap="8.0">
+                            <columnConstraints>
+                                <ColumnConstraints percentWidth="18.0" />
+                                <ColumnConstraints percentWidth="20.0" />
+                                <ColumnConstraints percentWidth="20.0" />
+                                <ColumnConstraints percentWidth="20.0" />
+                                <ColumnConstraints percentWidth="22.0" />
+                            </columnConstraints>
+
+                            <Label style="-fx-font-weight: 700; -fx-text-fill: #475569; -fx-font-size: 11px;" text="Dia" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Label style="-fx-font-weight: 700; -fx-text-fill: #475569; -fx-font-size: 11px;" text="Turno 1 Início" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                            <Label style="-fx-font-weight: 700; -fx-text-fill: #475569; -fx-font-size: 11px;" text="Turno 1 Saída" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                            <Label style="-fx-font-weight: 700; -fx-text-fill: #475569; -fx-font-size: 11px;" text="Turno 2 Início" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                            <Label style="-fx-font-weight: 700; -fx-text-fill: #475569; -fx-font-size: 11px;" text="Turno 2 Saída" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+
+                            <CheckBox fx:id="chkSeg" text="Segunda" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <TextField fx:id="txtSegIni1" promptText="08:00" text="08:00" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                            <TextField fx:id="txtSegFim1" promptText="12:00" text="12:00" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <TextField fx:id="txtSegIni2" promptText="13:00" text="13:00" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                            <TextField fx:id="txtSegFim2" promptText="17:00" text="17:00" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+
+                            <CheckBox fx:id="chkTer" text="Terça" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <TextField fx:id="txtTerIni1" promptText="08:00" text="08:00" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                            <TextField fx:id="txtTerFim1" promptText="12:00" text="12:00" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                            <TextField fx:id="txtTerIni2" promptText="13:00" text="13:00" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                            <TextField fx:id="txtTerFim2" promptText="17:00" text="17:00" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+
+                            <CheckBox fx:id="chkQua" text="Quarta" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                            <TextField fx:id="txtQuaIni1" promptText="08:00" text="08:00" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                            <TextField fx:id="txtQuaFim1" promptText="12:00" text="12:00" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                            <TextField fx:id="txtQuaIni2" promptText="13:00" text="13:00" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                            <TextField fx:id="txtQuaFim2" promptText="17:00" text="17:00" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+
+                            <CheckBox fx:id="chkQui" text="Quinta" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                            <TextField fx:id="txtQuiIni1" promptText="08:00" text="08:00" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                            <TextField fx:id="txtQuiFim1" promptText="12:00" text="12:00" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                            <TextField fx:id="txtQuiIni2" promptText="13:00" text="13:00" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                            <TextField fx:id="txtQuiFim2" promptText="17:00" text="17:00" GridPane.columnIndex="4" GridPane.rowIndex="4" />
+
+                            <CheckBox fx:id="chkSex" text="Sexta" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                            <TextField fx:id="txtSexIni1" promptText="08:00" text="08:00" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                            <TextField fx:id="txtSexFim1" promptText="12:00" text="12:00" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                            <TextField fx:id="txtSexIni2" promptText="13:00" text="13:00" GridPane.columnIndex="3" GridPane.rowIndex="5" />
+                            <TextField fx:id="txtSexFim2" promptText="17:00" text="17:00" GridPane.columnIndex="4" GridPane.rowIndex="5" />
+
+                            <CheckBox fx:id="chkSab" text="Sábado" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+                            <TextField fx:id="txtSabIni1" promptText="08:00" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                            <TextField fx:id="txtSabFim1" promptText="14:00" GridPane.columnIndex="2" GridPane.rowIndex="6" />
+                            <TextField fx:id="txtSabIni2" promptText="" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+                            <TextField fx:id="txtSabFim2" promptText="" GridPane.columnIndex="4" GridPane.rowIndex="6" />
+
+                            <CheckBox fx:id="chkDom" text="Domingo" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+                            <TextField fx:id="txtDomIni1" promptText="08:00" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                            <TextField fx:id="txtDomFim1" promptText="14:00" GridPane.columnIndex="2" GridPane.rowIndex="7" />
+                            <TextField fx:id="txtDomIni2" promptText="" GridPane.columnIndex="3" GridPane.rowIndex="7" />
+                            <TextField fx:id="txtDomFim2" promptText="" GridPane.columnIndex="4" GridPane.rowIndex="7" />
+                        </GridPane>
+                    </VBox>
+
+                    <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="5">
+                        <Label style="-fx-text-fill: #1e293b; -fx-font-weight: 600;" text="Atividades Acordadas e Observacoes do Contrato" />
+                        <TextArea fx:id="txtAtividades" prefRowCount="3" promptText="Descricao detalhada das funcoes, regras da instituicao e tarefas atribuidas..." />
                     </VBox>
                 </GridPane>
 
                 <HBox alignment="CENTER_RIGHT" spacing="12.0">
+                    <Button onAction="#handleCancelarEdicao" style="-fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-text-fill: #64748b; -fx-font-weight: 600; -fx-cursor: hand;" text="Cancelar" />
                     <Button fx:id="btnSalvarPena" onAction="#handleSalvarPena" prefHeight="40.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 24px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Salvar e Registrar Pena" />
                 </HBox>
+            </VBox>
+
+            <VBox spacing="10.0" VBox.vgrow="ALWAYS" styleClass="card-container">
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <VBox spacing="2.0">
+                        <Label style="-fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="Penas e Contratos Cadastrados no Sistema" />
+                        <Label style="-fx-text-fill: #64748b; -fx-font-size: 11px;" text="Dica: Dê duplo clique em uma linha para abrir a edição rápida do contrato." />
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button onAction="#handleRecarregarPenas" styleClass="btn-secondary" text="Atualizar Lista" style="-fx-font-size: 11px; -fx-padding: 6px 12px;" />
+                    <Button fx:id="btnEditarPenaTabela" onAction="#handleEditarPenaSelecionada" style="-fx-background-color: #0284c7; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 6px 16px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Editar Contrato" />
+                    <Button onAction="#handleAlternarFormularioPena" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 6px 16px; -fx-background-radius: 6px; -fx-cursor: hand;" text="Nova Pena Alternativa" />
+                </HBox>
+
+                <TableView fx:id="tblPenasGeral" prefHeight="440.0">
+                    <columns>
+                        <TableColumn fx:id="colPenaGeralId" prefWidth="55.0" text="ID" />
+                        <TableColumn fx:id="colPenaGeralCodigo" prefWidth="85.0" text="Código" />
+                        <TableColumn fx:id="colPenaGeralApenado" prefWidth="200.0" text="Apenado" />
+                        <TableColumn fx:id="colPenaGeralTipo" prefWidth="170.0" text="Medida Alternativa" />
+                        <TableColumn fx:id="colPenaGeralInstituicao" prefWidth="170.0" text="Instituição Principal" />
+                        <TableColumn fx:id="colPenaGeralHoras" prefWidth="75.0" text="Total" />
+                        <TableColumn fx:id="colPenaGeralSemanais" prefWidth="75.0" text="Semanal" />
+                        <TableColumn fx:id="colPenaGeralDias" prefWidth="220.0" text="Contrato / Horários" />
+                        <TableColumn fx:id="colPenaGeralInicio" prefWidth="95.0" text="Início" />
+                    </columns>
+                    <placeholder>
+                        <Label text="Nenhuma pena cadastrada no sistema." style="-fx-text-fill: #94a3b8;" />
+                    </placeholder>
+                </TableView>
             </VBox>
         </VBox>
     </content>

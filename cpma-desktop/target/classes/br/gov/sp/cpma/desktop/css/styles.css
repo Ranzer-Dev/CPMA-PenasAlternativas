@@ -311,11 +311,28 @@
     -fx-background-radius: 12px;
 }
 
-.field-error {
+.field-error,
+.text-input.field-error,
+.combo-box.field-error,
+.date-picker.field-error {
     -fx-border-color: #ef4444 !important;
     -fx-border-width: 2px !important;
     -fx-border-radius: 6px !important;
     -fx-background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.combo-box.field-error > .text-field,
+.date-picker.field-error > .text-field {
+    -fx-background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.field-error:focused,
+.text-input.field-error:focused,
+.combo-box.field-error:focused,
+.date-picker.field-error:focused {
+    -fx-border-color: #dc2626 !important;
+    -fx-border-width: 2px !important;
+    -fx-effect: dropshadow(gaussian, rgba(239, 68, 68, 0.35), 4, 0, 0, 0);
 }
 
 .field-error-label {
@@ -394,4 +411,59 @@
 
 .scroll-pane .scroll-bar:vertical .thumb:hover {
     -fx-background-color: rgba(37, 99, 235, 0.45);
+}
+
+.camera-preview-box {
+    -fx-background-color: #0f172a;
+    -fx-border-color: #334155;
+    -fx-border-width: 2px;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-alignment: center;
+}
+
+.token-badge {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-padding: 4px 10px;
+    -fx-background-radius: 12px;
+}
+
+.hero-header {
+    -fx-background-color: linear-gradient(to right, #ffffff 0%, #f8fafc 100%);
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-padding: 18px 24px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.04), 8, 0, 0, 2);
+}
+
+.hero-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0f172a;
+}
+
+.hero-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+}
+
+.hero-badge {
+    -fx-background-color: #eff6ff;
+    -fx-text-fill: #1d4ed8;
+    -fx-font-weight: 700;
+    -fx-font-size: 11px;
+    -fx-padding: 4px 12px;
+    -fx-background-radius: 20px;
+    -fx-border-color: #bfdbfe;
+    -fx-border-radius: 20px;
+    -fx-border-width: 1px;
+}
+
+.icon-text-badge {
+    -fx-font-weight: 800;
+    -fx-font-size: 13px;
+    -fx-text-fill: #2563eb;
 }

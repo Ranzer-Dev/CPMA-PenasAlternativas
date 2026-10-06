@@ -1,1 +1,8 @@
+br\gov\sp\cpma\desktop\ui\FormControlsBindingTest$1.class
+br\gov\sp\cpma\desktop\util\FormValidatorTest.class
+br\gov\sp\cpma\desktop\ui\FormControlsBindingTest.class
+br\gov\sp\cpma\desktop\util\RelatorioImpressaoServiceTest.class
+br\gov\sp\cpma\desktop\util\SessaoAdminTest.class
 br\gov\sp\cpma\desktop\CpmaApiClientTest.class
+br\gov\sp\cpma\desktop\client\DtoSerializationTest.class
+br\gov\sp\cpma\desktop\client\EstimativaPenaDTOTest.class

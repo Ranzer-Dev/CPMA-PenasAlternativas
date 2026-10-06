@@ -1,7 +1,15 @@
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\AuthControllerTest.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\BiometriaResilienceTest.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\CalculadoraExecucaoPenalTest.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\CodigoPenaCalculatorTest.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\E2EWorkflowIntegrationTest.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\GlobalExceptionHandlerTest.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\InstituicaoControllerTest.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\PenaControllerTest.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\PostgresIntegrationTest.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\RegistroTrabalhoControllerTest.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\TokenServiceTest.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\TotemConcurrencyTest.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\TotemControllerTest.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\TotemServiceTest.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-backend\src\test\java\br\gov\sp\cpma\UsuarioControllerTest.java

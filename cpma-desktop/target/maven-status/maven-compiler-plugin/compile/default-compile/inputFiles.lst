@@ -8,6 +8,7 @@ D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\des
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\EstimativaPenaDTO.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\FieldErrorDetail.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\InstituicaoDTO.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\ItemFolhaPontoMensal.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\LoginResponseDTO.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\PenaDTO.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\ReconhecimentoFacialDTO.java
@@ -15,6 +16,7 @@ D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\des
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\ResumoCumprimentoDTO.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\StandardApiError.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\TipoInstituicaoDTO.java
+D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\TokenTotemDTO.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\UsuarioDTO.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\client\ValidarAcessoDTO.java
 D:\Projetos\CPMA-PenasAlternativas\cpma-desktop\src\main\java\br\gov\sp\cpma\desktop\controller\ApenadosController.java
