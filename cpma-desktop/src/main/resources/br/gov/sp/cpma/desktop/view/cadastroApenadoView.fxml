@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 
 <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="br.gov.sp.cpma.desktop.controller.CadastroApenadoController">
@@ -11,10 +12,30 @@
                 <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
             </padding>
 
-            <Label style="-fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="Cadastro de Apenado (Novo Registro)" />
+            <Label fx:id="lblTituloForm" style="-fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: #2563eb;" text="Cadastro de Apenado (Novo Registro)" />
             <Label style="-fx-font-size: 13px; -fx-text-fill: #64748b;" text="Preencha os dados abaixo. Campos obrigatorios marcados em vermelho caso invalidos." />
 
             <Label fx:id="lblFeedbackMessage" wrapText="true" maxWidth="Infinity" />
+
+            <!-- Painel de Biometria / Foto do Apenado -->
+            <HBox spacing="20.0" alignment="CENTER_LEFT" style="-fx-background-color: #f8fafc; -fx-padding: 16px; -fx-background-radius: 10px; -fx-border-color: #e2e8f0; -fx-border-radius: 10px;">
+                <StackPane prefHeight="130.0" prefWidth="110.0" style="-fx-background-color: #e2e8f0; -fx-background-radius: 8px; -fx-border-color: #cbd5e1; -fx-border-radius: 8px;">
+                    <ImageView fx:id="imgFotoApenado" fitHeight="130.0" fitWidth="110.0" preserveRatio="true" />
+                    <Label fx:id="lblFotoPlaceholder" style="-fx-font-size: 11px; -fx-text-fill: #94a3b8; -fx-text-alignment: center;" text="Sem Foto" wrapText="true" />
+                </StackPane>
+
+                <VBox spacing="8.0" HBox.hgrow="ALWAYS">
+                    <Label text="Fotografia e Biometria Facial" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" />
+                    <Label text="A foto e utilizada para reconhecimento facial automatico no totem de autoatendimento. Posicione o apenado de frente para a camera." style="-fx-font-size: 12px; -fx-text-fill: #64748b;" wrapText="true" />
+                    
+                    <HBox spacing="10.0" alignment="CENTER_LEFT">
+                        <Button fx:id="btnTirarFoto" onAction="#handleTirarFotoCamera" text="📸 Tirar Foto (Câmera)" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: 700; -fx-background-radius: 6px; -fx-padding: 7px 16px; -fx-cursor: hand;" />
+                        <Button fx:id="btnCarregarFoto" onAction="#handleSelecionarFoto" text="📁 Carregar Arquivo" style="-fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-text-fill: #475569; -fx-font-weight: 600; -fx-background-radius: 6px; -fx-border-radius: 6px; -fx-padding: 6px 14px; -fx-cursor: hand;" />
+                        <Button fx:id="btnRemoverFoto" onAction="#handleRemoverFoto" text="✕ Remover" style="-fx-background-color: #fee2e2; -fx-text-fill: #dc2626; -fx-font-weight: 600; -fx-background-radius: 6px; -fx-padding: 6px 12px; -fx-cursor: hand;" visible="false" />
+                    </HBox>
+                    <Label fx:id="lblFotoStatus" text="Nenhuma foto anexada (A biometria facial requer uma foto cadastrada)" style="-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-style: italic;" />
+                </VBox>
+            </HBox>
 
             <GridPane hgap="16.0" vgap="12.0">
                 <columnConstraints>

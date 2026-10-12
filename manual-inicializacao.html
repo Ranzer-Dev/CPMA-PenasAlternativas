@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPMA — Manual de Inicialização e Operação Simplificada</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --card-border: #1f293d;
+      --accent-blue: #2563eb;
+      --accent-blue-light: #60a5fa;
+      --accent-teal: #0d9488;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      padding: 32px 20px 80px 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    /* HEADER */
+    .hero {
+      text-align: center;
+      padding: 48px 24px;
+      background: linear-gradient(180deg, rgba(37, 99, 235, 0.12) 0%, rgba(17, 24, 39, 0.4) 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.3) 0%, transparent 70%);
+      filter: blur(50px);
+      pointer-events: none;
+    }
+
+    .badge-gov {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(37, 99, 235, 0.2);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      color: var(--accent-blue-light);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      color: #ffffff;
+    }
+
+    .hero p {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* CARDS & GRIDS */
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 36px;
+    }
+
+    .step-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .step-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(96, 165, 250, 0.4);
+    }
+
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--accent-blue);
+      color: white;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .step-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .step-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      flex-grow: 1;
+    }
+
+    .code-box {
+      background: #080c14;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      word-break: break-all;
+    }
+
+    /* HIGHLIGHT BANNER */
+    .banner-fast {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(13, 148, 136, 0.05) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 36px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .banner-fast-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--accent-green);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .banner-fast h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #34d399;
+      margin-bottom: 4px;
+    }
+
+    .banner-fast p {
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    /* EDGE CASES / TROUBLESHOOTING */
+    .accordion-item {
+      background: #0d1322;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .accordion-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      user-select: none;
+      transition: background 0.2s;
+    }
+
+    .accordion-header:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .accordion-header .status-tag {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+
+    .tag-amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+    .tag-red { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+    .tag-blue { background: rgba(37, 99, 235, 0.15); color: var(--accent-blue-light); }
+
+    .accordion-content {
+      padding: 0 20px 20px 20px;
+      font-size: 14px;
+      color: #cbd5e1;
+      display: block;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 8px;
+      padding-top: 14px;
+    }
+
+    .accordion-content ol, .accordion-content ul {
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+
+    .accordion-content li {
+      margin-bottom: 6px;
+    }
+
+    /* NETWORK / IP EXPLANATION */
+    .ip-box {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .ip-box { grid-template-columns: 1fr; }
+    }
+
+    .ip-item h4 {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .ip-item .value {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      font-family: var(--font-mono);
+    }
+
+    .ip-item p {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--card-border);
+      color: #64748b;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- HERO HEADER -->
+    <header class="hero">
+      <div class="badge-gov">Secretaria da Administração Penitenciária • SP</div>
+      <h1>Manual de Inicialização CPMA</h1>
+      <p>Guia definitivo para operadores e equipes de suporte colocarem o ecossistema no ar em menos de 1 minuto, mesmo sem conhecimento técnico prévio.</p>
+    </header>
+
+    <!-- BANNER 1-CLIQUE -->
+    <div class="banner-fast">
+      <div class="banner-fast-icon">⚡</div>
+      <div>
+        <h2>Início Rápido: Modo 1-Clique</h2>
+        <p>Basta dar <strong>dois cliques rápidos</strong> no arquivo <code>run_all.bat</code> na pasta raiz do projeto. Ele detecta conflitos de portas, libera processos travados automaticamente e inicia todos os serviços na ordem correta.</p>
+      </div>
+    </div>
+
+    <!-- OS 3 PILARES DO SISTEMA -->
+    <h2 class="section-title">Como o Ecossistema Funciona</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h3>Backend REST (Porta 8080)</h3>
+        <p>O coração do sistema. Gerencia o banco de dados de apenados, registros de presença, regras de cumprimento e segurança JWT.</p>
+        <div class="code-box">http://localhost:8080</div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h3>Serviço Biométrico (Porta 8001)</h3>
+        <p>Serviço inteligente em Python com OpenCV e algoritmo de comparação facial 1:1. Analisa as fotos tiradas pela câmera do Totem.</p>
+        <div class="code-box">http://127.0.0.1:8001/health</div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h3>Totem Web ou Desktop</h3>
+        <p>Interface acessível pelo apenado para digitação de PIN e validação biométrica facial antes de ver o prontuário.</p>
+        <div class="code-box">http://[IP-DO-SERVIDOR]:8080/totem</div>
+      </div>
+    </div>
+
+    <!-- GUIA DE REDE: COMO OUTROS APARELHOS ACESSAM O TOTEM -->
+    <div class="card">
+      <h2 class="section-title">🌐 Conectando Outros Aparelhos (Tablets, Totens e Celulares)</h2>
+      <p style="margin-bottom: 18px; color: var(--text-muted); font-size: 14px;">
+        Se você está rodando o servidor em um computador central e quer que um Totem físico ou Tablet na portaria acesse a tela do Totem:
+      </p>
+
+      <div class="ip-box">
+        <div class="ip-item">
+          <h4>Onde ver o IP do Servidor</h4>
+          <div class="value">cpma-server-ip.txt</div>
+          <p>O arquivo é gerado automaticamente na raiz do projeto com o IP exato da sua máquina na rede local (ex: <code>192.168.15.20</code>).</p>
+        </div>
+
+        <div class="ip-item">
+          <h4>Endereço de Acesso no Totem</h4>
+          <div class="value">http://[IP]:8080/totem</div>
+          <p>Abra o navegador no Totem ou Tablet e digite essa URL. Exemplo: <code>http://192.168.15.20:8080/totem</code>.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASOS DE BORDA E TROUBLESHOOTING -->
+    <h2 class="section-title">🛠️ Casos de Borda e Solução Imediata de Problemas</h2>
+
+    <!-- CASO 1: PORTA OCUPADA -->
+    <div class="accordion-item">
+      <div class="accordion-header">
+        <span>🔴 Porta 8080 ou 8001 já em uso (Port already in use)</span>
+        <span class="status-tag tag-red">Porta Ocupada</span>
+      </div>
+      <div class="accordion-content">
+        <p><strong>Causa:</strong> Uma execução anterior do sistema continuou rodando em segundo plano quando a janela foi fechada incorretamente.</p>
+        <p style="margin-top: 8px;"><strong>Como Resolver:</strong></p>
+        <ol>
+          <li>Dê dois cliques em <code>run_all.bat</code> novamente. Os scripts agora possuem <em>auto-cleanup</em> inteligente via PowerShell que identifica e encerra processos zumbis nas portas 8080 e 8001 antes de subir.</li>
+          <li>Caso persista, abra o PowerShell como Administrador e execute:
+            <div class="code-box">Stop-Process -Id (Get-NetTCPConnection -LocalPort 8080).OwningProcess -Force</div>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- CASO 2: CÂMERA NÃO FUNCIONA -->
+    <div class="accordion-item">
+      <div class="accordion-header">
+        <span>📷 Câmera não abre ou exibe "Erro de permissão / dispositivo não encontrado"</span>
+        <span class="status-tag tag-amber">Webcam</span>
+      </div>
+      <div class="accordion-content">
+        <p><strong>Causa:</strong> O navegador bloqueou o acesso à webcam ou o Windows não liberou permissão para aplicativos de terceiros.</p>
+        <p style="margin-top: 8px;"><strong>Como Resolver:</strong></p>
+        <ol>
+          <li><strong>No Navegador (Chrome / Edge):</strong> Clique no ícone de "Cadeado" ou "Ajustes do Site" ao lado do endereço web e mude a opção <strong>Câmera</strong> para <strong>Permitir</strong>.</li>
+          <li><strong>Se estiver usando HTTP na rede local (não localhost):</strong> O Chrome bloqueia câmera em redes locais sem HTTPS por segurança. Para liberar:
+            <ul>
+              <li>Acesse no Chrome: <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code></li>
+              <li>Habilite a flag e adicione a URL do servidor (ex: <code>http://192.168.15.20:8080</code>).</li>
+              <li>Clique em <strong>Relaunch</strong> no rodapé. A câmera abrirá instantaneamente!</li>
+            </ul>
+          </li>
+          <li><strong>No Windows:</strong> Vá em <em>Configurações &gt; Privacidade &gt; Câmera</em> e certifique-se de que "Permitir que os aplicativos acessem sua câmera" está ativado.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- CASO 3: TOTEM BLOQUEADO POR IP -->
+    <div class="accordion-item">
+      <div class="accordion-header">
+        <span>🛡️ Totem exibe "Erro 403: Terminal não autorizado / IP não permitido"</span>
+        <span class="status-tag tag-blue">Segurança Ativa</span>
+      </div>
+      <div class="accordion-content">
+        <p><strong>Causa:</strong> A blindagem de segurança por lista de IPs permitidos (<code>cpma.totem.ip-filter-enabled=true</code>) está ativada no servidor e o IP do Totem não foi cadastrado.</p>
+        <p style="margin-top: 8px;"><strong>Como Resolver:</strong></p>
+        <ol>
+          <li>Abra o arquivo <code>cpma-backend/src/main/resources/application.properties</code>.</li>
+          <li>Localize a linha <code>cpma.totem.allowed-ips</code> e adicione o IP do seu Totem separado por vírgula. Exemplo:
+            <div class="code-box">cpma.totem.allowed-ips=127.0.0.1,0:0:0:0:0:0:0:1,192.168.15.20,192.168.15.55</div>
+          </li>
+          <li>Se estiver em fase de teste e quiser permitir qualquer máquina da rede provisoriamente, defina:
+            <div class="code-box">cpma.totem.ip-filter-enabled=false</div>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- CASO 4: CABO DE REDE OU WI-FI -->
+    <div class="accordion-item">
+      <div class="accordion-header">
+        <span>🔌 Outro computador não abre a página do Totem (Não conecta)</span>
+        <span class="status-tag tag-amber">Rede / Firewall</span>
+      </div>
+      <div class="accordion-content">
+        <p><strong>Causa:</strong> Os computadores estão em redes Wi-Fi diferentes ou o Firewall do Windows do computador servidor bloqueou a porta 8080.</p>
+        <p style="margin-top: 8px;"><strong>Como Resolver:</strong></p>
+        <ol>
+          <li>Certifique-se de que o computador do Servidor e o Totem estão conectados no <strong>mesmo roteador/switch</strong> (via cabo ou Wi-Fi da unidade).</li>
+          <li>No computador servidor, libere a porta 8080 no Firewall do Windows executando no PowerShell como Administrador:
+            <div class="code-box">New-NetFirewallRule -DisplayName "CPMA Backend 8080" -Direction Inbound -LocalPort 8080 -Protocol TCP -Action Allow</div>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- RODAPÉ -->
+    <footer>
+      <p>Sistema CPMA — Coordenadoria de Reintegração Social e Cidadania (CRSC / SAP-SP)</p>
+      <p>Desenvolvido para máxima robustez e proteção de dados judiciais sensíveis.</p>
+    </footer>
+
+  </div>
+
+</body>
+</html>

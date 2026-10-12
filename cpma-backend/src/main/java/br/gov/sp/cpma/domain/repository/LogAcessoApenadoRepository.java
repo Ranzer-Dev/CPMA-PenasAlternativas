@@ -11,5 +11,11 @@ public interface LogAcessoApenadoRepository extends JpaRepository<LogAcessoApena
 
     List<LogAcessoApenado> findTop50ByOrderByDataHoraDesc();
 
+    List<LogAcessoApenado> findAllByOrderByDataHoraDesc();
+
+    List<LogAcessoApenado> findBySucessoOrderByDataHoraDesc(Integer sucesso);
+
     List<LogAcessoApenado> findByUsuarioIdUsuarioOrderByDataHoraDesc(Long idUsuario);
+
+    long countBySucesso(Integer sucesso);
 }

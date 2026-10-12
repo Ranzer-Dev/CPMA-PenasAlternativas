@@ -34,6 +34,7 @@ public class PenaDTO {
     public Long getInstituicaoPrincipalId() { return instituicaoPrincipalId; }
     public void setInstituicaoPrincipalId(Long instituicaoPrincipalId) { this.instituicaoPrincipalId = instituicaoPrincipalId; }
     public String getInstituicaoPrincipalNome() { return instituicaoPrincipalNome; }
+    public String getInstituicaoNome() { return instituicaoPrincipalNome; }
     public void setInstituicaoPrincipalNome(String instituicaoPrincipalNome) { this.instituicaoPrincipalNome = instituicaoPrincipalNome; }
     public String getTipoPena() { return tipoPena; }
     public void setTipoPena(String tipoPena) { this.tipoPena = tipoPena; }

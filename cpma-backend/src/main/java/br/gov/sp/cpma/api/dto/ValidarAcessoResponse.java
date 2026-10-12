@@ -9,6 +9,7 @@ public class ValidarAcessoResponse {
     private Long usuarioId;
     private String usuarioNome;
     private String usuarioCodigo;
+    private String tokenSessao;
     private LocalDateTime dataHora;
 
     public ValidarAcessoResponse() {
@@ -22,6 +23,11 @@ public class ValidarAcessoResponse {
         this.usuarioId = usuarioId;
         this.usuarioNome = usuarioNome;
         this.usuarioCodigo = usuarioCodigo;
+    }
+
+    public ValidarAcessoResponse(boolean sucesso, String mensagem, Long usuarioId, String usuarioNome, String usuarioCodigo, String tokenSessao) {
+        this(sucesso, mensagem, usuarioId, usuarioNome, usuarioCodigo);
+        this.tokenSessao = tokenSessao;
     }
 
     public boolean isSucesso() {
@@ -62,6 +68,14 @@ public class ValidarAcessoResponse {
 
     public void setUsuarioCodigo(String usuarioCodigo) {
         this.usuarioCodigo = usuarioCodigo;
+    }
+
+    public String getTokenSessao() {
+        return tokenSessao;
+    }
+
+    public void setTokenSessao(String tokenSessao) {
+        this.tokenSessao = tokenSessao;
     }
 
     public LocalDateTime getDataHora() {

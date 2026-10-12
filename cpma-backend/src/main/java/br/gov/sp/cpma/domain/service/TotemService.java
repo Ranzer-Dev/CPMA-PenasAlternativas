@@ -127,18 +127,140 @@ public class TotemService {
         logSucesso.setMensagem("Acesso validado com sucesso via codigo numerico no totem");
         logAcessoRepository.save(logSucesso);
 
+        String tokenSessao = tokenService.gerarTokenSessaoApenado(usuario.getIdUsuario(), usuario.getNome(), usuario.getCodigo());
         return new ValidarAcessoResponse(
                 true,
                 "Acesso concedido com sucesso!",
                 usuario.getIdUsuario(),
                 usuario.getNome(),
-                usuario.getCodigo()
+                usuario.getCodigo(),
+                tokenSessao
+        );
+    }
+
+    @Transactional
+    public ValidarCodigoEtapa1Response validarCodigoEtapa1(ValidarCodigoEtapa1Request request) {
+        CodigoAcessoApenado codigoAcesso = codigoAcessoRepository
+                .findByCodigoAndStatus(request.getCodigo(), "ATIVO")
+                .orElse(null);
+
+        if (codigoAcesso == null || codigoAcesso.getDataExpiracao().isBefore(LocalDateTime.now())) {
+            LogAcessoApenado logFalha = new LogAcessoApenado();
+            logFalha.setMetodo("2FA_ETAPA1_CODIGO");
+            logFalha.setSucesso(0);
+            logFalha.setCodigoTentado(request.getCodigo());
+            logFalha.setMensagem(codigoAcesso == null ? "Codigo nao encontrado ou inativo" : "Codigo expirado");
+            logAcessoRepository.save(logFalha);
+
+            throw new DomainException(
+                    "INVALID_OR_EXPIRED_CODE",
+                    "O codigo de acesso informado e invalido ou expirou.",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        Usuario usuario = codigoAcesso.getUsuario();
+        if (usuario.getFoto() == null || usuario.getFoto().isBlank()) {
+            throw new DomainException(
+                    "USER_PHOTO_NOT_REGISTERED",
+                    "O apenado titular do codigo (" + usuario.getNome() + ") nao possui foto cadastrada no sistema. Compareca ao balcao de atendimento.",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        return new ValidarCodigoEtapa1Response(
+                true,
+                "Codigo validado com sucesso. Prossiga para a avaliacao biometrica facial.",
+                usuario.getIdUsuario(),
+                usuario.getNome(),
+                usuario.getCodigo(),
+                codigoAcesso.getCodigo(),
+                true
+        );
+    }
+
+    @Transactional
+    public ValidarAcessoResponse validarBiometriaEtapa2(ValidarBiometriaEtapa2Request request) {
+        CodigoAcessoApenado codigoAcesso = codigoAcessoRepository
+                .findByCodigoAndStatusWithLock(request.getCodigo(), "ATIVO")
+                .orElse(null);
+
+        if (codigoAcesso == null || codigoAcesso.getDataExpiracao().isBefore(LocalDateTime.now())) {
+            LogAcessoApenado logFalha = new LogAcessoApenado();
+            logFalha.setMetodo("2FA_ETAPA2_BIOMETRIA");
+            logFalha.setSucesso(0);
+            logFalha.setCodigoTentado(request.getCodigo());
+            logFalha.setMensagem(codigoAcesso == null ? "Codigo nao encontrado ou inativo na 2a etapa" : "Codigo expirado na 2a etapa");
+            logAcessoRepository.save(logFalha);
+
+            throw new DomainException(
+                    "INVALID_OR_EXPIRED_CODE",
+                    "O codigo de acesso informado e invalido ou expirou.",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        Usuario usuario = codigoAcesso.getUsuario();
+        if (usuario.getFoto() == null || usuario.getFoto().isBlank()) {
+            throw new DomainException(
+                    "USER_PHOTO_NOT_REGISTERED",
+                    "O apenado titular do codigo (" + usuario.getNome() + ") nao possui foto cadastrada no sistema.",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        BiometriaClientService.BiometriaCompareResult result = biometriaClientService.compararFaces(
+                request.getFotoCapturadaBase64(),
+                usuario.getFoto(),
+                request.getThreshold()
+        );
+
+        if (!result.isMatch()) {
+            LogAcessoApenado logFalha = new LogAcessoApenado();
+            logFalha.setUsuario(usuario);
+            logFalha.setCodigoAcesso(codigoAcesso);
+            logFalha.setMetodo("2FA_ETAPA2_BIOMETRIA");
+            logFalha.setSucesso(0);
+            logFalha.setCodigoTentado(request.getCodigo());
+            logFalha.setMensagem("Falha biometrica: rosto nao confere com titular " + usuario.getNome() + " (confianca: " + result.getConfidence() + ")");
+            logAcessoRepository.save(logFalha);
+
+            throw new DomainException(
+                    "BIOMETRIA_MISMATCH",
+                    "Reconhecimento facial nao corresponde ao apenado titular do codigo (" + usuario.getNome() + "). Tente novamente ou dirija-se ao balcao.",
+                    HttpStatus.FORBIDDEN
+            );
+        }
+
+        codigoAcesso.setStatus("USADO");
+        codigoAcesso.setDataUso(LocalDateTime.now());
+        codigoAcessoRepository.save(codigoAcesso);
+
+        LogAcessoApenado logSucesso = new LogAcessoApenado();
+        logSucesso.setUsuario(usuario);
+        logSucesso.setCodigoAcesso(codigoAcesso);
+        logSucesso.setMetodo("2FA_ETAPA2_BIOMETRIA");
+        logSucesso.setSucesso(1);
+        logSucesso.setCodigoTentado(request.getCodigo());
+        logSucesso.setMensagem("Acesso 2FA validado com sucesso (Codigo + Biometria 1:1, confianca: " + result.getConfidence() + ")");
+        logAcessoRepository.save(logSucesso);
+
+        String tokenSessao = tokenService.gerarTokenSessaoApenado(usuario.getIdUsuario(), usuario.getNome(), usuario.getCodigo());
+        return new ValidarAcessoResponse(
+                true,
+                "Autenticacao em duas etapas concluida com sucesso!",
+                usuario.getIdUsuario(),
+                usuario.getNome(),
+                usuario.getCodigo(),
+                tokenSessao
         );
     }
 
     @Transactional
     public ReconhecimentoFacialResponse processarReconhecimentoFacial(ReconhecimentoFacialRequest request, String tokenTotem) {
-        tokenService.validarTokenTotem(tokenTotem);
+        if (tokenTotem != null && !tokenTotem.isBlank()) {
+            tokenService.validarTokenTotem(tokenTotem);
+        }
 
         List<Usuario> usuariosComFoto = usuarioRepository.findAll().stream()
                 .filter(u -> u.getFoto() != null && !u.getFoto().isBlank())

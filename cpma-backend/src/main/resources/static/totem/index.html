@@ -60,28 +60,38 @@
       </div>
 
       <button type="button" class="btn-primary" id="btnConfirmarCodigo" disabled>
-        Confirmar Acesso ➔
+        Avançar para Reconhecimento Facial
       </button>
 
       <div id="alertKeypad" class="alert-box"></div>
     </section>
 
     <section id="stepCamera" class="step-card">
-      <h2 class="step-title">Reconhecimento Facial</h2>
-      <p class="step-subtitle">Olhe diretamente para a câmera e posicione seu rosto na marcação para registrar sua presença.</p>
+      <h2 class="step-title">Etapa 2 de 2 • Reconhecimento Facial</h2>
+      <div id="badgeTitularIdentificado" style="background: rgba(59, 130, 246, 0.15); border: 1px solid #3b82f6; color: #93c5fd; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; margin: 0 auto 12px; display: inline-block;">Titular: Identificando...</div>
+      <p class="step-subtitle" id="cameraSubtitle">Olhe diretamente para a câmera do totem para confirmar sua titularidade.</p>
 
       <div class="camera-viewport">
-        <video id="cameraFeed" autoplay playsinline muted></video>
+        <video id="cameraFeed" autoplay playsinline muted style="display: none;"></video>
+        <img id="cameraFeedMjpeg" style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none;" alt="Feed Câmera">
         <div class="camera-guide-oval"></div>
         <div class="camera-scanner"></div>
       </div>
 
       <button type="button" class="btn-primary" id="btnCapturarFoto">
-        📸 Capturar Foto e Validar
+        Confirmar Identidade Facial
+      </button>
+
+      <button type="button" class="btn-secondary" id="btnAlternarCamera" style="margin-top: 14px; width: 100%; max-width: 380px; display: none;">
+        Alternar Câmera
+      </button>
+
+      <button type="button" class="btn-secondary" id="btnReconectarCamera" style="margin-top: 14px; width: 100%; max-width: 380px; display: none;">
+        Tentar Novamente
       </button>
 
       <button type="button" class="btn-secondary" id="btnVoltarKeypad" style="margin-top: 14px; width: 100%; max-width: 380px;">
-        🔙 Cancelar e Voltar
+        Digitar Outro Código
       </button>
 
       <div id="alertCamera" class="alert-box"></div>
@@ -223,10 +233,10 @@
 
         <div class="actions-bar">
           <button type="button" class="btn-primary" id="btnImprimir" style="max-width: 320px;">
-            🖨️ Imprimir Folha de Ponto
+            Imprimir Folha de Ponto
           </button>
           <button type="button" class="btn-secondary" id="btnNovoAcesso">
-            🔙 Concluir Atendimento
+            Concluir Atendimento
           </button>
         </div>
 

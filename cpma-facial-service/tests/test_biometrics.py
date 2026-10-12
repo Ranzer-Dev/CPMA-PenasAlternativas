@@ -96,3 +96,13 @@ def test_biometric_engine_direct():
     assert decoded is not None
     assert decoded.shape[0] > 0
     assert decoded.shape[1] > 0
+
+def test_anti_spoofing_phone_bezel():
+    engine = BiometricEngine()
+    img = np.ones((400, 400, 3), dtype=np.uint8) * 40
+    cv2.rectangle(img, (100, 50), (300, 350), (255, 255, 255), 4)
+    cv2.rectangle(img, (105, 55), (295, 345), (10, 10, 10), -1)
+    cv2.circle(img, (200, 200), 60, (200, 180, 150), -1)
+    is_live, reason, conf = engine.check_anti_spoofing(img, (140, 140, 120, 120))
+    assert is_live is False
+    assert reason == "MOLDURA_DE_DISPOSITIVO_DETECTADA"

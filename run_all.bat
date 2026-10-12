@@ -1,20 +1,15 @@
 @echo off
-echo ========================================================
-echo   INICIANDO ECOSSISTEMA COMPLETO CPMA PENAS ALTERNATIVAS
-echo ========================================================
+setlocal
+cd /d "%~dp0"
 
-echo [1/3] Iniciando Servico Biometrico Facial (Python: 8001)...
-start "CPMA - Servico Biometrico" cmd /k "run_facial_service.bat"
-
-timeout /t 2 /nobreak >nul
-
-echo [2/3] Iniciando Backend REST API (Spring Boot: 8080)...
-start "CPMA - Servidor Backend" cmd /k "run_backend.bat"
-
-timeout /t 5 /nobreak >nul
-
-echo [3/3] Iniciando Aplicativo Desktop (JavaFX + AtlantaFX)...
-start "CPMA - Desktop App" cmd /k "run_desktop.bat"
-
-echo.
-echo Todos os modulos foram iniciados em suas respectivas janelas.
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0run_ecosystem.ps1"
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo [AVISO] Execucao do orquestrador PowerShell falhou. Tentando modo de contingencia...
+    timeout /t 2 /nobreak >nul
+    start "CPMA - Servico Biometrico" cmd /k "run_facial_service.bat"
+    timeout /t 3 /nobreak >nul
+    start "CPMA - Servidor Backend" cmd /k "run_backend.bat"
+    timeout /t 6 /nobreak >nul
+    start "CPMA - Desktop App" cmd /k "run_desktop.bat"
+)

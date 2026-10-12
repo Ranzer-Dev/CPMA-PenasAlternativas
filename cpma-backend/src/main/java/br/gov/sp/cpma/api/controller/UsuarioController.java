@@ -43,4 +43,12 @@ public class UsuarioController {
         UsuarioResponse response = usuarioService.buscarPorCpf(cpf);
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioResponse> atualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody CadastroUsuarioRequest request) {
+        UsuarioResponse response = usuarioService.atualizar(id, request);
+        return ResponseEntity.ok(response);
+    }
 }

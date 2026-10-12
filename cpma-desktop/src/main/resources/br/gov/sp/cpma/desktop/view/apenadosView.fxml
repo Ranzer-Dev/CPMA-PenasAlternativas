@@ -16,6 +16,7 @@
                 <Button onAction="#handleLimparFiltro" style="-fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-text-fill: #64748b; -fx-cursor: hand;" text="Limpar" />
                 <Button onAction="#handleRecarregar" style="-fx-background-color: #f1f5f9; -fx-border-color: #2563eb; -fx-border-radius: 6px; -fx-text-fill: #2563eb; -fx-font-weight: 600; -fx-cursor: hand;" text="Atualizar" />
                 <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="btnEditarApenado" onAction="#handleEditarApenado" prefHeight="36.0" style="-fx-background-color: #f1f5f9; -fx-border-color: #2563eb; -fx-border-radius: 6px; -fx-text-fill: #2563eb; -fx-font-weight: bold; -fx-cursor: hand;" text="Editar Apenado" />
                 <Button fx:id="btnGerarCodigoTotem" onAction="#handleGerarCodigoTotem" prefHeight="36.0" styleClass="btn-secondary" style="-fx-font-weight: bold; -fx-text-fill: #059669; -fx-border-color: #059669;" text="Gerar Código Totem" />
                 <Button onAction="#handleNovoApenado" prefHeight="36.0" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;" text="Cadastrar Novo Apenado" />
             </HBox>
@@ -48,6 +49,7 @@
                     <Label fx:id="lblDetalheNome" style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" text="---" />
                     <Region HBox.hgrow="ALWAYS" />
                     <Label fx:id="lblDetalheCpf" style="-fx-text-fill: #64748b; -fx-font-weight: 600;" text="---" />
+                    <Button onAction="#handleEditarApenado" styleClass="btn-secondary" style="-fx-font-size: 11px; -fx-padding: 5px 12px; -fx-text-fill: #2563eb; -fx-border-color: #2563eb;" text="Editar Dados Cadastrais" />
                     <Button onAction="#handleImprimirDadosTrabalho" styleClass="btn-secondary" style="-fx-font-size: 11px; -fx-padding: 5px 12px; -fx-text-fill: #2563eb; -fx-border-color: #2563eb;" text="Imprimir Ficha Completa" />
                     <Button onAction="#handleGerarCodigoTotem" styleClass="btn-secondary" style="-fx-font-size: 11px; -fx-padding: 5px 12px; -fx-text-fill: #059669; -fx-border-color: #059669;" text="Gerar Código Totem" />
                 </HBox>

@@ -58,6 +58,41 @@ public class UsuarioService {
         return new UsuarioResponse(salvo);
     }
 
+    @Transactional
+    public UsuarioResponse atualizar(Long id, CadastroUsuarioRequest request) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new DomainException("USER_NOT_FOUND", "Apenado nao encontrado com o ID fornecido: " + id, HttpStatus.NOT_FOUND));
+
+        if (!usuario.getCpf().equals(request.getCpf()) && usuarioRepository.existsByCpf(request.getCpf())) {
+            throw new DomainException("CPF_ALREADY_EXISTS", "Ja existe outro apenado cadastrado com este CPF.", HttpStatus.CONFLICT);
+        }
+
+        if (!usuario.getCodigo().equals(request.getCodigo()) && usuarioRepository.existsByCodigo(request.getCodigo())) {
+            throw new DomainException("CODIGO_ALREADY_EXISTS", "Ja existe outro apenado cadastrado com este codigo.", HttpStatus.CONFLICT);
+        }
+
+        usuario.setNome(request.getNome());
+        usuario.setCpf(request.getCpf());
+        usuario.setCodigo(request.getCodigo());
+        usuario.setDataNascimento(request.getDataNascimento());
+        usuario.setEndereco(request.getEndereco());
+        usuario.setBairro(request.getBairro());
+        usuario.setCidade(request.getCidade());
+        usuario.setCep(request.getCep());
+        usuario.setUf(request.getUf());
+        if (request.getNacionalidade() != null) {
+            usuario.setNacionalidade(request.getNacionalidade());
+        }
+        if (request.getFoto() != null && !request.getFoto().isBlank()) {
+            usuario.setFoto(request.getFoto());
+        }
+        usuario.setObservacao(request.getObservacao());
+        usuario.setTelefone(request.getTelefone());
+
+        Usuario salvo = usuarioRepository.save(usuario);
+        return new UsuarioResponse(salvo);
+    }
+
     @Transactional(readOnly = true)
     public List<UsuarioResponse> listarTodos() {
         return usuarioRepository.findAll().stream()

@@ -210,4 +210,104 @@ public class TotemServiceTest {
         assertFalse(response.isSucesso());
         verify(logAcessoRepository, times(1)).save(any());
     }
+
+    @Test
+    @DisplayName("Deve validar codigo etapa 1 com sucesso e indicar biometria obrigatoria")
+    void deveValidarCodigoEtapa1ComSucesso() {
+        ValidarCodigoEtapa1Request request = new ValidarCodigoEtapa1Request();
+        request.setCodigo("123456");
+
+        CodigoAcessoApenado codigo = new CodigoAcessoApenado();
+        codigo.setCodigo("123456");
+        codigo.setStatus("ATIVO");
+        codigo.setDataExpiracao(LocalDateTime.now().plusHours(2));
+        codigo.setUsuario(usuario);
+
+        when(codigoAcessoRepository.findByCodigoAndStatus("123456", "ATIVO"))
+                .thenReturn(Optional.of(codigo));
+
+        ValidarCodigoEtapa1Response response = totemService.validarCodigoEtapa1(request);
+
+        assertTrue(response.isSucesso());
+        assertEquals("Apenado Silva", response.getUsuarioNome());
+        assertTrue(response.isEtapaBiometriaObrigatoria());
+        assertEquals("ATIVO", codigo.getStatus());
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar etapa 1 se o apenado nao tiver foto cadastrada")
+    void deveRejeitarEtapa1SemFotoCadastrada() {
+        ValidarCodigoEtapa1Request request = new ValidarCodigoEtapa1Request();
+        request.setCodigo("123456");
+
+        Usuario usuarioSemFoto = new Usuario();
+        usuarioSemFoto.setIdUsuario(2L);
+        usuarioSemFoto.setNome("Apenado Sem Foto");
+        usuarioSemFoto.setFoto(null);
+
+        CodigoAcessoApenado codigo = new CodigoAcessoApenado();
+        codigo.setCodigo("123456");
+        codigo.setStatus("ATIVO");
+        codigo.setDataExpiracao(LocalDateTime.now().plusHours(2));
+        codigo.setUsuario(usuarioSemFoto);
+
+        when(codigoAcessoRepository.findByCodigoAndStatus("123456", "ATIVO"))
+                .thenReturn(Optional.of(codigo));
+
+        DomainException ex = assertThrows(DomainException.class, () -> totemService.validarCodigoEtapa1(request));
+        assertEquals("USER_PHOTO_NOT_REGISTERED", ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Deve validar etapa 2 de biometria com sucesso e marcar codigo como USADO")
+    void deveValidarBiometriaEtapa2ComSucesso() {
+        ValidarBiometriaEtapa2Request request = new ValidarBiometriaEtapa2Request();
+        request.setCodigo("123456");
+        request.setFotoCapturadaBase64("base64_camera_totem");
+        request.setThreshold(0.65);
+
+        CodigoAcessoApenado codigo = new CodigoAcessoApenado();
+        codigo.setCodigo("123456");
+        codigo.setStatus("ATIVO");
+        codigo.setDataExpiracao(LocalDateTime.now().plusHours(2));
+        codigo.setUsuario(usuario);
+
+        when(codigoAcessoRepository.findByCodigoAndStatusWithLock("123456", "ATIVO"))
+                .thenReturn(Optional.of(codigo));
+        when(biometriaClientService.compararFaces("base64_camera_totem", "base64_foto_cadastrada", 0.65))
+                .thenReturn(new BiometriaClientService.BiometriaCompareResult(true, 0.95));
+
+        ValidarAcessoResponse response = totemService.validarBiometriaEtapa2(request);
+
+        assertTrue(response.isSucesso());
+        assertEquals("USADO", codigo.getStatus());
+        assertNotNull(codigo.getDataUso());
+        verify(codigoAcessoRepository, times(1)).save(codigo);
+        verify(logAcessoRepository, times(1)).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar etapa 2 se o reconhecimento biometrico falhar")
+    void deveRejeitarBiometriaEtapa2QuandoNaoCorresponder() {
+        ValidarBiometriaEtapa2Request request = new ValidarBiometriaEtapa2Request();
+        request.setCodigo("123456");
+        request.setFotoCapturadaBase64("base64_impostor");
+        request.setThreshold(0.65);
+
+        CodigoAcessoApenado codigo = new CodigoAcessoApenado();
+        codigo.setCodigo("123456");
+        codigo.setStatus("ATIVO");
+        codigo.setDataExpiracao(LocalDateTime.now().plusHours(2));
+        codigo.setUsuario(usuario);
+
+        when(codigoAcessoRepository.findByCodigoAndStatusWithLock("123456", "ATIVO"))
+                .thenReturn(Optional.of(codigo));
+        when(biometriaClientService.compararFaces("base64_impostor", "base64_foto_cadastrada", 0.65))
+                .thenReturn(new BiometriaClientService.BiometriaCompareResult(false, 0.25));
+
+        DomainException ex = assertThrows(DomainException.class, () -> totemService.validarBiometriaEtapa2(request));
+        assertEquals("BIOMETRIA_MISMATCH", ex.getCode());
+        assertEquals("ATIVO", codigo.getStatus());
+        verify(codigoAcessoRepository, never()).save(codigo);
+    }
 }

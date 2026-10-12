@@ -45,9 +45,21 @@ public class TotemController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/etapa1/validar-codigo")
+    public ResponseEntity<ValidarCodigoEtapa1Response> validarCodigoEtapa1(@Valid @RequestBody ValidarCodigoEtapa1Request request) {
+        ValidarCodigoEtapa1Response response = totemService.validarCodigoEtapa1(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/etapa2/validar-biometria")
+    public ResponseEntity<ValidarAcessoResponse> validarBiometriaEtapa2(@Valid @RequestBody ValidarBiometriaEtapa2Request request) {
+        ValidarAcessoResponse response = totemService.validarBiometriaEtapa2(request);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/reconhecer")
     public ResponseEntity<ReconhecimentoFacialResponse> reconhecer(
-            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody ReconhecimentoFacialRequest request) {
         ReconhecimentoFacialResponse response = totemService.processarReconhecimentoFacial(request, authorizationHeader);
         return ResponseEntity.ok(response);
