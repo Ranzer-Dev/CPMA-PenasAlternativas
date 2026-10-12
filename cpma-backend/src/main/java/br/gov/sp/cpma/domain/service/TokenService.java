@@ -92,4 +92,40 @@ public class TokenService {
             throw new DomainException("INVALID_TOKEN", "O token do totem e invalido ou foi corrompido.", HttpStatus.UNAUTHORIZED);
         }
     }
+
+    public String gerarTokenSessaoApenado(Long usuarioId, String usuarioNome, String codigo) {
+        Instant now = Instant.now();
+        Instant expiry = now.plus(30, ChronoUnit.MINUTES);
+
+        return Jwts.builder()
+                .subject(String.valueOf(usuarioId))
+                .claim("type", "APENADO_SESSION")
+                .claim("usuarioId", usuarioId)
+                .claim("usuarioNome", usuarioNome)
+                .claim("codigo", codigo)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .signWith(key)
+                .compact();
+    }
+
+    public Claims validarToken(String token) {
+        if (token == null || token.isBlank()) {
+            throw new DomainException("TOKEN_REQUIRED", "Token de autorizacao obrigatorio.", HttpStatus.UNAUTHORIZED);
+        }
+
+        String rawToken = token.startsWith("Bearer ") ? token.substring(7).trim() : token.trim();
+
+        try {
+            return Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(rawToken)
+                    .getPayload();
+        } catch (ExpiredJwtException ex) {
+            throw new DomainException("TOKEN_EXPIRED", "O token fornecido expirou.", HttpStatus.UNAUTHORIZED);
+        } catch (JwtException ex) {
+            throw new DomainException("INVALID_TOKEN", "O token fornecido e invalido ou corrompido.", HttpStatus.UNAUTHORIZED);
+        }
+    }
 }

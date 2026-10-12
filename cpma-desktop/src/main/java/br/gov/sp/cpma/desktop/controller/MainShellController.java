@@ -65,7 +65,7 @@ public class MainShellController {
     private Button btnNavFrequencia;
 
     @FXML
-    private Button btnNavTotem;
+    private Button btnNavAuditoria;
 
     @FXML
     private Button btnSair;
@@ -152,9 +152,14 @@ public class MainShellController {
     }
 
     @FXML
+    public void navegarParaAuditoria() {
+        ativarBotao(btnNavAuditoria, "Auditoria e Logs", "Rastreabilidade de acessos ao Totem, detecção de tentativas de invasão e integridade de registros.", "Segurança & Auditoria");
+        carregarConteudo("/br/gov/sp/cpma/desktop/view/auditoriaLogsView.fxml");
+    }
+
+    @FXML
     public void navegarParaTotem() {
-        ativarBotao(btnNavTotem, "Totem de Presença", "Terminal de autoatendimento para autenticação biométrica presencial.", "Terminal Kiosk");
-        carregarConteudo("/br/gov/sp/cpma/desktop/view/totemKioskView.fxml");
+        navegarParaAuditoria();
     }
 
     @FXML
@@ -188,7 +193,7 @@ public class MainShellController {
             lblSectionBadge.setText(badge);
         }
 
-        Button[] botoes = {btnNavDashboard, btnNavApenados, btnNavPenas, btnNavInstituicoes, btnNavFrequencia, btnNavTotem};
+        Button[] botoes = {btnNavDashboard, btnNavApenados, btnNavPenas, btnNavInstituicoes, btnNavFrequencia, btnNavAuditoria};
         for (Button b : botoes) {
             b.getStyleClass().remove("nav-button-active");
             if (!b.getStyleClass().contains("nav-button")) {

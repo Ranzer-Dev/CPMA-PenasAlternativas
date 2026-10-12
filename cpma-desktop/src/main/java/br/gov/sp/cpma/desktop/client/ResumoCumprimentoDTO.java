@@ -26,6 +26,7 @@ public class ResumoCumprimentoDTO {
     public Double getHorasRestantes() { return horasRestantes; }
     public void setHorasRestantes(Double horasRestantes) { this.horasRestantes = horasRestantes; }
     public Double getPercentualConcluido() { return percentualConcluido; }
+    public Double getPercentualCumprido() { return percentualConcluido; }
     public void setPercentualConcluido(Double percentualConcluido) { this.percentualConcluido = percentualConcluido; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

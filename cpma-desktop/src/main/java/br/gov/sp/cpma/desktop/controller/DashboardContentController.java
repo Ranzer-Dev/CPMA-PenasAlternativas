@@ -79,10 +79,15 @@ public class DashboardContentController {
     }
 
     @FXML
-    public void handleAbrirTotem() {
+    public void handleAbrirAuditoria() {
         if (MainShellController.getInstance() != null) {
-            MainShellController.getInstance().navegarParaTotem();
+            MainShellController.getInstance().navegarParaAuditoria();
         }
+    }
+
+    @FXML
+    public void handleAbrirTotem() {
+        handleAbrirAuditoria();
     }
 
     @FXML

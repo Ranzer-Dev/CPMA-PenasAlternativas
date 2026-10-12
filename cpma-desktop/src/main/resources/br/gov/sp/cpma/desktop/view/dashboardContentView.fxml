@@ -43,16 +43,16 @@
                 <VBox HBox.hgrow="ALWAYS" spacing="8.0" styleClass="stat-card">
                     <HBox alignment="CENTER_LEFT" spacing="14.0">
                         <StackPane styleClass="icon-circle, icon-circle-amber">
-                            <Label style="-fx-text-fill: #d97706; -fx-font-weight: 800; -fx-font-size: 13px;" text="TK" />
+                            <Label style="-fx-text-fill: #d97706; -fx-font-weight: 800; -fx-font-size: 13px;" text="🛡️" />
                         </StackPane>
                         <VBox spacing="2.0">
-                            <Label styleClass="stat-label" text="TOTEM BIOMETRICO" />
-                            <Label styleClass="stat-value" style="-fx-font-size: 20px; -fx-text-fill: #1e293b;" text="Terminal Facial" />
+                            <Label styleClass="stat-label" text="AUDITORIA E SEGURANCA" />
+                            <Label styleClass="stat-value" style="-fx-font-size: 20px; -fx-text-fill: #1e293b;" text="Logs de Acesso" />
                         </VBox>
                     </HBox>
                     <Separator style="-fx-opacity: 0.5;" />
                     <HBox alignment="CENTER_RIGHT">
-                        <Button onAction="#handleAbrirTotem" prefHeight="28.0" styleClass="btn-secondary" text="Abrir Totem Kiosk" style="-fx-font-size: 11px; -fx-padding: 4px 12px;" />
+                        <Button onAction="#handleAbrirAuditoria" prefHeight="28.0" styleClass="btn-secondary" text="Ver Logs de Auditoria" style="-fx-font-size: 11px; -fx-padding: 4px 12px;" />
                     </HBox>
                 </VBox>
             </HBox>

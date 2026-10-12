@@ -38,6 +38,8 @@ public class TotemControllerTest {
     @MockBean
     private TotemService totemService;
 
+    private static final String CHAVE_TERMINAL = "CPMA-TOTEM-KIOSK-TERMINAL-01-SP-GOV-AUTH-2026";
+
     @Test
     @DisplayName("Deve gerar token JWT para terminal totem com sucesso retornando 201")
     void deveGerarTokenTotemComSucesso() throws Exception {
@@ -49,6 +51,7 @@ public class TotemControllerTest {
         when(totemService.gerarTokenTotem(any(GerarTokenTotemRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/totem/token")
+                        .header("X-Totem-Terminal-Key", CHAVE_TERMINAL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -102,6 +105,7 @@ public class TotemControllerTest {
         when(totemService.validarCodigoAcesso(any(ValidarCodigoAcessoRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/totem/validar-codigo")
+                        .header("X-Totem-Terminal-Key", CHAVE_TERMINAL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -120,6 +124,7 @@ public class TotemControllerTest {
                 .thenThrow(new DomainException("INVALID_OR_EXPIRED_CODE", "O codigo de acesso informado e invalido ou expirou.", HttpStatus.BAD_REQUEST));
 
         mockMvc.perform(post("/totem/validar-codigo")
+                        .header("X-Totem-Terminal-Key", CHAVE_TERMINAL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -148,6 +153,7 @@ public class TotemControllerTest {
 
         mockMvc.perform(post("/totem/reconhecer")
                         .header("Authorization", "Bearer valid_token")
+                        .header("X-Totem-Terminal-Key", CHAVE_TERMINAL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -163,5 +169,33 @@ public class TotemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.service").value("cpma-backend"));
+    }
+
+    @Test
+    @DisplayName("Deve permitir reconhecimento facial sem cabecalho Authorization (modo totem publico)")
+    void devePermitirReconhecimentoFacialSemAuthorizationHeader() throws Exception {
+        ReconhecimentoFacialRequest request = new ReconhecimentoFacialRequest();
+        request.setFotoCapturadaBase64("base64_capturada_valida");
+        request.setThreshold(0.70);
+
+        ReconhecimentoFacialResponse response = new ReconhecimentoFacialResponse(
+                true,
+                "Apenado reconhecido com sucesso!",
+                10L,
+                "Jose Pereira",
+                "APN-010",
+                0.85
+        );
+
+        when(totemService.processarReconhecimentoFacial(any(ReconhecimentoFacialRequest.class), org.mockito.ArgumentMatchers.isNull()))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/totem/reconhecer")
+                        .header("X-Totem-Terminal-Key", CHAVE_TERMINAL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sucesso").value(true))
+                .andExpect(jsonPath("$.usuarioNome").value("Jose Pereira"));
     }
 }

@@ -27,6 +27,9 @@ public class ApenadosController {
     private TextField txtFiltro;
 
     @FXML
+    private Button btnEditarApenado;
+
+    @FXML
     private Button btnGerarCodigoTotem;
 
     @FXML
@@ -113,6 +116,16 @@ public class ApenadosController {
                 apenadoSelecionado = newSel;
                 exibirDetalhes(newSel);
             }
+        });
+
+        tblApenados.setRowFactory(tv -> {
+            TableRow<UsuarioDTO> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    handleEditarApenado();
+                }
+            });
+            return row;
         });
 
         tblPenasApenado.setRowFactory(tv -> {
@@ -220,6 +233,39 @@ public class ApenadosController {
     }
 
     @FXML
+    public void handleEditarApenado() {
+        UsuarioDTO selecionado = apenadoSelecionado != null ? apenadoSelecionado : tblApenados.getSelectionModel().getSelectedItem();
+        if (selecionado == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Atenção");
+            alert.setHeaderText("Nenhum Apenado Selecionado");
+            alert.setContentText("Selecione um apenado na lista para editar seus dados cadastrais.");
+            alert.showAndWait();
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/br/gov/sp/cpma/desktop/view/cadastroApenadoView.fxml"));
+            Parent root = loader.load();
+            CadastroApenadoController controller = loader.getController();
+            controller.inicializarParaEdicao(selecionado);
+
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setTitle("CPMA - Editar Apenado: " + selecionado.getNome());
+            dialog.setScene(new Scene(root, 750, 680));
+            dialog.showAndWait();
+            carregarApenados();
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erro");
+            alert.setHeaderText("Falha ao abrir tela de edição");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
+        }
+    }
+
+    @FXML
     public void handleImprimirDadosTrabalho() {
         UsuarioDTO selecionado = apenadoSelecionado != null ? apenadoSelecionado : tblApenados.getSelectionModel().getSelectedItem();
         if (selecionado == null) {
@@ -250,6 +296,17 @@ public class ApenadosController {
             alert.setTitle("Atencao");
             alert.setHeaderText("Nenhum Apenado Selecionado");
             alert.setContentText("Selecione um apenado na lista para gerar o codigo de acesso ao Totem/Kiosk.");
+            alert.showAndWait();
+            return;
+        }
+
+        if (selecionado.getFoto() == null || selecionado.getFoto().isBlank()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Biometria Facial Obrigatoria");
+            alert.setHeaderText("Apenado sem Foto Cadastrada");
+            alert.setContentText("O apenado " + selecionado.getNome() + " ainda nao possui foto cadastrada.\n\n"
+                    + "O Totem exige autenticacao de seguranca em 2 etapas (Codigo + Reconhecimento Facial 1:1).\n"
+                    + "Por favor, cadastre a foto do apenado antes de gerar o codigo de acesso.");
             alert.showAndWait();
             return;
         }

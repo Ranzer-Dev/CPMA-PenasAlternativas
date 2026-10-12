@@ -45,7 +45,7 @@
                 <Button fx:id="btnNavPenas" maxWidth="Infinity" onAction="#navegarParaPenas" styleClass="nav-button" text="Penas Alternativas" />
                 <Button fx:id="btnNavInstituicoes" maxWidth="Infinity" onAction="#navegarParaInstituicoes" styleClass="nav-button" text="Instituicoes Parceiras" />
                 <Button fx:id="btnNavFrequencia" maxWidth="Infinity" onAction="#navegarParaFrequencia" styleClass="nav-button" text="Frequencia e Trabalho" />
-                <Button fx:id="btnNavTotem" maxWidth="Infinity" onAction="#navegarParaTotem" styleClass="nav-button" text="Totem de Presenca" />
+                <Button fx:id="btnNavAuditoria" maxWidth="Infinity" onAction="#navegarParaAuditoria" styleClass="nav-button" text="Auditoria e Logs" />
             </VBox>
 
             <VBox spacing="10.0">

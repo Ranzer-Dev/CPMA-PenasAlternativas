@@ -2,19 +2,40 @@ package br.gov.sp.cpma.desktop.controller;
 
 import br.gov.sp.cpma.desktop.client.ApiResponse;
 import br.gov.sp.cpma.desktop.client.CadastroUsuarioDTO;
+import br.gov.sp.cpma.desktop.client.CapturaCameraDTO;
 import br.gov.sp.cpma.desktop.client.CpmaApiClient;
 import br.gov.sp.cpma.desktop.client.UsuarioDTO;
 import br.gov.sp.cpma.desktop.util.FormValidator;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
+import java.util.Base64;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 
 public class CadastroApenadoController implements Initializable {
+
+    @FXML private Label lblTituloForm;
+    @FXML private ImageView imgFotoApenado;
+    @FXML private Label lblFotoPlaceholder;
+    @FXML private Button btnTirarFoto;
+    @FXML private Button btnCarregarFoto;
+    @FXML private Button btnRemoverFoto;
+    @FXML private Label lblFotoStatus;
 
     @FXML private TextField txtNome;
     @FXML private TextField txtCpf;
@@ -35,6 +56,8 @@ public class CadastroApenadoController implements Initializable {
     @FXML private Button btnSalvar;
     @FXML private Label lblFeedbackMessage;
 
+    private Long idApenadoEmEdicao = null;
+    private String fotoBase64 = null;
     private final CpmaApiClient apiClient = new CpmaApiClient();
     private final FormValidator formValidator = new FormValidator();
 
@@ -45,6 +68,154 @@ public class CadastroApenadoController implements Initializable {
         formValidator.registerField("codigo", txtCodigo, lblCodigoError);
 
         lblFeedbackMessage.setVisible(false);
+    }
+
+    public void inicializarParaEdicao(UsuarioDTO usuario) {
+        if (usuario == null) {
+            return;
+        }
+
+        this.idApenadoEmEdicao = usuario.getIdUsuario();
+        if (lblTituloForm != null) {
+            lblTituloForm.setText("Atualizar Cadastro de Apenado (ID: " + usuario.getIdUsuario() + ")");
+        }
+        if (btnSalvar != null) {
+            btnSalvar.setText("Atualizar Apenado");
+        }
+
+        if (usuario.getNome() != null) txtNome.setText(usuario.getNome());
+        if (usuario.getCpf() != null) txtCpf.setText(usuario.getCpf());
+        if (usuario.getCodigo() != null) txtCodigo.setText(usuario.getCodigo());
+        if (usuario.getDataNascimento() != null) txtDataNascimento.setText(usuario.getDataNascimento().toString());
+        if (usuario.getTelefone() != null) txtTelefone.setText(usuario.getTelefone());
+        if (usuario.getEndereco() != null) txtEndereco.setText(usuario.getEndereco());
+        if (usuario.getBairro() != null) txtBairro.setText(usuario.getBairro());
+        if (usuario.getCidade() != null) txtCidade.setText(usuario.getCidade());
+        if (usuario.getCep() != null) txtCep.setText(usuario.getCep());
+        if (usuario.getUf() != null) txtUf.setText(usuario.getUf());
+        if (usuario.getObservacao() != null) txtObservacao.setText(usuario.getObservacao());
+
+        if (usuario.getFoto() != null && !usuario.getFoto().isBlank()) {
+            try {
+                String cleanB64 = usuario.getFoto();
+                if (cleanB64.contains(",")) {
+                    cleanB64 = cleanB64.substring(cleanB64.indexOf(",") + 1);
+                }
+                byte[] bytes = Base64.getDecoder().decode(cleanB64);
+                Image image = new Image(new ByteArrayInputStream(bytes));
+                imgFotoApenado.setImage(image);
+                if (lblFotoPlaceholder != null) {
+                    lblFotoPlaceholder.setVisible(false);
+                }
+                if (btnRemoverFoto != null) {
+                    btnRemoverFoto.setVisible(true);
+                }
+                this.fotoBase64 = cleanB64;
+                lblFotoStatus.setText("✓ Fotografia biométrica vinculada.");
+                lblFotoStatus.setStyle("-fx-font-size: 11px; -fx-text-fill: #059669; -fx-font-weight: 700;");
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    @FXML
+    public void handleTirarFotoCamera() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/br/gov/sp/cpma/desktop/view/cameraCaptureView.fxml"));
+            Parent root = loader.load();
+            CameraCaptureController controller = loader.getController();
+
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setTitle("CPMA - Captura Biométrica Facial (Câmera ao Vivo)");
+            dialog.setScene(new Scene(root, 650, 560));
+            dialog.setMinWidth(640);
+            dialog.setMinHeight(520);
+            dialog.setResizable(true);
+            dialog.sizeToScene();
+
+            dialog.setOnCloseRequest(event -> controller.encerrarRecursos());
+
+            controller.iniciarCamera(b64 -> {
+                this.fotoBase64 = b64;
+                try {
+                    byte[] bytes = Base64.getDecoder().decode(b64);
+                    imgFotoApenado.setImage(new Image(new ByteArrayInputStream(bytes)));
+                    if (lblFotoPlaceholder != null) {
+                        lblFotoPlaceholder.setVisible(false);
+                    }
+                    if (btnRemoverFoto != null) {
+                        btnRemoverFoto.setVisible(true);
+                    }
+                    lblFotoStatus.setText("✓ Fotografia biométrica capturada pela câmera ao vivo!");
+                    lblFotoStatus.setStyle("-fx-font-size: 11px; -fx-text-fill: #059669; -fx-font-weight: 700;");
+                } catch (Exception e) {
+                    exibirMensagemErro("Erro ao carregar imagem capturada: " + e.getMessage());
+                }
+            });
+
+            Stage parentStage = (Stage) btnSalvar.getScene().getWindow();
+            if (parentStage != null) {
+                dialog.initOwner(parentStage);
+            }
+
+            dialog.showAndWait();
+        } catch (Exception e) {
+            exibirMensagemErro("Falha ao abrir visualizador da câmera: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void handleSelecionarFoto() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Selecionar Fotografia do Apenado");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Imagens (JPG, PNG)", "*.jpg", "*.jpeg", "*.png")
+        );
+
+        Stage stage = (Stage) btnSalvar.getScene().getWindow();
+        File file = fileChooser.showOpenDialog(stage);
+
+        if (file != null) {
+            try {
+                byte[] bytes = Files.readAllBytes(file.toPath());
+                if (bytes.length > 5 * 1024 * 1024) {
+                    exibirMensagemErro("A foto selecionada e muito grande. O limite e de 5MB.");
+                    return;
+                }
+
+                Image image = new Image(new ByteArrayInputStream(bytes));
+                imgFotoApenado.setImage(image);
+                if (lblFotoPlaceholder != null) {
+                    lblFotoPlaceholder.setVisible(false);
+                }
+
+                this.fotoBase64 = Base64.getEncoder().encodeToString(bytes);
+                btnRemoverFoto.setVisible(true);
+                lblFotoStatus.setText("✓ Foto carregada (" + file.getName() + "). Biometria facial habilitada!");
+                lblFotoStatus.setStyle("-fx-font-size: 11px; -fx-text-fill: #059669; -fx-font-weight: 700;");
+            } catch (Exception e) {
+                exibirMensagemErro("Falha ao carregar arquivo de imagem: " + e.getMessage());
+            }
+        }
+    }
+
+    @FXML
+    public void handleRemoverFoto() {
+        this.fotoBase64 = null;
+        if (imgFotoApenado != null) {
+            imgFotoApenado.setImage(null);
+        }
+        if (lblFotoPlaceholder != null) {
+            lblFotoPlaceholder.setVisible(true);
+        }
+        if (btnRemoverFoto != null) {
+            btnRemoverFoto.setVisible(false);
+        }
+        if (lblFotoStatus != null) {
+            lblFotoStatus.setText("Nenhuma foto anexada (A biometria facial requer uma foto cadastrada)");
+            lblFotoStatus.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-style: italic;");
+        }
     }
 
     @FXML
@@ -75,17 +246,30 @@ public class CadastroApenadoController implements Initializable {
         dto.setCep(txtCep.getText() != null ? txtCep.getText().trim() : null);
         dto.setUf(txtUf.getText() != null ? txtUf.getText().trim() : null);
         dto.setObservacao(txtObservacao.getText() != null ? txtObservacao.getText().trim() : null);
+        dto.setFoto(this.fotoBase64);
         dto.setAdminId(1L);
 
-        CompletableFuture.supplyAsync(() -> apiClient.cadastrarUsuario(dto))
-                .thenAccept(this::processarResposta)
-                .exceptionally(ex -> {
-                    Platform.runLater(() -> {
-                        btnSalvar.setDisable(false);
-                        exibirMensagemErro("Falha de conexao com o servidor: " + ex.getMessage());
+        if (idApenadoEmEdicao != null) {
+            CompletableFuture.supplyAsync(() -> apiClient.atualizarUsuario(idApenadoEmEdicao, dto))
+                    .thenAccept(this::processarResposta)
+                    .exceptionally(ex -> {
+                        Platform.runLater(() -> {
+                            btnSalvar.setDisable(false);
+                            exibirMensagemErro("Falha de conexao com o servidor: " + ex.getMessage());
+                        });
+                        return null;
                     });
-                    return null;
-                });
+        } else {
+            CompletableFuture.supplyAsync(() -> apiClient.cadastrarUsuario(dto))
+                    .thenAccept(this::processarResposta)
+                    .exceptionally(ex -> {
+                        Platform.runLater(() -> {
+                            btnSalvar.setDisable(false);
+                            exibirMensagemErro("Falha de conexao com o servidor: " + ex.getMessage());
+                        });
+                        return null;
+                    });
+        }
     }
 
     private void processarResposta(ApiResponse<UsuarioDTO> response) {
@@ -93,8 +277,12 @@ public class CadastroApenadoController implements Initializable {
             btnSalvar.setDisable(false);
 
             if (response.isSuccess() && response.getData() != null) {
-                exibirMensagemSucesso("Apenado cadastrado com sucesso! ID: " + response.getData().getIdUsuario());
-                limparFormulario();
+                if (idApenadoEmEdicao != null) {
+                    exibirMensagemSucesso("Apenado atualizado com sucesso! ID: " + response.getData().getIdUsuario());
+                } else {
+                    exibirMensagemSucesso("Apenado cadastrado com sucesso! ID: " + response.getData().getIdUsuario());
+                    limparFormulario();
+                }
             } else {
                 if (response.getStatusCode() == 422) {
                     formValidator.applyErrors(response.getError());
@@ -129,6 +317,7 @@ public class CadastroApenadoController implements Initializable {
         txtCep.clear();
         txtUf.clear();
         txtObservacao.clear();
+        handleRemoverFoto();
         formValidator.clearAllErrors();
     }
 }

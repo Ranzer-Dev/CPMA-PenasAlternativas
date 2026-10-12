@@ -1,14 +1,20 @@
 const PIN_LENGTH = 6;
 const TERMINAL_ID = 'TOTEM_EXTERNO_01';
+const TERMINAL_KEY = 'CPMA-TOTEM-KIOSK-TERMINAL-01-SP-GOV-AUTH-2026';
+const FACIAL_SERVICE_URL = 'http://127.0.0.1:8001';
 
 const state = {
   currentPin: '',
   token: null,
+  tokenSessao: null,
   usuarioId: null,
   penaId: null,
   cameraStream: null,
+  usandoMjpeg: false,
   timeoutTimer: null,
-  timeoutSeconds: 30
+  timeoutSeconds: 30,
+  listaCameras: [],
+  cameraAtivaIndex: 0
 };
 
 const dom = {
@@ -19,9 +25,13 @@ const dom = {
   btnConfirmarCodigo: document.getElementById('btnConfirmarCodigo'),
   alertKeypad: document.getElementById('alertKeypad'),
   alertCamera: document.getElementById('alertCamera'),
+  btnAlternarCamera: document.getElementById('btnAlternarCamera'),
+  btnReconectarCamera: document.getElementById('btnReconectarCamera'),
   cameraFeed: document.getElementById('cameraFeed'),
+  cameraFeedMjpeg: document.getElementById('cameraFeedMjpeg'),
   btnCapturarFoto: document.getElementById('btnCapturarFoto'),
   btnVoltarKeypad: document.getElementById('btnVoltarKeypad'),
+  btnIrParaCamera: document.getElementById('btnIrParaCamera'),
   btnImprimir: document.getElementById('btnImprimir'),
   btnNovoAcesso: document.getElementById('btnNovoAcesso'),
   lblNome: document.getElementById('lblNome'),
@@ -193,16 +203,18 @@ async function handleValidarCodigo() {
   if (state.currentPin.length !== PIN_LENGTH) return;
 
   dom.btnConfirmarCodigo.disabled = true;
-  dom.btnConfirmarCodigo.textContent = 'Validando Acesso...';
+  dom.btnConfirmarCodigo.textContent = 'Validando Código...';
   hideAlert(dom.alertKeypad);
 
   try {
-    const res = await fetch('/api/v1/totem/validar-codigo', {
+    const res = await fetch('/api/v1/totem/etapa1/validar-codigo', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Totem-Terminal-Key': TERMINAL_KEY
+      },
       body: JSON.stringify({
         codigo: state.currentPin,
-        codigoAcesso: state.currentPin,
         terminalId: TERMINAL_ID
       })
     });
@@ -213,21 +225,47 @@ async function handleValidarCodigo() {
       const msg = data.mensagem || data.message || 'Código de acesso incorreto ou expirado.';
       showAlert(dom.alertKeypad, 'error', msg);
       dom.btnConfirmarCodigo.disabled = false;
-      dom.btnConfirmarCodigo.textContent = 'Confirmar Acesso ➔';
+      dom.btnConfirmarCodigo.textContent = 'Avançar para Reconhecimento Facial ➔';
       return;
     }
 
+    state.codigo = data.codigo;
+    state.usuarioNome = data.usuarioNome;
     state.usuarioId = data.usuarioId;
-    abrirEtapaProntuario();
+
+    const badge = document.getElementById('badgeTitularIdentificado');
+    if (badge) {
+      badge.textContent = `Titular: ${data.usuarioNome} (Código: ${data.codigo})`;
+    }
+
+    abrirEtapaCamera();
   } catch (err) {
     showAlert(dom.alertKeypad, 'error', 'Falha ao conectar com o servidor. Verifique a rede.');
   } finally {
     dom.btnConfirmarCodigo.disabled = state.currentPin.length !== PIN_LENGTH;
-    dom.btnConfirmarCodigo.textContent = 'Confirmar Acesso ➔';
+    dom.btnConfirmarCodigo.textContent = 'Avançar para Reconhecimento Facial';
   }
 }
 
 function setupCameraButtons() {
+  if (dom.btnIrParaCamera) {
+    dom.btnIrParaCamera.addEventListener('click', () => {
+      abrirEtapaCamera();
+    });
+  }
+
+  if (dom.btnAlternarCamera) {
+    dom.btnAlternarCamera.addEventListener('click', () => {
+      alternarProximaCamera();
+    });
+  }
+
+  if (dom.btnReconectarCamera) {
+    dom.btnReconectarCamera.addEventListener('click', () => {
+      iniciarCameraSilenciosa();
+    });
+  }
+
   dom.btnVoltarKeypad.addEventListener('click', () => {
     pararCamera();
     abrirEtapaKeypad();
@@ -236,53 +274,206 @@ function setupCameraButtons() {
   dom.btnCapturarFoto.addEventListener('click', handleCapturarFoto);
 }
 
+async function obterCandidatosDeCamera() {
+  const candidatos = [];
+  state.listaCameras = [];
+  if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(d => d.kind === 'videoinput');
+      state.listaCameras = videoDevices;
+
+      if (dom.btnAlternarCamera) {
+        dom.btnAlternarCamera.style.display = videoDevices.length > 1 ? 'block' : 'none';
+      }
+
+      const prioridade = [];
+      const comuns = [];
+      videoDevices.forEach(d => {
+        const label = (d.label || '').toLowerCase();
+        if (label.includes('iriun') || label.includes('droidcam') || label.includes('external') || label.includes('usb')) {
+          prioridade.push(d);
+        } else {
+          comuns.push(d);
+        }
+      });
+      const ordenados = [...prioridade, ...comuns];
+      ordenados.forEach(dev => {
+        if (dev.deviceId) {
+          candidatos.push({ video: { deviceId: { exact: dev.deviceId }, width: { ideal: 640 }, height: { ideal: 480 } } });
+          candidatos.push({ video: { deviceId: dev.deviceId } });
+        }
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  candidatos.push({ video: { width: { ideal: 640 }, height: { ideal: 480 } } });
+  candidatos.push({ video: true });
+  return candidatos;
+}
+
+async function alternarProximaCamera() {
+  if (!state.listaCameras || state.listaCameras.length <= 1) {
+    return;
+  }
+  state.cameraAtivaIndex = (state.cameraAtivaIndex + 1) % state.listaCameras.length;
+  const proxDev = state.listaCameras[state.cameraAtivaIndex];
+  if (!proxDev || !proxDev.deviceId) {
+    return;
+  }
+  pararCamera();
+  hideAlert(dom.alertCamera);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { deviceId: { exact: proxDev.deviceId }, width: { ideal: 640 }, height: { ideal: 480 } }
+    });
+    state.cameraStream = stream;
+    dom.cameraFeed.srcObject = state.cameraStream;
+    try {
+      await dom.cameraFeed.play();
+    } catch (e) {}
+  } catch (err) {
+    iniciarCameraSilenciosa();
+  }
+}
+
+async function iniciarCameraSilenciosa() {
+  pararCamera();
+  hideAlert(dom.alertCamera);
+  if (dom.btnReconectarCamera) {
+    dom.btnReconectarCamera.style.display = 'none';
+  }
+
+  try {
+    const resHealth = await fetch(`${FACIAL_SERVICE_URL}/health`, { signal: AbortSignal.timeout(1200) });
+    if (resHealth.ok) {
+      state.usandoMjpeg = true;
+      if (dom.cameraFeed) dom.cameraFeed.style.display = 'none';
+      if (dom.cameraFeedMjpeg) {
+        dom.cameraFeedMjpeg.src = `${FACIAL_SERVICE_URL}/camera/stream?t=` + Date.now();
+        dom.cameraFeedMjpeg.style.display = 'block';
+      }
+      if (dom.btnAlternarCamera) dom.btnAlternarCamera.style.display = 'none';
+      return;
+    }
+  } catch (e) {
+    state.usandoMjpeg = false;
+  }
+
+  if (dom.cameraFeedMjpeg) {
+    dom.cameraFeedMjpeg.src = '';
+    dom.cameraFeedMjpeg.style.display = 'none';
+  }
+  if (dom.cameraFeed) {
+    dom.cameraFeed.style.display = 'block';
+  }
+
+  const candidatos = await obterCandidatosDeCamera();
+  let streamObtido = null;
+  let ultimoErro = null;
+
+  for (const constraints of candidatos) {
+    try {
+      streamObtido = await navigator.mediaDevices.getUserMedia(constraints);
+      if (streamObtido) {
+        break;
+      }
+    } catch (err) {
+      ultimoErro = err;
+    }
+  }
+
+  if (streamObtido) {
+    state.cameraStream = streamObtido;
+    dom.cameraFeed.srcObject = state.cameraStream;
+    try {
+      await dom.cameraFeed.play();
+    } catch (e) {}
+    return;
+  }
+
+  const isLockOrBusy = ultimoErro && (
+    ultimoErro.name === 'NotReadableError' ||
+    ultimoErro.name === 'TrackStartError' ||
+    (ultimoErro.message && ultimoErro.message.toLowerCase().includes('could not start video source'))
+  );
+
+  let mensagemAmigavel = 'Não foi possível acessar a câmera do totem no momento.';
+  if (isLockOrBusy) {
+    mensagemAmigavel = 'A câmera está temporariamente ocupada ou inacessível. Se outro aplicativo estiver aberto no sistema, feche-o e clique em Tentar Novamente.';
+  }
+
+  showAlert(dom.alertCamera, 'error', mensagemAmigavel);
+  if (dom.btnReconectarCamera) {
+    dom.btnReconectarCamera.style.display = 'block';
+  }
+}
+
 async function abrirEtapaCamera() {
   mudarEtapa(dom.stepCamera);
   hideAlert(dom.alertCamera);
   dom.btnCapturarFoto.disabled = false;
-  dom.btnCapturarFoto.textContent = '📸 Capturar Foto e Validar';
-
-  try {
-    state.cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
-    });
-    dom.cameraFeed.srcObject = state.cameraStream;
-  } catch (err) {
-    showAlert(dom.alertCamera, 'error', 'Não foi possível acessar a câmera do totem: ' + err.message);
-  }
+  dom.btnCapturarFoto.textContent = 'Confirmar Identidade Facial';
+  await iniciarCameraSilenciosa();
 }
 
 function pararCamera() {
+  if (dom.cameraFeedMjpeg) {
+    dom.cameraFeedMjpeg.src = '';
+    dom.cameraFeedMjpeg.style.display = 'none';
+  }
+  state.usandoMjpeg = false;
   if (state.cameraStream) {
     state.cameraStream.getTracks().forEach(track => track.stop());
     state.cameraStream = null;
   }
-  dom.cameraFeed.srcObject = null;
+  if (dom.cameraFeed) {
+    dom.cameraFeed.srcObject = null;
+    dom.cameraFeed.style.display = 'none';
+  }
 }
 
 async function handleCapturarFoto() {
   dom.btnCapturarFoto.disabled = true;
-  dom.btnCapturarFoto.textContent = 'Processando Biometria...';
+  dom.btnCapturarFoto.textContent = 'Processando Biometria 1:1...';
   hideAlert(dom.alertCamera);
 
-  const canvas = document.createElement('canvas');
-  canvas.width = dom.cameraFeed.videoWidth || 640;
-  canvas.height = dom.cameraFeed.videoHeight || 480;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(dom.cameraFeed, 0, 0, canvas.width, canvas.height);
+  let base64Data = null;
 
-  const base64Data = canvas.toDataURL('image/jpeg', 0.9);
+  if (state.usandoMjpeg) {
+    try {
+      const resCap = await fetch(`${FACIAL_SERVICE_URL}/camera/capture`);
+      if (resCap.ok) {
+        const dataCap = await resCap.json();
+        base64Data = dataCap.rawBase64 || dataCap.base64;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  if (!base64Data) {
+    const canvas = document.createElement('canvas');
+    const sourceEl = (state.usandoMjpeg && dom.cameraFeedMjpeg) ? dom.cameraFeedMjpeg : dom.cameraFeed;
+    canvas.width = sourceEl.videoWidth || sourceEl.naturalWidth || 640;
+    canvas.height = sourceEl.videoHeight || sourceEl.naturalHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(sourceEl, 0, 0, canvas.width, canvas.height);
+    base64Data = canvas.toDataURL('image/jpeg', 0.9);
+  }
 
   try {
-    const res = await fetch('/api/v1/totem/reconhecer', {
+    const res = await fetch('/api/v1/totem/etapa2/validar-biometria', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + state.token
+        'X-Totem-Terminal-Key': TERMINAL_KEY
       },
       body: JSON.stringify({
+        codigo: state.codigo,
         fotoCapturadaBase64: base64Data,
-        fotoBase64: base64Data,
+        terminalId: TERMINAL_ID,
         threshold: 0.65
       })
     });
@@ -290,19 +481,21 @@ async function handleCapturarFoto() {
     const data = await res.json();
 
     if (!res.ok || !data.sucesso) {
-      const msg = data.mensagem || 'Biometria facial não confere com o cadastro.';
+      const msg = data.mensagem || data.message || `Biometria facial não corresponde ao titular do código (${state.usuarioNome}).`;
       showAlert(dom.alertCamera, 'error', msg);
       dom.btnCapturarFoto.disabled = false;
-      dom.btnCapturarFoto.textContent = '📸 Tentar Novamente';
+      dom.btnCapturarFoto.textContent = 'Tentar Novamente';
       return;
     }
 
+    state.usuarioId = data.usuarioId;
+    state.tokenSessao = data.tokenSessao;
     pararCamera();
     abrirEtapaProntuario();
   } catch (err) {
     showAlert(dom.alertCamera, 'error', 'Erro ao validar biometria: ' + err.message);
     dom.btnCapturarFoto.disabled = false;
-    dom.btnCapturarFoto.textContent = '📸 Tentar Novamente';
+    dom.btnCapturarFoto.textContent = 'Tentar Novamente';
   }
 }
 
@@ -314,7 +507,9 @@ async function abrirEtapaProntuario() {
 
 async function carregarDadosCompletosProntuario() {
   try {
-    const resUser = await fetch('/api/v1/usuarios/' + state.usuarioId);
+    const authHeaders = state.tokenSessao ? { 'Authorization': 'Bearer ' + state.tokenSessao } : {};
+
+    const resUser = await fetch('/api/v1/usuarios/' + state.usuarioId, { headers: authHeaders });
     if (resUser.ok) {
       const u = await resUser.json();
       dom.lblNome.textContent = u.nome || '-';
@@ -331,7 +526,7 @@ async function carregarDadosCompletosProntuario() {
       }
     }
 
-    const resPenas = await fetch('/api/v1/penas/usuario/' + state.usuarioId);
+    const resPenas = await fetch('/api/v1/penas/usuario/' + state.usuarioId, { headers: authHeaders });
     let penaAtiva = null;
     if (resPenas.ok) {
       const penas = await resPenas.json();
@@ -356,7 +551,7 @@ async function carregarDadosCompletosProntuario() {
       let horasPrevistas = totalHorasPena;
       let horasCumpridas = 0;
 
-      const resRegs = await fetch('/api/v1/registros-trabalho/pena/' + penaAtiva.idPena);
+      const resRegs = await fetch('/api/v1/registros-trabalho/pena/' + penaAtiva.idPena, { headers: authHeaders });
       let registros = [];
       if (resRegs.ok) {
         registros = await resRegs.json();
@@ -365,7 +560,7 @@ async function carregarDadosCompletosProntuario() {
       }
 
       try {
-        const resResumo = await fetch('/api/v1/registros-trabalho/pena/' + penaAtiva.idPena + '/resumo');
+        const resResumo = await fetch('/api/v1/registros-trabalho/pena/' + penaAtiva.idPena + '/resumo', { headers: authHeaders });
         if (resResumo.ok) {
           const r = await resResumo.json();
           if (r.horasTotais != null && r.horasTotais > 0) {
@@ -431,6 +626,7 @@ function concluirAcesso() {
   pararCamera();
   clearDigits();
   state.token = null;
+  state.tokenSessao = null;
   state.usuarioId = null;
   state.penaId = null;
   abrirEtapaKeypad();
