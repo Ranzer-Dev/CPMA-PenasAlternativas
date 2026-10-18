@@ -15,7 +15,13 @@ cpma-server-ip.txt
 # Arquivos de crash da JVM (Java Virtual Machine)
 hs_err_pid*
 replay_pid*
-
+node_modules/
+*.node_modules
+**/node_modules/
+dist/
+**/dist/
+release/
+dist-electron/
 
 ### Arquivos de Compilação Java ###
 # Embora geralmente estejam na pasta /target, é uma boa prática ignorá-los
