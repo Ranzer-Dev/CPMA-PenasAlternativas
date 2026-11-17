@@ -29,7 +29,7 @@ public class LogAcessoApenado {
     @Column(name = "codigo_tentado")
     private String codigoTentado;
 
-    @Column(name = "mensagem")
+    @Column(name = "mensagem", columnDefinition = "TEXT")
     private String mensagem;
 
     @Column(name = "data_hora", nullable = false)

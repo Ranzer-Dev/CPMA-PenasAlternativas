@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { db } from '../data/mockStore';
-import { formatarCPF, limparCPF, gerarHashSHA256 } from '../utils/formatters';
+import { Administrador } from '../types';
+import { api, salvarSessaoAdmin } from '../services/api';
+import { formatarCPF, limparCPF } from '../utils/formatters';
 import { Eye, EyeOff, Lock, User, LogIn, AlertCircle } from 'lucide-react';
 
 interface LoginViewProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (admin: Administrador) => void;
   onNavigateRedefinir: () => void;
 }
 
@@ -12,8 +13,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
   onLoginSuccess,
   onNavigateRedefinir,
 }) => {
-  const [cpf, setCpf] = useState('12345678900');
-  const [senha, setSenha] = useState('123456');
+  const [cpf, setCpf] = useState('123.456.789-00');
+  const [senha, setSenha] = useState('admin123');
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
@@ -41,23 +42,26 @@ export const LoginView: React.FC<LoginViewProps> = ({
         return;
       }
 
-      const admin = db.buscarAdminPorCPF(cpfLimpo);
-      if (!admin) {
-        setErro('Usuário ou senha incorretos.');
-        setCarregando(false);
-        return;
-      }
+      const resposta = await api.post<Administrador>(
+        '/auth/login',
+        { cpf: cpfLimpo, senha },
+        { skipAuthRedirect: true }
+      );
 
-      const hashCalculado = await gerarHashSHA256(senha);
-      if (hashCalculado === admin.senha || senha === '123456') {
-        db.setUsuarioLogado(admin);
-        onLoginSuccess();
-      } else {
-        setErro('Usuário ou senha incorretos.');
-      }
-    } catch (err) {
-      console.error('Erro na autenticação:', err);
-      setErro('Ocorreu um erro ao processar o login. Tente novamente.');
+      const admin: Administrador = {
+        adminId: resposta.adminId,
+        id_admin: resposta.adminId,
+        nome: resposta.nome,
+        cpf: resposta.cpf,
+        nivelPermissao: resposta.nivelPermissao,
+        nivel_permissao: resposta.nivelPermissao,
+        token: resposta.token,
+      };
+
+      salvarSessaoAdmin(admin);
+      onLoginSuccess(admin);
+    } catch (err: any) {
+      setErro(err?.message || 'Não foi possível realizar o login. Verifique o CPF, a senha e a conexão com o servidor.');
     } finally {
       setCarregando(false);
     }
@@ -66,10 +70,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2 border border-slate-200">
-        {/* Left Column: Branding & Info (conforme imagem de referência) */}
+        {/* Left Column: Branding & Info */}
         <div className="bg-white p-8 sm:p-12 flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-slate-200">
           <div className="flex flex-col items-center justify-center max-w-md mx-auto space-y-6">
-            {/* Título CPMA */}
             <div className="space-y-3">
               <h1 className="text-5xl sm:text-6xl font-bold text-blue-600 tracking-normal font-sans">
                 CPMA
@@ -79,27 +82,24 @@ export const LoginView: React.FC<LoginViewProps> = ({
               </h2>
             </div>
 
-            {/* Descrição do Sistema */}
             <p className="text-sm sm:text-base text-slate-800 leading-relaxed max-w-xs sm:max-w-sm">
               Sistema de gestão para controle e acompanhamento de penas alternativas
             </p>
 
-            {/* Brasão do Estado de São Paulo */}
             <div className="py-2">
               <img
-                src="/images/logoSP.png"
+                src="./images/logoSP.png"
                 alt="Brasão do Estado de São Paulo"
                 className="h-28 sm:h-36 w-auto object-contain mx-auto"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   if (!target.src.endsWith('/images/logo-sp.png')) {
-                    target.src = '/images/logo-sp.png';
+                    target.src = './images/logo-sp.png';
                   }
                 }}
               />
             </div>
 
-            {/* Informações Institucionais e Versão */}
             <div className="space-y-1 text-center">
               <p className="text-xs font-semibold text-black tracking-wider uppercase">
                 GOVERNO DO ESTADO DE SÃO PAULO
@@ -108,7 +108,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 SECRETARIA DA ADMINISTRAÇÃO PENITENCIÁRIA
               </p>
               <p className="text-xs text-slate-700 pt-1">
-                Versão 1.0
+                Versão 1.0 • API Local Integrada
               </p>
             </div>
           </div>
@@ -181,7 +181,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <span className="text-xs text-slate-500">Credencial padrão: 123456</span>
+              <span className="text-xs text-slate-500">Credencial padrão: admin123</span>
               <button
                 type="button"
                 onClick={onNavigateRedefinir}
@@ -203,17 +203,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
           {/* Quick autofill helper */}
           <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs text-slate-400">Ambiente de Demonstração CPMA</span>
+            <span className="text-xs text-slate-400">Ambiente CPMA Delegacia</span>
             <button
               type="button"
               onClick={() => {
                 setCpf('123.456.789-00');
-                setSenha('123456');
+                setSenha('admin123');
                 setErro(null);
               }}
               className="text-xs text-blue-600 hover:underline cursor-pointer font-medium"
             >
-              Preencher dados teste
+              Preencher dados padrão
             </button>
           </div>
         </div>

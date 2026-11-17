@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Usuario } from '../types';
+import { Usuario, Pena, Instituicao } from '../types';
+import { api, normalizarFotoBase64 } from '../services/api';
 import { formatarCPF } from '../utils/formatters';
 import {
   Search,
   Users,
   Building2,
   Scale,
-  Clock,
-  Camera,
-  Smartphone,
-  ShieldCheck,
   ChevronRight,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -25,33 +24,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [termoBusca, setTermoBusca] = useState('');
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [resultados, setResultados] = useState<Usuario[]>([]);
+  const [erroConexao, setErroConexao] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
   const [stats, setStats] = useState({
     totalApenados: 0,
     totalPenas: 0,
     totalInstituicoes: 0,
-    totalPontos: 0,
   });
 
   const carregarDados = async () => {
+    setCarregando(true);
+    setErroConexao(null);
     try {
-      const resUsers = await fetch('/api/v1/usuarios');
-      if (resUsers.ok) {
-        const data = await resUsers.json();
-        setUsuarios(data);
-        setStats(prev => ({ ...prev, totalApenados: data.length }));
-      }
-      const resInst = await fetch('/api/v1/instituicoes');
-      if (resInst.ok) {
-        const insts = await resInst.json();
-        setStats(prev => ({ ...prev, totalInstituicoes: insts.length }));
-      }
-      const resPenas = await fetch('/api/v1/penas');
-      if (resPenas.ok) {
-        const penas = await resPenas.json();
-        setStats(prev => ({ ...prev, totalPenas: penas.length }));
-      }
-    } catch (e) {
-      console.warn('Erro ao carregar dados:', e);
+      const [usersData, instData, penasData] = await Promise.all([
+        api.get<Usuario[]>('/usuarios'),
+        api.get<Instituicao[]>('/instituicoes'),
+        api.get<Pena[]>('/penas'),
+      ]);
+
+      setUsuarios(usersData || []);
+      setStats({
+        totalApenados: (usersData || []).length,
+        totalInstituicoes: (instData || []).length,
+        totalPenas: (penasData || []).length,
+      });
+    } catch (e: any) {
+      setErroConexao(
+        e?.message ||
+          'Não foi possível carregar os dados do servidor local (127.0.0.1:8080).'
+      );
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -69,10 +72,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       return;
     }
 
-    const filtrados = usuarios.filter(u => {
-      const cpfLimpo = u.cpf.replace(/\D/g, '');
+    const filtrados = usuarios.filter((u) => {
+      const cpfLimpo = (u.cpf || '').replace(/\D/g, '');
       if (termoNum && cpfLimpo.includes(termoNum)) return true;
-      if (u.nome.toLowerCase().includes(termo)) return true;
+      if (u.nome && u.nome.toLowerCase().includes(termo)) return true;
       if (u.codigo && u.codigo.toLowerCase().includes(termo)) return true;
       return false;
     });
@@ -85,7 +88,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-      {/* SaaS Welcome & Quick Stats */}
+      {/* SaaS Welcome & Quick Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
         <div>
           <h2 className="text-2xl font-black text-slate-900 tracking-tight">Painel de Controle</h2>
@@ -94,6 +97,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
         </div>
         <div className="flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={carregarDados}
+            disabled={carregando}
+            className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer flex items-center space-x-1.5"
+            title="Atualizar indicadores"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${carregando ? 'animate-spin' : ''}`} />
+            <span>Atualizar</span>
+          </button>
           <button
             type="button"
             onClick={() => onNavigate('usuarios', -1)}
@@ -111,9 +124,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* KPI Stats Grid - 3 Painéis Solicitados */}
+      {erroConexao && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center justify-between gap-4 text-xs">
+          <div className="flex items-center space-x-2.5">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+            <span>{erroConexao}</span>
+          </div>
+          <button
+            type="button"
+            onClick={carregarDados}
+            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg cursor-pointer shrink-0"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      )}
+
+      {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs flex items-center justify-between">
+        <div
+          onClick={() => onNavigate('usuarios')}
+          className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs flex items-center justify-between hover:border-blue-300 transition-colors cursor-pointer"
+        >
           <div>
             <span className="text-3xs font-bold uppercase tracking-wider text-slate-400 block">
               Apenados Cadastrados
@@ -131,7 +163,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs flex items-center justify-between">
+        <div
+          onClick={() => onNavigate('penas')}
+          className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs flex items-center justify-between hover:border-indigo-300 transition-colors cursor-pointer"
+        >
           <div>
             <span className="text-3xs font-bold uppercase tracking-wider text-slate-400 block">
               Processos / Penas
@@ -149,7 +184,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs flex items-center justify-between">
+        <div
+          onClick={() => onNavigate('instituicoes')}
+          className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs flex items-center justify-between hover:border-emerald-300 transition-colors cursor-pointer"
+        >
           <div>
             <span className="text-3xs font-bold uppercase tracking-wider text-slate-400 block">
               Instituições Parceiras
@@ -202,37 +240,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </form>
 
-        {/* Results dropdown list if multiple */}
+        {/* Results dropdown list */}
         {resultados.length > 0 && (
           <div className="pt-4 border-t border-slate-100 space-y-2">
             <p className="text-xs font-semibold text-slate-500 uppercase">
               Resultados Encontrados ({resultados.length}):
             </p>
             <div className="space-y-1 max-h-64 overflow-y-auto">
-              {resultados.map((u) => (
-                <div
-                  key={u.id_usuario}
-                  onClick={() => onSelecionarApenado(u)}
-                  className="flex items-center justify-between p-3.5 rounded-xl hover:bg-blue-50 cursor-pointer border border-transparent hover:border-blue-200 transition-colors"
-                >
-                  <div className="flex items-center space-x-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-blue-100/60 text-blue-700 font-bold flex items-center justify-center overflow-hidden shrink-0 border border-blue-200/50">
-                      {u.foto ? (
-                        <img src={u.foto} alt={u.nome} className="w-full h-full object-cover" />
-                      ) : (
-                        u.nome.charAt(0)
-                      )}
+              {resultados.map((u) => {
+                const fotoUrl = normalizarFotoBase64(u.foto);
+                return (
+                  <div
+                    key={u.idUsuario}
+                    onClick={() => onSelecionarApenado(u)}
+                    className="flex items-center justify-between p-3.5 rounded-xl hover:bg-blue-50 cursor-pointer border border-transparent hover:border-blue-200 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-blue-100/60 text-blue-700 font-bold flex items-center justify-center overflow-hidden shrink-0 border border-blue-200/50">
+                        {fotoUrl ? (
+                          <img src={fotoUrl} alt={u.nome} className="w-full h-full object-cover" />
+                        ) : (
+                          u.nome.charAt(0)
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">{u.nome}</p>
+                        <p className="text-xs text-slate-500 font-mono">
+                          CPF: {formatarCPF(u.cpf)} • Cód: {u.codigo || 'S/N'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">{u.nome}</p>
-                      <p className="text-xs text-slate-500 font-mono">
-                        CPF: {formatarCPF(u.cpf)} • Cód: {u.codigo || 'S/N'}
-                      </p>
-                    </div>
+                    <ChevronRight className="w-4 h-4 text-blue-600" />
                   </div>
-                  <ChevronRight className="w-4 h-4 text-blue-600" />
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

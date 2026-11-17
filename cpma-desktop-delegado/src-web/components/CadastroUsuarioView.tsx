@@ -1,26 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Usuario } from '../types';
+import { Usuario, CadastroUsuarioPayload } from '../types';
+import { api, ApiError, normalizarFotoBase64 } from '../services/api';
 import { formatarCPF, formatarTelefone, formatarCEP, validarCPF, limparCPF } from '../utils/formatters';
 import {
   Users,
-  Plus,
   Edit,
   Trash2,
   Camera,
   Upload,
   Check,
-  X,
   AlertCircle,
   Search,
 } from 'lucide-react';
 
 interface CadastroUsuarioViewProps {
+  adminId: number;
   usuarioParaEditar?: Usuario | null;
   onVoltar: () => void;
   onSalvo: () => void;
 }
 
 export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
+  adminId,
   usuarioParaEditar,
   onVoltar,
   onSalvo,
@@ -29,18 +30,22 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
   const [filtro, setFiltro] = useState('');
 
   // Form State
-  const [idUsuario, setIdUsuario] = useState<number | undefined>(usuarioParaEditar?.id_usuario);
+  const [idUsuario, setIdUsuario] = useState<number | undefined>(usuarioParaEditar?.idUsuario);
   const [codigo, setCodigo] = useState(usuarioParaEditar?.codigo || 'PENA-001');
   const [nome, setNome] = useState(usuarioParaEditar?.nome || '');
   const [cpf, setCpf] = useState(usuarioParaEditar?.cpf ? formatarCPF(usuarioParaEditar.cpf) : '');
-  const [dataNascimento, setDataNascimento] = useState(usuarioParaEditar?.data_nascimento || '');
-  const [telefone, setTelefone] = useState(usuarioParaEditar?.telefone ? formatarTelefone(usuarioParaEditar.telefone) : '');
+  const [dataNascimento, setDataNascimento] = useState(usuarioParaEditar?.dataNascimento || '');
+  const [telefone, setTelefone] = useState(
+    usuarioParaEditar?.telefone ? formatarTelefone(usuarioParaEditar.telefone) : ''
+  );
   const [endereco, setEndereco] = useState(usuarioParaEditar?.endereco || '');
   const [bairro, setBairro] = useState(usuarioParaEditar?.bairro || '');
   const [cidade, setCidade] = useState(usuarioParaEditar?.cidade || 'Votorantim');
   const [uf, setUf] = useState(usuarioParaEditar?.uf || 'SP');
   const [cep, setCep] = useState(usuarioParaEditar?.cep ? formatarCEP(usuarioParaEditar.cep) : '');
-  const [nacionalidade, setNacionalidade] = useState(usuarioParaEditar?.nacionalidade || 'Brasileira');
+  const [nacionalidade, setNacionalidade] = useState(
+    usuarioParaEditar?.nacionalidade || 'Brasileira'
+  );
   const [observacao, setObservacao] = useState(usuarioParaEditar?.observacao || '');
   const [foto, setFoto] = useState(usuarioParaEditar?.foto || '');
 
@@ -49,32 +54,36 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const [erro, setErro] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
 
   const carregarUsuarios = async () => {
     try {
-      const res = await fetch('/api/v1/usuarios');
-      if (res.ok) {
-        const data = await res.json();
-        setUsuarios(data);
+      const data = await api.get<Usuario[]>('/usuarios');
+      setUsuarios(data || []);
+      if (!usuarioParaEditar && !idUsuario) {
+        setCodigo(`PENA-${String((data?.length || 0) + 1).padStart(3, '0')}`);
       }
-    } catch (e) {
-      console.warn('Erro ao carregar lista de apenados:', e);
+    } catch (e: any) {
+      setErro(e?.message || 'Erro ao carregar lista de apenados.');
     }
   };
 
   useEffect(() => {
     carregarUsuarios();
+    return () => {
+      pararCamera();
+    };
   }, []);
 
   useEffect(() => {
     if (usuarioParaEditar) {
-      setIdUsuario(usuarioParaEditar.id_usuario);
+      setIdUsuario(usuarioParaEditar.idUsuario);
       setCodigo(usuarioParaEditar.codigo);
       setNome(usuarioParaEditar.nome);
       setCpf(formatarCPF(usuarioParaEditar.cpf));
-      setDataNascimento(usuarioParaEditar.data_nascimento || '');
+      setDataNascimento(usuarioParaEditar.dataNascimento || '');
       setTelefone(formatarTelefone(usuarioParaEditar.telefone || ''));
       setEndereco(usuarioParaEditar.endereco || '');
       setBairro(usuarioParaEditar.bairro || '');
@@ -84,6 +93,8 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
       setNacionalidade(usuarioParaEditar.nacionalidade || 'Brasileira');
       setObservacao(usuarioParaEditar.observacao || '');
       setFoto(usuarioParaEditar.foto || '');
+      setFieldErrors({});
+      setErro(null);
     }
   }, [usuarioParaEditar]);
 
@@ -102,6 +113,7 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
     setNacionalidade('Brasileira');
     setObservacao('');
     setFoto('');
+    setFieldErrors({});
     setErro(null);
     setSucesso(null);
   };
@@ -109,7 +121,9 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
   const iniciarCamera = async () => {
     setCameraAtiva(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 400 } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 400, height: 400 },
+      });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play();
@@ -124,11 +138,11 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
   const capturarFoto = () => {
     if (videoRef.current) {
       const canvas = document.createElement('canvas');
-      canvas.width = 300;
-      canvas.height = 300;
+      canvas.width = 400;
+      canvas.height = 400;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0, 300, 300);
+        ctx.drawImage(videoRef.current, 0, 0, 400, 400);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         setFoto(dataUrl);
       }
@@ -139,7 +153,7 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
   const pararCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
     }
     setCameraAtiva(false);
   };
@@ -158,85 +172,91 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro(null);
+    setFieldErrors({});
     setSucesso(null);
 
     const cpfLimpo = limparCPF(cpf);
     if (!nome.trim()) {
       setErro('O campo Nome é obrigatório.');
+      setFieldErrors({ nome: 'O nome completo é obrigatório.' });
       return;
     }
     if (!cpfLimpo || cpfLimpo.length !== 11) {
       setErro('Informe um CPF válido com 11 dígitos.');
+      setFieldErrors({ cpf: 'O CPF deve conter 11 dígitos.' });
       return;
     }
     if (!validarCPF(cpfLimpo)) {
       setErro('O CPF informado possui dígitos verificadores inválidos.');
+      setFieldErrors({ cpf: 'CPF inválido.' });
       return;
     }
 
     setSalvando(true);
     try {
-      const url = idUsuario ? `/api/v1/usuarios/${idUsuario}` : '/api/v1/usuarios';
-      const method = idUsuario ? 'PUT' : 'POST';
-
-      const payload = {
-        codigo,
+      const payload: CadastroUsuarioPayload = {
+        codigo: codigo.trim() || `PENA-${String(usuarios.length + 1).padStart(3, '0')}`,
         nome: nome.trim(),
         cpf: cpfLimpo,
-        data_nascimento: dataNascimento,
-        telefone: telefone.replace(/\D/g, ''),
-        endereco,
-        bairro,
-        cidade,
-        uf,
-        cep: cep.replace(/\D/g, ''),
-        nacionalidade,
-        observacao,
-        foto,
+        dataNascimento: dataNascimento || undefined,
+        telefone: telefone.replace(/\D/g, '') || undefined,
+        endereco: endereco.trim() || undefined,
+        bairro: bairro.trim() || undefined,
+        cidade: cidade.trim() || 'Votorantim',
+        uf: (uf.trim() || 'SP').toUpperCase(),
+        cep: cep.replace(/\D/g, '') || undefined,
+        nacionalidade: nacionalidade.trim() || 'Brasileira',
+        observacao: observacao.trim() || undefined,
+        foto: foto || undefined,
+        adminId: adminId || 1,
       };
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Erro ao salvar apenado.');
+      if (idUsuario) {
+        await api.put<Usuario>(`/usuarios/${idUsuario}`, payload);
+      } else {
+        await api.post<Usuario>('/usuarios', payload);
       }
 
-      setSucesso(idUsuario ? 'Apenado atualizado com sucesso!' : 'Apenado cadastrado com sucesso!');
+      setSucesso(
+        idUsuario ? 'Apenado atualizado com sucesso!' : 'Apenado cadastrado com sucesso!'
+      );
       await carregarUsuarios();
       if (!idUsuario) {
         limparFormulario();
       }
       onSalvo();
     } catch (err: any) {
-      setErro(err.message || 'Falha ao salvar dados.');
+      if (err instanceof ApiError && err.fieldErrors) {
+        setFieldErrors(err.fieldErrors);
+      }
+      setErro(err?.message || 'Falha ao salvar dados do apenado.');
     } finally {
       setSalvando(false);
     }
   };
 
   const handleExcluir = async (id: number) => {
-    if (!confirm('Deseja realmente excluir este apenado do sistema?')) return;
+    if (!confirm('Deseja realmente excluir este apenado e seus vínculos do sistema?')) return;
+    setErro(null);
+    setSucesso(null);
     try {
-      const res = await fetch(`/api/v1/usuarios/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        await carregarUsuarios();
-        if (idUsuario === id) limparFormulario();
-      }
-    } catch (err) {
-      console.error('Erro ao excluir:', err);
+      await api.delete(`/usuarios/${id}`);
+      setSucesso('Apenado excluído com sucesso.');
+      await carregarUsuarios();
+      if (idUsuario === id) limparFormulario();
+    } catch (err: any) {
+      setErro(err?.message || 'Erro ao excluir apenado.');
     }
   };
 
-  const usuariosFiltrados = usuarios.filter(u =>
-    u.nome.toLowerCase().includes(filtro.toLowerCase()) ||
-    u.cpf.includes(filtro.replace(/\D/g, '')) ||
-    (u.codigo && u.codigo.toLowerCase().includes(filtro.toLowerCase()))
+  const usuariosFiltrados = usuarios.filter(
+    (u) =>
+      u.nome.toLowerCase().includes(filtro.toLowerCase()) ||
+      (u.cpf && u.cpf.includes(filtro.replace(/\D/g, ''))) ||
+      (u.codigo && u.codigo.toLowerCase().includes(filtro.toLowerCase()))
   );
+
+  const fotoPreview = normalizarFotoBase64(foto);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
@@ -295,15 +315,20 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
               <div className="relative w-28 h-28 rounded-2xl bg-white border-2 border-slate-200 overflow-hidden shrink-0 flex items-center justify-center shadow-xs">
                 {cameraAtiva ? (
                   <video ref={videoRef} className="w-full h-full object-cover" autoPlay playsInline />
-                ) : foto ? (
-                  <img src={foto} alt="Foto do Apenado" className="w-full h-full object-cover" />
+                ) : fotoPreview ? (
+                  <img src={fotoPreview} alt="Foto do Apenado" className="w-full h-full object-cover" />
                 ) : (
                   <Users className="w-12 h-12 text-slate-300" />
                 )}
               </div>
 
               <div className="space-y-2 flex-1 w-full text-center sm:text-left">
-                <span className="text-xs font-bold text-slate-700 uppercase block">Fotografia / Biometria</span>
+                <span className="text-xs font-bold text-slate-700 uppercase block">
+                  Fotografia / Biometria Facial
+                </span>
+                <p className="text-2xs text-slate-500">
+                  A foto cadastrada aqui é utilizada na validação biométrica do Totem (Etapa 2).
+                </p>
                 <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                   {cameraAtiva ? (
                     <>
@@ -335,7 +360,12 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
                       <label className="flex items-center space-x-1 px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50 cursor-pointer">
                         <Upload className="w-3.5 h-3.5" />
                         <span>Carregar</span>
-                        <input type="file" accept="image/*" onChange={handleUploadFoto} className="hidden" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleUploadFoto}
+                          className="hidden"
+                        />
                       </label>
                       {foto && (
                         <button
@@ -357,7 +387,9 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
                   type="text"
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value)}
-                  className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold bg-white text-blue-700 w-full sm:w-28 text-center"
+                  className={`px-3 py-1.5 border rounded-lg text-xs font-mono font-bold bg-white text-blue-700 w-full sm:w-28 text-center ${
+                    fieldErrors.codigo ? 'border-red-500 ring-1 ring-red-500' : 'border-slate-300'
+                  }`}
                 />
               </div>
             </div>
@@ -372,9 +404,14 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Ex: João Pedro de Almeida"
-                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                className={`w-full px-3.5 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-hidden ${
+                  fieldErrors.nome ? 'border-red-500 bg-red-50/30' : 'border-slate-300'
+                }`}
                 required
               />
+              {fieldErrors.nome && (
+                <p className="text-2xs text-red-600 mt-1">{fieldErrors.nome}</p>
+              )}
             </div>
 
             {/* CPF, Data Nasc, Telefone */}
@@ -389,9 +426,14 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
                   onChange={(e) => setCpf(formatarCPF(e.target.value))}
                   placeholder="000.000.000-00"
                   maxLength={14}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:outline-hidden ${
+                    fieldErrors.cpf ? 'border-red-500 bg-red-50/30' : 'border-slate-300'
+                  }`}
                   required
                 />
+                {fieldErrors.cpf && (
+                  <p className="text-2xs text-red-600 mt-1">{fieldErrors.cpf}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
@@ -538,72 +580,77 @@ export const CadastroUsuarioView: React.FC<CadastroUsuarioViewProps> = ({
               type="text"
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
-              placeholder="Filtrar por nome ou CPF..."
+              placeholder="Filtrar por nome, código ou CPF..."
               className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-            {usuariosFiltrados.map((u) => (
-              <div
-                key={u.id_usuario}
-                className={`p-3 rounded-xl border transition-all flex items-center justify-between ${
-                  idUsuario === u.id_usuario
-                    ? 'border-blue-500 bg-blue-50/50'
-                    : 'border-slate-200 hover:border-slate-300 bg-white'
-                }`}
-              >
-                <div className="flex items-center space-x-3 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-slate-200 shrink-0 overflow-hidden">
-                    {u.foto ? (
-                      <img src={u.foto} alt={u.nome} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs font-bold">
-                        {u.nome.charAt(0)}
-                      </div>
-                    )}
+            {usuariosFiltrados.map((u) => {
+              const fotoItem = normalizarFotoBase64(u.foto);
+              return (
+                <div
+                  key={u.idUsuario}
+                  className={`p-3 rounded-xl border transition-all flex items-center justify-between ${
+                    idUsuario === u.idUsuario
+                      ? 'border-blue-500 bg-blue-50/50'
+                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-slate-200 shrink-0 overflow-hidden">
+                      {fotoItem ? (
+                        <img src={fotoItem} alt={u.nome} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs font-bold">
+                          {u.nome.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-900 truncate">{u.nome}</p>
+                      <p className="text-2xs text-slate-500 font-mono">
+                        {formatarCPF(u.cpf)} • {u.codigo}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-900 truncate">{u.nome}</p>
-                    <p className="text-2xs text-slate-500 font-mono">
-                      {formatarCPF(u.cpf)} • {u.codigo}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-center space-x-1 shrink-0 ml-2">
-                  <button
-                    onClick={() => {
-                      setIdUsuario(u.id_usuario);
-                      setCodigo(u.codigo);
-                      setNome(u.nome);
-                      setCpf(formatarCPF(u.cpf));
-                      setDataNascimento(u.data_nascimento || '');
-                      setTelefone(formatarTelefone(u.telefone || ''));
-                      setEndereco(u.endereco || '');
-                      setBairro(u.bairro || '');
-                      setCidade(u.cidade || 'Votorantim');
-                      setUf(u.uf || 'SP');
-                      setCep(formatarCEP(u.cep || ''));
-                      setNacionalidade(u.nacionalidade || 'Brasileira');
-                      setObservacao(u.observacao || '');
-                      setFoto(u.foto || '');
-                    }}
-                    title="Editar"
-                    className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded-lg cursor-pointer"
-                  >
-                    <Edit className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleExcluir(u.id_usuario)}
-                    title="Excluir"
-                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center space-x-1 shrink-0 ml-2">
+                    <button
+                      onClick={() => {
+                        setIdUsuario(u.idUsuario);
+                        setCodigo(u.codigo);
+                        setNome(u.nome);
+                        setCpf(formatarCPF(u.cpf));
+                        setDataNascimento(u.dataNascimento || '');
+                        setTelefone(formatarTelefone(u.telefone || ''));
+                        setEndereco(u.endereco || '');
+                        setBairro(u.bairro || '');
+                        setCidade(u.cidade || 'Votorantim');
+                        setUf(u.uf || 'SP');
+                        setCep(formatarCEP(u.cep || ''));
+                        setNacionalidade(u.nacionalidade || 'Brasileira');
+                        setObservacao(u.observacao || '');
+                        setFoto(u.foto || '');
+                        setFieldErrors({});
+                        setErro(null);
+                      }}
+                      title="Editar"
+                      className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleExcluir(u.idUsuario)}
+                      title="Excluir"
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

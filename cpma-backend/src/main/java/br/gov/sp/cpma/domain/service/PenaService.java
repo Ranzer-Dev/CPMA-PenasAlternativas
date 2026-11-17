@@ -10,8 +10,10 @@ import br.gov.sp.cpma.domain.entity.Pena;
 import br.gov.sp.cpma.domain.entity.Usuario;
 import br.gov.sp.cpma.domain.repository.InstituicaoRepository;
 import br.gov.sp.cpma.domain.repository.PenaRepository;
+import br.gov.sp.cpma.domain.repository.RegistroDeTrabalhoRepository;
 import br.gov.sp.cpma.domain.repository.UsuarioRepository;
 import br.gov.sp.cpma.domain.util.CodigoPenaCalculator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,13 +28,23 @@ public class PenaService {
     private final PenaRepository penaRepository;
     private final UsuarioRepository usuarioRepository;
     private final InstituicaoRepository instituicaoRepository;
+    private final RegistroDeTrabalhoRepository registroRepository;
 
     public PenaService(PenaRepository penaRepository,
                        UsuarioRepository usuarioRepository,
                        InstituicaoRepository instituicaoRepository) {
+        this(penaRepository, usuarioRepository, instituicaoRepository, null);
+    }
+
+    @Autowired
+    public PenaService(PenaRepository penaRepository,
+                       UsuarioRepository usuarioRepository,
+                       InstituicaoRepository instituicaoRepository,
+                       RegistroDeTrabalhoRepository registroRepository) {
         this.penaRepository = penaRepository;
         this.usuarioRepository = usuarioRepository;
         this.instituicaoRepository = instituicaoRepository;
+        this.registroRepository = registroRepository;
     }
 
     @Transactional
@@ -156,6 +168,18 @@ public class PenaService {
         return new PenaResponse(salva);
     }
 
+    @Transactional
+    public void excluir(Long idPena) {
+        Pena pena = penaRepository.findById(idPena)
+                .orElseThrow(() -> new DomainException("PENA_NOT_FOUND", "Pena nao encontrada", HttpStatus.NOT_FOUND));
+
+        if (registroRepository != null) {
+            registroRepository.deleteByPena_IdPena(idPena);
+        }
+        pena.getInstituicoesVinculadas().clear();
+        penaRepository.delete(pena);
+    }
+
     @Transactional(readOnly = true)
     public List<PenaResponse> listarTodas() {
         return penaRepository.findAll()
@@ -171,4 +195,3 @@ public class PenaService {
         return new EstimativaPenaResponse(meses, termino);
     }
 }
-

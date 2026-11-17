@@ -12,4 +12,8 @@ public interface PenaRepository extends JpaRepository<Pena, Long> {
     List<Pena> findByUsuario_IdUsuarioOrderByDataInicioDesc(Long usuarioId);
 
     int countByUsuario_IdUsuario(Long usuarioId);
+
+    boolean existsByInstituicaoPrincipal_IdInstituicao(Long instituicaoId);
+
+    boolean existsByInstituicoesVinculadas_IdInstituicao(Long instituicaoId);
 }

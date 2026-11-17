@@ -20,4 +20,6 @@ public interface CodigoAcessoApenadoRepository extends JpaRepository<CodigoAcess
     Optional<CodigoAcessoApenado> findByCodigoAndStatusWithLock(@Param("codigo") String codigo, @Param("status") String status);
 
     Optional<CodigoAcessoApenado> findFirstByUsuarioIdUsuarioAndStatusOrderByDataGeracaoDesc(Long idUsuario, String status);
+
+    void deleteByUsuario_IdUsuario(Long idUsuario);
 }

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Usuario } from '../types';
+import { Usuario, ReconhecimentoFacialResponse } from '../types';
+import { api, normalizarFotoBase64 } from '../services/api';
 import { formatarCPF } from '../utils/formatters';
 import {
   Camera,
@@ -8,7 +9,6 @@ import {
   Search,
   CheckCircle,
   AlertCircle,
-  Sparkles,
   ArrowRight,
 } from 'lucide-react';
 
@@ -21,7 +21,6 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
   onVoltar,
   onAbrirDetalhe,
 }) => {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [imagemAtual, setImagemAtual] = useState<string | null>(null);
   const [cameraAtiva, setCameraAtiva] = useState(false);
   const [processando, setProcessando] = useState(false);
@@ -34,13 +33,7 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    fetch('/api/v1/usuarios')
-      .then(res => res.json())
-      .then(setUsuarios)
-      .catch(console.error);
-
     iniciarCamera();
-
     return () => {
       pararCamera();
     };
@@ -50,7 +43,9 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
     setCameraAtiva(true);
     setErro(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 480, height: 480 } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 480, height: 480 },
+      });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play();
@@ -64,12 +59,12 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
   const pararCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(t => t.stop());
+      stream.getTracks().forEach((t) => t.stop());
     }
     setCameraAtiva(false);
   };
 
-  const capturarDaCamera = () => {
+  const capturarSnapshotBase64 = (): string | null => {
     if (videoRef.current) {
       const canvas = document.createElement('canvas');
       canvas.width = 400;
@@ -80,8 +75,10 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         setImagemAtual(dataUrl);
         setResultadoMatch(null);
+        return dataUrl;
       }
     }
+    return null;
   };
 
   const handleUploadFoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,8 +93,13 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
     }
   };
 
-  const handleIdentificar = () => {
-    if (!imagemAtual && !cameraAtiva) {
+  const handleIdentificar = async () => {
+    let fotoParaEnviar = imagemAtual;
+    if (!fotoParaEnviar && cameraAtiva) {
+      fotoParaEnviar = capturarSnapshotBase64();
+    }
+
+    if (!fotoParaEnviar) {
       setErro('Por favor, capture ou carregue uma imagem com rosto.');
       return;
     }
@@ -106,24 +108,35 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
     setErro(null);
     setResultadoMatch(null);
 
-    // If no captured photo yet, snapshot from video
-    if (!imagemAtual && videoRef.current) {
-      capturarDaCamera();
-    }
+    try {
+      const res = await api.post<ReconhecimentoFacialResponse>('/totem/reconhecer', {
+        fotoCapturadaBase64: fotoParaEnviar,
+        threshold: 0.7,
+      });
 
-    setTimeout(() => {
-      if (usuarios.length > 0) {
-        // Select best matching user based on available photos
-        const match = usuarios[0];
+      if (res.sucesso && res.usuarioId) {
+        const usuario = await api.get<Usuario>(`/usuarios/${res.usuarioId}`);
+        const confPercent = res.confidence
+          ? Math.round(res.confidence * 1000) / 10
+          : 95.0;
         setResultadoMatch({
-          usuario: match,
-          similaridade: 96.4,
+          usuario,
+          similaridade: confPercent,
         });
       } else {
-        setErro('Nenhum apenado cadastrado no banco de biometria para comparação.');
+        setErro(
+          res.mensagem ||
+            'Nenhum apenado correspondente foi reconhecido na base biométrica.'
+        );
       }
+    } catch (err: any) {
+      setErro(
+        err?.message ||
+          'Falha ao consultar o motor biométrico facial (verifique se o cpma-facial-service está ativo na porta 8001).'
+      );
+    } finally {
       setProcessando(false);
-    }, 700);
+    }
   };
 
   return (
@@ -133,10 +146,10 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
         <div>
           <h2 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
             <Camera className="w-6 h-6 text-blue-600" />
-            <span>Identificação e Biometria Facial</span>
+            <span>Identificação e Biometria Facial (1:N)</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Reconhecimento biométrico de penados através de captura por webcam ou upload de fotos
+            Reconhecimento biométrico de apenados através de captura por webcam ou upload de fotos
           </p>
         </div>
         <button
@@ -176,7 +189,6 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
               </div>
             )}
 
-            {/* Simulated face detect frame */}
             <div className="absolute inset-0 m-12 border-2 border-dashed border-emerald-400/70 rounded-2xl pointer-events-none flex items-center justify-center">
               <span className="text-3xs text-emerald-300 bg-slate-900/80 px-2 py-0.5 rounded uppercase font-bold tracking-wider">
                 Detector Facial
@@ -188,7 +200,7 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
             {cameraAtiva && (
               <button
                 type="button"
-                onClick={capturarDaCamera}
+                onClick={capturarSnapshotBase64}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
                 Tirar Foto
@@ -223,7 +235,9 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
             className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
           >
             <UserCheck className="w-4 h-4" />
-            <span>{processando ? 'Processando Algoritmo Facial...' : 'Identificar Apenado'}</span>
+            <span>
+              {processando ? 'Processando Biometria Facial...' : 'Identificar Apenado'}
+            </span>
           </button>
         </div>
 
@@ -231,7 +245,7 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
           <div className="pb-3 border-b border-slate-100">
             <h3 className="font-bold text-slate-900 text-sm">Resultado da Análise Biométrica</h3>
-            <p className="text-xs text-slate-500">Comparação com base cadastrada de dados faciais</p>
+            <p className="text-xs text-slate-500">Comparação real com base cadastrada de dados faciais</p>
           </div>
 
           {resultadoMatch ? (
@@ -246,11 +260,14 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
                 </span>
               </div>
 
-              {/* Profile Card */}
               <div className="flex items-start space-x-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
                 <div className="w-20 h-20 rounded-2xl bg-white border border-slate-300 overflow-hidden shrink-0 shadow-xs">
-                  {resultadoMatch.usuario.foto ? (
-                    <img src={resultadoMatch.usuario.foto} alt={resultadoMatch.usuario.nome} className="w-full h-full object-cover" />
+                  {normalizarFotoBase64(resultadoMatch.usuario.foto) ? (
+                    <img
+                      src={normalizarFotoBase64(resultadoMatch.usuario.foto)}
+                      alt={resultadoMatch.usuario.nome}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center font-bold text-slate-400">
                       {resultadoMatch.usuario.nome.charAt(0)}
@@ -262,7 +279,9 @@ export const IdentificacaoFacialView: React.FC<IdentificacaoFacialViewProps> = (
                   <span className="text-2xs font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded">
                     {resultadoMatch.usuario.codigo}
                   </span>
-                  <h4 className="text-base font-bold text-slate-900">{resultadoMatch.usuario.nome}</h4>
+                  <h4 className="text-base font-bold text-slate-900">
+                    {resultadoMatch.usuario.nome}
+                  </h4>
                   <p className="text-xs text-slate-600 font-mono">
                     CPF: {formatarCPF(resultadoMatch.usuario.cpf)}
                   </p>

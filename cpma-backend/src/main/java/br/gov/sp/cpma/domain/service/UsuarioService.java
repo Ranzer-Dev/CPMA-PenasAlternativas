@@ -4,9 +4,10 @@ import br.gov.sp.cpma.api.dto.CadastroUsuarioRequest;
 import br.gov.sp.cpma.api.dto.UsuarioResponse;
 import br.gov.sp.cpma.api.exception.DomainException;
 import br.gov.sp.cpma.domain.entity.Administrador;
+import br.gov.sp.cpma.domain.entity.Pena;
 import br.gov.sp.cpma.domain.entity.Usuario;
-import br.gov.sp.cpma.domain.repository.AdministradorRepository;
-import br.gov.sp.cpma.domain.repository.UsuarioRepository;
+import br.gov.sp.cpma.domain.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +20,28 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final AdministradorRepository administradorRepository;
+    private final PenaRepository penaRepository;
+    private final RegistroDeTrabalhoRepository registroRepository;
+    private final CodigoAcessoApenadoRepository codigoAcessoRepository;
+    private final LogAcessoApenadoRepository logAcessoRepository;
 
     public UsuarioService(UsuarioRepository usuarioRepository, AdministradorRepository administradorRepository) {
+        this(usuarioRepository, administradorRepository, null, null, null, null);
+    }
+
+    @Autowired
+    public UsuarioService(UsuarioRepository usuarioRepository,
+                          AdministradorRepository administradorRepository,
+                          PenaRepository penaRepository,
+                          RegistroDeTrabalhoRepository registroRepository,
+                          CodigoAcessoApenadoRepository codigoAcessoRepository,
+                          LogAcessoApenadoRepository logAcessoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.administradorRepository = administradorRepository;
+        this.penaRepository = penaRepository;
+        this.registroRepository = registroRepository;
+        this.codigoAcessoRepository = codigoAcessoRepository;
+        this.logAcessoRepository = logAcessoRepository;
     }
 
     @Transactional
@@ -91,6 +110,30 @@ public class UsuarioService {
 
         Usuario salvo = usuarioRepository.save(usuario);
         return new UsuarioResponse(salvo);
+    }
+
+    @Transactional
+    public void excluir(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new DomainException("USER_NOT_FOUND", "Apenado nao encontrado com o ID fornecido: " + id, HttpStatus.NOT_FOUND));
+
+        if (logAcessoRepository != null) {
+            logAcessoRepository.deleteByUsuario_IdUsuario(id);
+        }
+        if (codigoAcessoRepository != null) {
+            codigoAcessoRepository.deleteByUsuario_IdUsuario(id);
+        }
+        if (penaRepository != null) {
+            List<Pena> penas = penaRepository.findByUsuario_IdUsuarioOrderByDataInicioDesc(id);
+            for (Pena pena : penas) {
+                if (registroRepository != null) {
+                    registroRepository.deleteByPena_IdPena(pena.getIdPena());
+                }
+                pena.getInstituicoesVinculadas().clear();
+                penaRepository.delete(pena);
+            }
+        }
+        usuarioRepository.delete(usuario);
     }
 
     @Transactional(readOnly = true)

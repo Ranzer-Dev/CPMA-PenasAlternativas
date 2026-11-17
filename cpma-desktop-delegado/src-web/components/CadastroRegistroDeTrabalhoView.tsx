@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Usuario, Instituicao, Pena } from '../types';
-import { formatarData, calcularHorasTrabalhadas } from '../utils/formatters';
+import {
+  Usuario,
+  Instituicao,
+  Pena,
+  CadastroRegistroTrabalhoPayload,
+  RegistroDeTrabalho,
+} from '../types';
+import { api } from '../services/api';
+import { calcularHorasTrabalhadas } from '../utils/formatters';
 import {
   Clock,
   Plus,
@@ -8,7 +15,6 @@ import {
   Trash2,
   Check,
   AlertCircle,
-  Sparkles,
 } from 'lucide-react';
 
 interface RowTemp {
@@ -25,20 +31,22 @@ interface RowTemp {
 interface CadastroRegistroDeTrabalhoViewProps {
   idUsuarioPreSelecionado?: number;
   onVoltar: () => void;
+  onSalvo?: () => void;
 }
 
 export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalhoViewProps> = ({
   idUsuarioPreSelecionado,
   onVoltar,
+  onSalvo,
 }) => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [penas, setPenas] = useState<Pena[]>([]);
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
 
   // Selection
-  const [idUsuario, setIdUsuario] = useState<number>(idUsuarioPreSelecionado || 0);
-  const [idPena, setIdPena] = useState<number>(0);
-  const [idInstituicao, setIdInstituicao] = useState<number>(0);
+  const [usuarioId, setUsuarioId] = useState<number>(idUsuarioPreSelecionado || 0);
+  const [penaId, setPenaId] = useState<number>(0);
+  const [instituicaoId, setInstituicaoId] = useState<number>(0);
 
   // Table of records being registered
   const [linhas, setLinhas] = useState<RowTemp[]>([
@@ -60,23 +68,22 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
 
   const carregarDados = async () => {
     try {
-      const resUsers = await fetch('/api/v1/usuarios');
-      if (resUsers.ok) {
-        const uList: Usuario[] = await resUsers.json();
-        setUsuarios(uList);
-        if (!idUsuario && uList.length > 0) {
-          setIdUsuario(idUsuarioPreSelecionado || uList[0].id_usuario);
-        }
-      }
+      const [uList, iList] = await Promise.all([
+        api.get<Usuario[]>('/usuarios'),
+        api.get<Instituicao[]>('/instituicoes'),
+      ]);
 
-      const resInst = await fetch('/api/v1/instituicoes');
-      if (resInst.ok) {
-        const iList: Instituicao[] = await resInst.json();
-        setInstituicoes(iList);
-        if (iList.length > 0) setIdInstituicao(iList[0].id_instituicao);
+      setUsuarios(uList || []);
+      setInstituicoes(iList || []);
+
+      if (!usuarioId && uList && uList.length > 0) {
+        setUsuarioId(idUsuarioPreSelecionado || uList[0].idUsuario);
       }
-    } catch (e) {
-      console.warn('Erro ao carregar dados:', e);
+      if (!instituicaoId && iList && iList.length > 0) {
+        setInstituicaoId(iList[0].idInstituicao);
+      }
+    } catch (e: any) {
+      setErro(e?.message || 'Erro ao carregar dados de apenados e instituições.');
     }
   };
 
@@ -84,23 +91,26 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
     carregarDados();
   }, []);
 
-  // When user is selected, load their penalties
   useEffect(() => {
-    if (idUsuario) {
-      fetch(`/api/v1/penas/usuario/${idUsuario}`)
-        .then(res => res.json())
-        .then((pList: Pena[]) => {
-          setPenas(pList);
-          if (pList.length > 0) {
-            setIdPena(pList[0].id_pena);
-            setIdInstituicao(pList[0].fk_instituicao_id_instituicao);
+    if (usuarioId) {
+      api
+        .get<Pena[]>(`/penas/usuario/${usuarioId}`)
+        .then((pList) => {
+          const lista = pList || [];
+          setPenas(lista);
+          if (lista.length > 0) {
+            setPenaId(lista[0].idPena);
+            setInstituicaoId(lista[0].instituicaoPrincipalId);
           } else {
-            setIdPena(0);
+            setPenaId(0);
           }
         })
-        .catch(console.error);
+        .catch(() => {
+          setPenas([]);
+          setPenaId(0);
+        });
     }
-  }, [idUsuario]);
+  }, [usuarioId]);
 
   const handleAdicionarDia = () => {
     const novaData = new Date().toISOString().split('T')[0];
@@ -114,11 +124,10 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
       horas: 4,
       atividades: 'Cumprimento de atividades rotineiras.',
     };
-    setLinhas(prev => [...prev, novaLinha]);
+    setLinhas((prev) => [...prev, novaLinha]);
   };
 
   const handleAdicionarMes = () => {
-    // Generate dates for current month (Mon, Wed, Fri by default)
     const agora = new Date();
     const ano = agora.getFullYear();
     const mes = agora.getMonth();
@@ -150,15 +159,14 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
   };
 
   const handleRemoverLinha = (id: string) => {
-    setLinhas(prev => prev.filter(l => l.id !== id));
+    setLinhas((prev) => prev.filter((l) => l.id !== id));
   };
 
   const handleAtualizarLinha = (id: string, campo: keyof RowTemp, valor: any) => {
-    setLinhas(prev =>
-      prev.map(l => {
+    setLinhas((prev) =>
+      prev.map((l) => {
         if (l.id !== id) return l;
         const atualizada = { ...l, [campo]: valor };
-        // Recalculate hours if time changed
         if (['inicio', 'almoco', 'volta', 'saida'].includes(campo)) {
           atualizada.horas = calcularHorasTrabalhadas(
             atualizada.inicio,
@@ -179,7 +187,7 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
     setErro(null);
     setSucesso(null);
 
-    if (!idPena) {
+    if (!penaId) {
       setErro('Selecione uma pena ativa para lançar os registros de trabalho.');
       return;
     }
@@ -188,35 +196,36 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
       return;
     }
 
+    const linhaInvalida = linhas.find((l) => !l.data || Number(l.horas) <= 0);
+    if (linhaInvalida) {
+      setErro('Todas as linhas devem conter uma data válida e horas cumpridas maiores que zero.');
+      return;
+    }
+
     setSalvando(true);
     try {
-      const payload = linhas.map(l => ({
-        data_trabalho: l.data,
-        horas_cumpridas: l.horas,
-        atividades: l.atividades,
-        horario_inicio: l.inicio,
-        horario_almoco: l.almoco || null,
-        horario_volta: l.volta || null,
-        horario_saida: l.saida,
-        fk_pena_id_pena: idPena,
-        fk_instituicao_id_instituicao: idInstituicao || null,
-      }));
-
-      const res = await fetch('/api/v1/registros-trabalho/lote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Erro ao registrar frequência de trabalho.');
+      for (const l of linhas) {
+        const payload: CadastroRegistroTrabalhoPayload = {
+          penaId: Number(penaId),
+          instituicaoId: instituicaoId ? Number(instituicaoId) : undefined,
+          dataTrabalho: l.data,
+          horasCumpridas: Number(l.horas),
+          atividades: l.atividades || undefined,
+          horarioInicio: l.inicio || undefined,
+          horarioAlmoco: l.almoco || undefined,
+          horarioVolta: l.volta || undefined,
+          horarioSaida: l.saida || undefined,
+        };
+        await api.post<RegistroDeTrabalho>('/registros-trabalho', payload);
       }
 
-      setSucesso(`Sucesso! ${linhas.length} registros de trabalho lançados (${totalHorasCalculadas}h).`);
+      setSucesso(
+        `Sucesso! ${linhas.length} registros de trabalho lançados (${totalHorasCalculadas}h).`
+      );
       setLinhas([]);
+      if (onSalvo) onSalvo();
     } catch (err: any) {
-      setErro(err.message || 'Falha ao salvar registros.');
+      setErro(err?.message || 'Falha ao salvar registros de trabalho.');
     } finally {
       setSalvando(false);
     }
@@ -264,13 +273,13 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
             Apenado *
           </label>
           <select
-            value={idUsuario}
-            onChange={(e) => setIdUsuario(Number(e.target.value))}
+            value={usuarioId}
+            onChange={(e) => setUsuarioId(Number(e.target.value))}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-purple-500 focus:outline-hidden"
           >
             <option value={0}>Selecione um apenado...</option>
             {usuarios.map((u) => (
-              <option key={u.id_usuario} value={u.id_usuario}>
+              <option key={u.idUsuario} value={u.idUsuario}>
                 {u.nome} ({u.codigo})
               </option>
             ))}
@@ -282,16 +291,16 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
             Pena Vinculada *
           </label>
           <select
-            value={idPena}
-            onChange={(e) => setIdPena(Number(e.target.value))}
+            value={penaId}
+            onChange={(e) => setPenaId(Number(e.target.value))}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-purple-500 focus:outline-hidden"
           >
             <option value={0}>
               {penas.length === 0 ? 'Nenhuma pena ativa para este apenado' : 'Selecione a pena...'}
             </option>
             {penas.map((p) => (
-              <option key={p.id_pena} value={p.id_pena}>
-                {p.tipo_pena} ({p.horas_totais}h totais)
+              <option key={p.idPena} value={p.idPena}>
+                {p.tipoPena} ({p.horasTotais}h totais)
               </option>
             ))}
           </select>
@@ -302,12 +311,12 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
             Instituição do Ponto *
           </label>
           <select
-            value={idInstituicao}
-            onChange={(e) => setIdInstituicao(Number(e.target.value))}
+            value={instituicaoId}
+            onChange={(e) => setInstituicaoId(Number(e.target.value))}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-purple-500 focus:outline-hidden"
           >
             {instituicoes.map((i) => (
-              <option key={i.id_instituicao} value={i.id_instituicao}>
+              <option key={i.idInstituicao} value={i.idInstituicao}>
                 {i.nome}
               </option>
             ))}
@@ -320,10 +329,11 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
             <h3 className="font-bold text-slate-900 text-sm">Lançamentos de Horas</h3>
-            <p className="text-xs text-slate-500">Adicione dias avulsos ou gere a grade completa do mês</p>
+            <p className="text-xs text-slate-500">
+              Adicione dias avulsos ou gere a grade completa do mês
+            </p>
           </div>
 
-          {/* Action buttons mirroring JavaFX buttons */}
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -416,7 +426,9 @@ export const CadastroRegistroDeTrabalhoView: React.FC<CadastroRegistroDeTrabalho
                       <input
                         type="text"
                         value={linha.atividades}
-                        onChange={(e) => handleAtualizarLinha(linha.id, 'atividades', e.target.value)}
+                        onChange={(e) =>
+                          handleAtualizarLinha(linha.id, 'atividades', e.target.value)
+                        }
                         placeholder="Atividades realizadas"
                         className="px-2 py-1 border border-slate-300 rounded text-xs bg-white w-full min-w-[200px]"
                       />

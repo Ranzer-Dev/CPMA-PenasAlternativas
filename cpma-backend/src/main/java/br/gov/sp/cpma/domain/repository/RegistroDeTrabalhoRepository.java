@@ -19,4 +19,6 @@ public interface RegistroDeTrabalhoRepository extends JpaRepository<RegistroDeTr
 
     @Query("SELECT COALESCE(SUM(r.horasCumpridas), 0.0) FROM RegistroDeTrabalho r WHERE r.pena.idPena = :penaId")
     Double somarHorasCumpridasPorPena(@Param("penaId") Long penaId);
+
+    void deleteByPena_IdPena(Long penaId);
 }

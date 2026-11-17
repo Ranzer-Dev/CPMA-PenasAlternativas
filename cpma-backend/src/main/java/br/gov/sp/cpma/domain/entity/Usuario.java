@@ -42,10 +42,10 @@ public class Usuario {
     @Column(name = "nacionalidade")
     private String nacionalidade;
 
-    @Column(name = "foto")
+    @Column(name = "foto", columnDefinition = "TEXT")
     private String foto;
 
-    @Column(name = "observacao")
+    @Column(name = "observacao", columnDefinition = "TEXT")
     private String observacao;
 
     @Column(name = "telefone")

@@ -11,7 +11,6 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  UserCheck,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -45,6 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'penas', label: 'Penas Alternativas', icon: Scale },
         { id: 'instituicoes', label: 'Instituições', icon: Building2 },
         { id: 'pontos', label: 'Frequência / Ponto', icon: Clock },
+        { id: 'facial', label: 'Biometria Facial', icon: Camera },
       ],
     },
     {
@@ -70,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 p-1">
               <img
-                src="/images/logoSP.png"
+                src="./images/logoSP.png"
                 alt="Brasão SP"
                 className="w-full h-full object-contain"
                 onError={(e) => {
@@ -93,7 +93,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          {/* Collapse button */}
           <button
             type="button"
             onClick={onToggleCollapse}
