@@ -21,7 +21,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -98,5 +101,16 @@ public class InstituicaoControllerTest {
         mockMvc.perform(get("/instituicoes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].nome").value("Horta Comunitaria"));
+    }
+
+    @Test
+    @DisplayName("Deve excluir instituicao com sucesso retornando status 204")
+    void deveExcluirInstituicaoComSucesso() throws Exception {
+        doNothing().when(instituicaoService).excluir(10L);
+
+        mockMvc.perform(delete("/instituicoes/10"))
+                .andExpect(status().isNoContent());
+
+        verify(instituicaoService).excluir(10L);
     }
 }

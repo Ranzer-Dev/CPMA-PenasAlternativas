@@ -7,6 +7,100 @@ const { spawn, exec } = require('child_process');
 let mainWindow = null;
 let pythonProcess = null;
 
+const DEFAULT_CONFIG = {
+  serverIp: process.env.CPMA_SERVER_IP || '127.0.0.1',
+  serverPort: Number(process.env.CPMA_SERVER_PORT || 8080),
+  terminalId: process.env.CPMA_TERMINAL_ID || 'TOTEM-DELEGACIA-01',
+  terminalKey: process.env.CPMA_TERMINAL_KEY || 'CPMA-TOTEM-TERMINAL-SECRET-2026-KEY',
+};
+
+function getConfigFilePath() {
+  return path.join(app.getPath('userData'), 'totem-config.json');
+}
+
+function readServerIpFallbackFile() {
+  const candidates = [
+    path.join(process.cwd(), 'cpma-server-ip.txt'),
+    path.join(process.cwd(), '../cpma-server-ip.txt'),
+    path.join(__dirname, '../../cpma-server-ip.txt'),
+  ];
+  for (const file of candidates) {
+    try {
+      if (fs.existsSync(file)) {
+        const content = fs.readFileSync(file, 'utf8').trim();
+        if (content) return content;
+      }
+    } catch {
+      // ignora erro de leitura
+    }
+  }
+  return null;
+}
+
+function loadTotemConfig() {
+  let config = { ...DEFAULT_CONFIG };
+
+  // Se CPMA_API_URL foi passado no ambiente (ex.: http://192.168.0.10:8080/api/v1), extrai host e porta
+  if (process.env.CPMA_API_URL) {
+    try {
+      const parsed = new URL(process.env.CPMA_API_URL);
+      if (parsed.hostname) config.serverIp = parsed.hostname;
+      if (parsed.port) config.serverPort = Number(parsed.port);
+    } catch {
+      // ignora URL inválida
+    }
+  }
+
+  const fallbackIp = readServerIpFallbackFile();
+  if (fallbackIp) {
+    config.serverIp = fallbackIp;
+  }
+
+  try {
+    const configPath = getConfigFilePath();
+    if (fs.existsSync(configPath)) {
+      const saved = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      config = {
+        ...config,
+        ...saved,
+      };
+    }
+  } catch (err) {
+    console.warn('[Totem Config] Aviso ao ler totem-config.json:', err.message);
+  }
+
+  return config;
+}
+
+function saveTotemConfig(newConfig) {
+  const current = loadTotemConfig();
+  const merged = {
+    ...current,
+    ...(newConfig || {}),
+    serverIp: String(newConfig?.serverIp || current.serverIp).trim(),
+    serverPort: Number(newConfig?.serverPort || current.serverPort || 8080),
+    terminalId: String(newConfig?.terminalId || current.terminalId).trim(),
+    terminalKey: String(newConfig?.terminalKey || current.terminalKey).trim(),
+  };
+
+  try {
+    const configPath = getConfigFilePath();
+    fs.writeFileSync(configPath, JSON.stringify(merged, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[Totem Config] Falha ao salvar totem-config.json:', err.message);
+  }
+
+  // Também atualiza cpma-server-ip.txt na raiz se possível
+  try {
+    const rootIpFile = path.join(__dirname, '../../cpma-server-ip.txt');
+    fs.writeFileSync(rootIpFile, merged.serverIp, 'utf8');
+  } catch {
+    // ignora caso diretório seja somente leitura
+  }
+
+  return merged;
+}
+
 // Checa se o microserviço facial já está ativo na porta 8001
 function checkFacialServiceRunning(callback) {
   const req = http.get('http://127.0.0.1:8001/health', (res) => {
@@ -36,7 +130,7 @@ function resolveFacialServicePath() {
   return null;
 }
 
-// Inicia o microserviço Python silenciosamente em segundo plano
+// Inicia o microserviço Python silenciosamente em segundo plano (se disponível na máquina do Totem)
 function startPythonFacialService() {
   checkFacialServiceRunning((isAlreadyRunning) => {
     if (isAlreadyRunning) {
@@ -46,7 +140,7 @@ function startPythonFacialService() {
 
     const serviceDir = resolveFacialServicePath();
     if (!serviceDir) {
-      console.warn('[Sidecar] Diretório de cpma-facial-service não localizado.');
+      console.warn('[Sidecar] Diretório de cpma-facial-service não localizado. Usando webcam via WebRTC.');
       return;
     }
 
@@ -102,14 +196,14 @@ function createWindow() {
   const isKiosk = process.env.CPMA_KIOSK !== 'false';
 
   mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width: 1280,
+    height: 800,
     fullscreen: isKiosk,
     kiosk: isKiosk,
     autoHideMenuBar: true,
     title: 'CPMA Totem - Autoatendimento Biométrico do Apenado',
     icon: path.join(__dirname, '../public/images/logoSP.png'),
-    backgroundColor: '#0f172a',
+    backgroundColor: '#020617',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
@@ -144,6 +238,8 @@ function createWindow() {
 
 // IPC Handlers
 ipcMain.handle('get-app-version', () => app.getVersion());
+ipcMain.handle('get-totem-config', () => loadTotemConfig());
+ipcMain.handle('save-totem-config', (_event, newConfig) => saveTotemConfig(newConfig));
 
 ipcMain.on('totem-exit-kiosk', () => {
   if (mainWindow) {
@@ -159,6 +255,12 @@ ipcMain.on('totem-enter-kiosk', () => {
   }
 });
 
+ipcMain.on('window-print', () => {
+  if (mainWindow) {
+    mainWindow.webContents.print({ silent: false, printBackground: true });
+  }
+});
+
 ipcMain.on('app-quit', () => {
   stopPythonFacialService();
   app.quit();
@@ -166,7 +268,7 @@ ipcMain.on('app-quit', () => {
 
 // Ciclo de Vida da Aplicação
 app.whenReady().then(() => {
-  // Inicia o Sidecar Python automaticamente
+  // Inicia o Sidecar Python automaticamente se presente
   startPythonFacialService();
 
   createWindow();

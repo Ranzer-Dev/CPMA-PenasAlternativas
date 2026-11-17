@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.net.InetAddress;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 50)
@@ -24,8 +25,11 @@ public class TotemSecurityFilter extends OncePerRequestFilter {
     @Value("${cpma.totem.ip-filter-enabled:true}")
     private boolean ipFilterEnabled;
 
-    @Value("${cpma.totem.allowed-ips:127.0.0.1,0:0:0:0:0:0:0:1,localhost,::1}")
+    @Value("${cpma.totem.allowed-ips:127.0.0.1,0:0:0:0:0:0:0:1,localhost,::1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,169.254.0.0/16}")
     private String allowedIps;
+
+    @Value("${cpma.security.trust-forwarded-for:false}")
+    private boolean trustForwardedFor;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private LogAcessoApenadoRepository logAcessoRepository;
@@ -40,6 +44,11 @@ public class TotemSecurityFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         String path = request.getRequestURI();
         String subPath = path;
@@ -97,9 +106,11 @@ public class TotemSecurityFilter extends OncePerRequestFilter {
     }
 
     private String extrairIpCliente(HttpServletRequest request) {
-        String xForwarded = request.getHeader("X-Forwarded-For");
-        if (xForwarded != null && !xForwarded.isBlank()) {
-            return xForwarded.split(",")[0].trim();
+        if (trustForwardedFor) {
+            String xForwarded = request.getHeader("X-Forwarded-For");
+            if (xForwarded != null && !xForwarded.isBlank()) {
+                return xForwarded.split(",")[0].trim();
+            }
         }
         return request.getRemoteAddr();
     }
@@ -109,6 +120,7 @@ public class TotemSecurityFilter extends OncePerRequestFilter {
         if (allowedIps == null || allowedIps.isBlank()) return false;
         for (String allowed : allowedIps.split(",")) {
             String trimmed = allowed.trim();
+            if (trimmed.isEmpty()) continue;
             if (trimmed.equals("*") || trimmed.equalsIgnoreCase(ip)) {
                 return true;
             }
@@ -116,8 +128,51 @@ public class TotemSecurityFilter extends OncePerRequestFilter {
                     && ("127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip))) {
                 return true;
             }
+            if (trimmed.endsWith(".*")) {
+                String prefix = trimmed.substring(0, trimmed.length() - 1);
+                if (ip.startsWith(prefix)) {
+                    return true;
+                }
+            }
+            if (trimmed.contains("/") && matchesCidr(ip, trimmed)) {
+                return true;
+            }
         }
         return false;
+    }
+
+    private boolean matchesCidr(String ip, String cidr) {
+        try {
+            String[] parts = cidr.split("/");
+            if (parts.length != 2) return false;
+            InetAddress targetAddr = InetAddress.getByName(ip);
+            InetAddress networkAddr = InetAddress.getByName(parts[0].trim());
+            byte[] targetBytes = targetAddr.getAddress();
+            byte[] networkBytes = networkAddr.getAddress();
+            if (targetBytes.length != networkBytes.length) return false;
+
+            int prefixLength = Integer.parseInt(parts[1].trim());
+            int maxBits = targetBytes.length * 8;
+            if (prefixLength < 0 || prefixLength > maxBits) return false;
+
+            int fullBytes = prefixLength / 8;
+            int remainingBits = prefixLength % 8;
+
+            for (int i = 0; i < fullBytes; i++) {
+                if (targetBytes[i] != networkBytes[i]) {
+                    return false;
+                }
+            }
+            if (remainingBits > 0) {
+                int mask = (0xFF << (8 - remainingBits)) & 0xFF;
+                if ((targetBytes[fullBytes] & mask) != (networkBytes[fullBytes] & mask)) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void registrarLogTentativa(String ip, String metodo, String mensagem) {

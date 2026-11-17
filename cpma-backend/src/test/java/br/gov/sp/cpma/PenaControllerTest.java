@@ -25,7 +25,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -170,5 +173,15 @@ public class PenaControllerTest {
                 .andExpect(jsonPath("$.horasTotais").value(200))
                 .andExpect(jsonPath("$.diasSemanaEHorariosDisponivel").value("Seg, Qua, Sex - 08h as 12h"));
     }
-}
 
+    @Test
+    @DisplayName("Deve excluir pena com sucesso retornando status 204")
+    void deveExcluirPenaComSucesso() throws Exception {
+        doNothing().when(penaService).excluir(100L);
+
+        mockMvc.perform(delete("/penas/100"))
+                .andExpect(status().isNoContent());
+
+        verify(penaService).excluir(100L);
+    }
+}

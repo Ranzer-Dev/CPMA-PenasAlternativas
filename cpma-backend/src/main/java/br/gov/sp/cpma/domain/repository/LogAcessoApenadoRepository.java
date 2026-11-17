@@ -18,4 +18,6 @@ public interface LogAcessoApenadoRepository extends JpaRepository<LogAcessoApena
     List<LogAcessoApenado> findByUsuarioIdUsuarioOrderByDataHoraDesc(Long idUsuario);
 
     long countBySucesso(Integer sucesso);
+
+    void deleteByUsuario_IdUsuario(Long idUsuario);
 }

@@ -24,13 +24,13 @@ public class Pena {
     @Column(name = "data_termino")
     private LocalDate dataTermino;
 
-    @Column(name = "descricao")
+    @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
 
     @Column(name = "dias_semana_e_horarios_disponivel")
     private String diasSemanaEHorariosDisponivel;
 
-    @Column(name = "atividades_acordadas")
+    @Column(name = "atividades_acordadas", columnDefinition = "TEXT")
     private String atividadesAcordadas;
 
     @Column(name = "horas_semanais", nullable = false)

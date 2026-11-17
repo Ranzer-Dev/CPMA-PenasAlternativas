@@ -1,17 +1,53 @@
 package br.gov.sp.cpma.api.security;
 
+import br.gov.sp.cpma.domain.repository.PenaRepository;
 import br.gov.sp.cpma.domain.service.TokenService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
 
     @Bean
-    public FilterRegistrationBean<AdminAuthFilter> adminAuthFilterRegistration(TokenService tokenService) {
-        FilterRegistrationBean<AdminAuthFilter> registration = new FilterRegistrationBean<>(new AdminAuthFilter(tokenService));
+    public FilterRegistrationBean<CorsFilter> corsFilterRegistration() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(false);
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        config.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "X-Totem-Terminal-Key",
+                "Accept",
+                "Origin",
+                "X-Requested-With"
+        ));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
+        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return bean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<AdminAuthFilter> adminAuthFilterRegistration(
+            TokenService tokenService,
+            @Autowired(required = false) PenaRepository penaRepository) {
+        FilterRegistrationBean<AdminAuthFilter> registration = new FilterRegistrationBean<>(
+                new AdminAuthFilter(tokenService, penaRepository)
+        );
         registration.addUrlPatterns(
                 "/usuarios",
                 "/usuarios/*",

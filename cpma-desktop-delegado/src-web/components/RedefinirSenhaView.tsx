@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { api } from '../services/api';
 import { formatarCPF, limparCPF } from '../utils/formatters';
 import { ArrowLeft, KeyRound, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -8,7 +9,7 @@ interface RedefinirSenhaViewProps {
 
 export const RedefinirSenhaView: React.FC<RedefinirSenhaViewProps> = ({ onVoltar }) => {
   const [cpf, setCpf] = useState('123.456.789-00');
-  const [respostaSecreta, setRespostaSecreta] = useState('Votorantim');
+  const [respostaSecreta, setRespostaSecreta] = useState('Branco');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmaSenha, setConfirmaSenha] = useState('');
   const [sucesso, setSucesso] = useState(false);
@@ -31,24 +32,18 @@ export const RedefinirSenhaView: React.FC<RedefinirSenhaViewProps> = ({ onVoltar
 
     setCarregando(true);
     try {
-      const res = await fetch('/api/v1/auth/redefinir-senha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      await api.post(
+        '/auth/redefinir-senha',
+        {
           cpf: limparCPF(cpf),
-          respostaSecreta,
+          respostaSecreta: respostaSecreta.trim(),
           novaSenha,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Erro ao redefinir senha.');
-      }
-
+        },
+        { skipAuthRedirect: true }
+      );
       setSucesso(true);
     } catch (err: any) {
-      setErro(err.message || 'Falha ao redefinir senha. Verifique os dados informados.');
+      setErro(err?.message || 'Falha ao redefinir senha. Verifique os dados informados.');
     } finally {
       setCarregando(false);
     }
@@ -109,6 +104,7 @@ export const RedefinirSenhaView: React.FC<RedefinirSenhaViewProps> = ({ onVoltar
                 value={cpf}
                 onChange={(e) => setCpf(formatarCPF(e.target.value))}
                 placeholder="000.000.000-00"
+                maxLength={14}
                 className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 required
               />
@@ -116,7 +112,7 @@ export const RedefinirSenhaView: React.FC<RedefinirSenhaViewProps> = ({ onVoltar
 
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
               <p className="text-xs font-bold text-slate-600 uppercase">Pergunta de Segurança:</p>
-              <p className="text-sm font-medium text-slate-800">"Qual a sua cidade natal?"</p>
+              <p className="text-sm font-medium text-slate-800">"Qual é a cor do seu cavalo branco?"</p>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mt-2 mb-1">
                   Sua Resposta:
@@ -125,7 +121,7 @@ export const RedefinirSenhaView: React.FC<RedefinirSenhaViewProps> = ({ onVoltar
                   type="text"
                   value={respostaSecreta}
                   onChange={(e) => setRespostaSecreta(e.target.value)}
-                  placeholder="Digite sua resposta secreta"
+                  placeholder="Digite sua resposta secreta (Padrão: Branco)"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   required
                 />

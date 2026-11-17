@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 
 let mainWindow = null;
+let apiBaseUrl = process.env.CPMA_API_URL || 'http://127.0.0.1:8080/api/v1';
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -36,7 +37,6 @@ function createWindow() {
     mainWindow.loadFile(indexPath);
   }
 
-  // Create custom application menu
   const template = [
     {
       label: 'Sistema',
@@ -68,7 +68,7 @@ function createWindow() {
               type: 'info',
               title: 'Sobre o CPMA',
               message: 'CPMA - Central de Penas e Medidas Alternativas',
-              detail: 'Versão Desktop Electron 1.0.0\nGoverno do Estado de São Paulo / Município de Votorantim\nParceria com FATEC Sorocaba.',
+              detail: `Versão Desktop Electron 1.0.0\nAPI Local: ${apiBaseUrl}\nGoverno do Estado de São Paulo / Município de Votorantim\nParceria com FATEC Sorocaba.`,
               buttons: ['OK'],
             });
           },
@@ -87,6 +87,13 @@ function createWindow() {
 
 // IPC Handlers
 ipcMain.handle('get-app-version', () => app.getVersion());
+ipcMain.handle('get-api-base-url', () => apiBaseUrl);
+ipcMain.handle('set-api-base-url', (_event, newUrl) => {
+  if (typeof newUrl === 'string' && newUrl.trim()) {
+    apiBaseUrl = newUrl.trim().replace(/\/+$/, '');
+  }
+  return apiBaseUrl;
+});
 
 ipcMain.on('window-minimize', () => {
   if (mainWindow) mainWindow.minimize();

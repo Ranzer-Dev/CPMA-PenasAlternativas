@@ -14,17 +14,22 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TotemController.class)
 @Import(TotemSecurityFilter.class)
+@TestPropertySource(properties = {
+        "cpma.totem.allowed-ips=127.0.0.1,0:0:0:0:0:0:0:1,localhost,::1,192.168.10.0/24"
+})
 public class TotemSecurityFilterTest {
 
     @Autowired
@@ -63,6 +68,40 @@ public class TotemSecurityFilterTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sucesso").value(true))
                 .andExpect(jsonPath("$.usuarioNome").value("Carlos Silva"));
+    }
+
+    @Test
+    @DisplayName("Deve permitir acesso quando IP do Totem via cabo-rede pertence a sub-rede CIDR autorizada")
+    void devePermitirAcessoComIpNaSubRedeCidr() throws Exception {
+        ValidarCodigoEtapa1Request req = new ValidarCodigoEtapa1Request();
+        req.setCodigo("123456");
+
+        ValidarCodigoEtapa1Response resp = new ValidarCodigoEtapa1Response(
+                true, "Código validado com sucesso", 1L, "Carlos Silva", "APN-001", "123456", true
+        );
+        when(totemService.validarCodigoEtapa1(any())).thenReturn(resp);
+
+        mockMvc.perform(post("/totem/etapa1/validar-codigo")
+                        .header("X-Totem-Terminal-Key", CHAVE_OFICIAL)
+                        .with(request -> {
+                            request.setRemoteAddr("192.168.10.25");
+                            return request;
+                        })
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sucesso").value(true));
+    }
+
+    @Test
+    @DisplayName("Deve permitir preflight OPTIONS sem exigir X-Totem-Terminal-Key")
+    void devePermitirPreflightOptions() throws Exception {
+        mockMvc.perform(options("/totem/etapa1/validar-codigo")
+                        .with(request -> {
+                            request.setRemoteAddr("192.168.10.25");
+                            return request;
+                        }))
+                .andExpect(status().isOk());
     }
 
     @Test

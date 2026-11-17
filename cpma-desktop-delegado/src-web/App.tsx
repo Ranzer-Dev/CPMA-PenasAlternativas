@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Administrador, Usuario } from './types';
-import { db } from './data/mockStore';
+import {
+  api,
+  carregarSessaoAdmin,
+  initApiBaseUrl,
+  limparSessaoAdmin,
+  setOnUnauthorizedHandler,
+} from './services/api';
 import { Sidebar } from './components/Sidebar';
 import { HeaderSaaS } from './components/HeaderSaaS';
 import { LoginView } from './components/LoginView';
@@ -11,10 +17,13 @@ import { CadastroUsuarioView } from './components/CadastroUsuarioView';
 import { CadastroInstituicaoView } from './components/CadastroInstituicaoView';
 import { CadastroPenaView } from './components/CadastroPenaView';
 import { CadastroRegistroDeTrabalhoView } from './components/CadastroRegistroDeTrabalhoView';
+import { IdentificacaoFacialView } from './components/IdentificacaoFacialView';
 import { AuditoriaView } from './components/AuditoriaView';
 
 export const App: React.FC = () => {
-  const [adminLogado, setAdminLogado] = useState<Administrador | null>(null);
+  const [adminLogado, setAdminLogado] = useState<Administrador | null>(() =>
+    carregarSessaoAdmin()
+  );
   const [telaLogin, setTelaLogin] = useState<'login' | 'redefinir'>('login');
   const [viewAtual, setViewAtual] = useState<string>('dashboard');
   const [apenadoSelecionado, setApenadoSelecionado] = useState<Usuario | null>(null);
@@ -23,35 +32,25 @@ export const App: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [termoBuscaGlobal, setTermoBuscaGlobal] = useState<string>('');
 
-  // Initialize session or default demo admin
   useEffect(() => {
-    const saved = localStorage.getItem('cpma_admin_session');
-    if (saved) {
-      try {
-        setAdminLogado(JSON.parse(saved));
-      } catch (e) {
-        console.warn('Session parse error:', e);
-      }
-    }
+    initApiBaseUrl();
+    setOnUnauthorizedHandler(() => {
+      setAdminLogado(null);
+      setViewAtual('dashboard');
+    });
+    return () => {
+      setOnUnauthorizedHandler(null);
+    };
   }, []);
 
-  const handleLoginSuccess = () => {
-    const admin: Administrador = {
-      id_admin: 1,
-      nome: 'Dr. Delegado Titular',
-      cpf: '12345678900',
-      senha: '',
-      nivel_permissao: 1,
-      criado_em: new Date().toISOString(),
-    };
+  const handleLoginSuccess = (admin: Administrador) => {
     setAdminLogado(admin);
-    localStorage.setItem('cpma_admin_session', JSON.stringify(admin));
     setViewAtual('dashboard');
   };
 
   const handleLogout = () => {
+    limparSessaoAdmin();
     setAdminLogado(null);
-    localStorage.removeItem('cpma_admin_session');
     setViewAtual('dashboard');
   };
 
@@ -82,31 +81,33 @@ export const App: React.FC = () => {
     setViewAtual('penas');
   };
 
-  // Global search submission from Header
-  const handleBuscarGlobalSubmit = (e: React.FormEvent) => {
+  const handleBuscarGlobalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const termo = termoBuscaGlobal.trim().toLowerCase();
     const termoNum = termo.replace(/\D/g, '');
 
     if (!termo) return;
 
-    const todos = db.listarUsuarios();
-    const encontrado = todos.find((u) => {
-      const cpfLimpo = u.cpf.replace(/\D/g, '');
-      if (termoNum && cpfLimpo.includes(termoNum)) return true;
-      if (u.nome.toLowerCase().includes(termo)) return true;
-      if (u.codigo && u.codigo.toLowerCase().includes(termo)) return true;
-      return false;
-    });
+    try {
+      const todos = await api.get<Usuario[]>('/usuarios');
+      const encontrado = todos.find((u) => {
+        const cpfLimpo = (u.cpf || '').replace(/\D/g, '');
+        if (termoNum && cpfLimpo.includes(termoNum)) return true;
+        if (u.nome && u.nome.toLowerCase().includes(termo)) return true;
+        if (u.codigo && u.codigo.toLowerCase().includes(termo)) return true;
+        return false;
+      });
 
-    if (encontrado) {
-      handleSelecionarApenado(encontrado);
-    } else {
+      if (encontrado) {
+        handleSelecionarApenado(encontrado);
+      } else {
+        setViewAtual('dashboard');
+      }
+    } catch {
       setViewAtual('dashboard');
     }
   };
 
-  // If not logged in, render login or password reset
   if (!adminLogado) {
     if (telaLogin === 'redefinir') {
       return <RedefinirSenhaView onVoltar={() => setTelaLogin('login')} />;
@@ -159,6 +160,7 @@ export const App: React.FC = () => {
             {viewAtual === 'detalhe' && apenadoSelecionado && (
               <DetalheApenadoView
                 usuario={apenadoSelecionado}
+                adminId={adminLogado.adminId}
                 onVoltar={() => setViewAtual('dashboard')}
                 onEditarUsuario={handleEditarApenado}
                 onNovoPonto={handleNovoPonto}
@@ -168,6 +170,7 @@ export const App: React.FC = () => {
 
             {viewAtual === 'usuarios' && (
               <CadastroUsuarioView
+                adminId={adminLogado.adminId}
                 usuarioParaEditar={usuarioParaEditar}
                 onVoltar={() => setViewAtual('dashboard')}
                 onSalvo={() => {
@@ -193,6 +196,13 @@ export const App: React.FC = () => {
                 idUsuarioPreSelecionado={idUsuarioPreSelecionado}
                 onVoltar={() => setViewAtual('dashboard')}
                 onSalvo={() => setViewAtual('dashboard')}
+              />
+            )}
+
+            {viewAtual === 'facial' && (
+              <IdentificacaoFacialView
+                onVoltar={() => setViewAtual('dashboard')}
+                onAbrirDetalhe={handleSelecionarApenado}
               />
             )}
 

@@ -7,7 +7,9 @@ import br.gov.sp.cpma.domain.entity.Instituicao;
 import br.gov.sp.cpma.domain.entity.TipoInstituicao;
 import br.gov.sp.cpma.domain.repository.DisponibilidadeInstituicaoRepository;
 import br.gov.sp.cpma.domain.repository.InstituicaoRepository;
+import br.gov.sp.cpma.domain.repository.PenaRepository;
 import br.gov.sp.cpma.domain.repository.TipoInstituicaoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,13 +23,23 @@ public class InstituicaoService {
     private final InstituicaoRepository instituicaoRepository;
     private final TipoInstituicaoRepository tipoInstituicaoRepository;
     private final DisponibilidadeInstituicaoRepository disponibilidadeRepository;
+    private final PenaRepository penaRepository;
 
     public InstituicaoService(InstituicaoRepository instituicaoRepository,
                               TipoInstituicaoRepository tipoInstituicaoRepository,
                               DisponibilidadeInstituicaoRepository disponibilidadeRepository) {
+        this(instituicaoRepository, tipoInstituicaoRepository, disponibilidadeRepository, null);
+    }
+
+    @Autowired
+    public InstituicaoService(InstituicaoRepository instituicaoRepository,
+                              TipoInstituicaoRepository tipoInstituicaoRepository,
+                              DisponibilidadeInstituicaoRepository disponibilidadeRepository,
+                              PenaRepository penaRepository) {
         this.instituicaoRepository = instituicaoRepository;
         this.tipoInstituicaoRepository = tipoInstituicaoRepository;
         this.disponibilidadeRepository = disponibilidadeRepository;
+        this.penaRepository = penaRepository;
     }
 
     @Transactional
@@ -107,6 +119,22 @@ public class InstituicaoService {
         InstituicaoResponse res = new InstituicaoResponse(salva);
         res.setDisponibilidades(disponibilidadesRes);
         return res;
+    }
+
+    @Transactional
+    public void excluir(Long id) {
+        Instituicao inst = instituicaoRepository.findById(id)
+                .orElseThrow(() -> new DomainException("INSTITUICAO_NOT_FOUND", "Instituicao nao encontrada", HttpStatus.NOT_FOUND));
+
+        if (penaRepository != null && (penaRepository.existsByInstituicaoPrincipal_IdInstituicao(id)
+                || penaRepository.existsByInstituicoesVinculadas_IdInstituicao(id))) {
+            throw new DomainException("INSTITUICAO_IN_USE",
+                    "Nao e possivel excluir instituicao vinculada a penas cadastradas.",
+                    HttpStatus.CONFLICT);
+        }
+
+        disponibilidadeRepository.deleteByInstituicao_IdInstituicao(id);
+        instituicaoRepository.delete(inst);
     }
 
     @Transactional(readOnly = true)

@@ -51,4 +51,10 @@ public class UsuarioController {
         UsuarioResponse response = usuarioService.atualizar(id, request);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        usuarioService.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
 }

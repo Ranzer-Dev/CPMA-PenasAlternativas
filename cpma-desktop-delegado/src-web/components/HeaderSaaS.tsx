@@ -1,5 +1,7 @@
-import React from 'react';
-import { Search, Plus, Database, ShieldCheck, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { BackendStatusResponse } from '../types';
+import { api } from '../services/api';
+import { Search, Database, WifiOff, ChevronRight } from 'lucide-react';
 
 interface HeaderSaaSProps {
   currentView: string;
@@ -18,6 +20,34 @@ export const HeaderSaaS: React.FC<HeaderSaaSProps> = ({
   onBuscarSubmit,
   subtitulo,
 }) => {
+  const [statusOnline, setStatusOnline] = useState<boolean>(true);
+  const [dbLabel, setDbLabel] = useState<string>('Banco Local Ativo');
+
+  useEffect(() => {
+    let mounted = true;
+    const verificarStatus = async () => {
+      try {
+        const res = await api.get<BackendStatusResponse>('/totem/status', {
+          skipAuthRedirect: true,
+          timeoutMs: 3000,
+        });
+        if (!mounted) return;
+        setStatusOnline(res?.status === 'UP');
+        setDbLabel(res?.database ? `${res.database} Ativo` : 'API Local Ativa');
+      } catch {
+        if (!mounted) return;
+        setStatusOnline(false);
+      }
+    };
+
+    verificarStatus();
+    const interval = setInterval(verificarStatus, 10000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   const getTituloView = (view: string) => {
     switch (view) {
       case 'dashboard':
@@ -32,15 +62,17 @@ export const HeaderSaaS: React.FC<HeaderSaaSProps> = ({
         return 'Penas e Processos Judiciais';
       case 'pontos':
         return 'Frequência e Registro de Ponto';
+      case 'facial':
+        return 'Identificação Biométrica Facial';
       case 'auditoria':
-        return 'Trilha de Auditoria do PostgreSQL';
+        return 'Trilha de Auditoria e Segurança';
       default:
         return 'Mesa do Delegado';
     }
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200/90 px-6 flex items-center justify-between sticky top-0 z-20 shadow-2xs">
+    <header className="h-16 bg-white border-b border-slate-200/90 px-6 flex items-center justify-between sticky top-0 z-20 shadow-2xs print:hidden">
       {/* Left: Breadcrumbs & Page Title */}
       <div className="flex items-center space-x-3">
         <div className="flex items-center space-x-1.5 text-xs text-slate-500 font-medium">
@@ -71,19 +103,25 @@ export const HeaderSaaS: React.FC<HeaderSaaSProps> = ({
             type="text"
             value={termoBusca}
             onChange={(e) => onTermoBuscaChange(e.target.value)}
-            placeholder="Buscar apenado por CPF ou nome (pressione Enter)..."
+            placeholder="Buscar apenado por CPF, código ou nome (pressione Enter)..."
             className="w-full pl-9 pr-4 py-1.5 bg-slate-100/80 hover:bg-slate-100 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 transition-all font-sans"
           />
         </form>
       </div>
 
-      {/* Right: Status Pills & Action Button */}
+      {/* Right: Status Pill */}
       <div className="flex items-center space-x-3">
-        {/* PostgreSQL Database status badge */}
-        <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-3xs font-semibold">
-          <Database className="w-3 h-3 text-emerald-600" />
-          <span>PostgreSQL Ativo</span>
-        </div>
+        {statusOnline ? (
+          <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-3xs font-semibold">
+            <Database className="w-3 h-3 text-emerald-600" />
+            <span>{dbLabel}</span>
+          </div>
+        ) : (
+          <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200 text-3xs font-semibold">
+            <WifiOff className="w-3 h-3 text-red-600" />
+            <span>API Offline (127.0.0.1:8080)</span>
+          </div>
+        )}
       </div>
     </header>
   );

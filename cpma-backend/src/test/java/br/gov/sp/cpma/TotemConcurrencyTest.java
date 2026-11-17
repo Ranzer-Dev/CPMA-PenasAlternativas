@@ -12,10 +12,13 @@ import br.gov.sp.cpma.domain.repository.UsuarioRepository;
 import br.gov.sp.cpma.domain.service.TotemService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +34,22 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("postgres")
+@EnabledIf("isPostgresAvailable")
 public class TotemConcurrencyTest {
+
+    static boolean isPostgresAvailable() {
+        try {
+            DriverManager.setLoginTimeout(2);
+            String url = "jdbc:postgresql://127.0.0.1:5432/cpma";
+            String user = System.getenv().getOrDefault("CPMA_DB_USER", "postgres");
+            String pass = System.getenv().getOrDefault("CPMA_DB_PASS", "postgres");
+            try (Connection conn = DriverManager.getConnection(url, user, pass)) {
+                return conn != null && !conn.isClosed();
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     @Autowired
     private TotemService totemService;

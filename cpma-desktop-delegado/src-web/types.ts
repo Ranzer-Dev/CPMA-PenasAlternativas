@@ -1,127 +1,214 @@
 export interface Administrador {
-  id_admin: number;
+  adminId: number;
+  id_admin?: number;
   nome: string;
   cpf: string;
-  senha: string; // sha-256 hash
-  nivel_permissao: number;
-  pergunta_secreta?: string;
-  resposta_secreta?: string;
-  criado_em: string;
+  nivelPermissao: number;
+  nivel_permissao?: number;
+  token: string;
 }
 
 export interface Usuario {
-  id_usuario: number;
+  idUsuario: number;
   codigo: string;
   nome: string;
   cpf: string;
-  data_nascimento: string;
-  endereco: string;
-  bairro: string;
-  cidade: string;
-  uf: string;
-  cep: string;
-  nacionalidade: string;
+  dataNascimento?: string;
+  endereco?: string;
+  bairro?: string;
+  cidade?: string;
+  cep?: string;
+  uf?: string;
+  nacionalidade?: string;
   foto?: string;
   observacao?: string;
-  telefone: string;
-  fk_administrador_id_admin: number;
-  criado_em: string;
+  telefone?: string;
+  criadoEm?: string;
+}
+
+export interface CadastroUsuarioPayload {
+  nome: string;
+  cpf: string;
+  codigo: string;
+  dataNascimento?: string;
+  endereco?: string;
+  bairro?: string;
+  cidade?: string;
+  cep?: string;
+  uf?: string;
+  nacionalidade?: string;
+  foto?: string;
+  observacao?: string;
+  telefone?: string;
+  adminId: number;
 }
 
 export interface TipoInstituicao {
-  id_tipo: number;
+  idTipo: number;
   tipo: string;
-  criado_em: string;
 }
 
-export interface DisponibilidadeInstituicao {
-  id_disponibilidade: number;
-  dia_semana: string; // "Segunda", "Terça", "Quarta", etc.
-  hora_inicio_1: string; // "08:00"
-  hora_fim_1: string; // "12:00"
-  hora_inicio_2?: string; // "13:00"
-  hora_fim_2?: string; // "17:00"
-  fk_instituicao_id_instituicao: number;
-  criado_em: string;
+export interface DisponibilidadeDTO {
+  diaSemana: string;
+  horaInicio1?: string;
+  horaFim1?: string;
+  horaInicio2?: string;
+  horaFim2?: string;
 }
 
 export interface Instituicao {
-  id_instituicao: number;
+  idInstituicao: number;
   nome: string;
-  endereco: string;
-  cidade: string;
-  uf: string;
-  bairro: string;
-  cep: string;
-  responsavel: string;
-  telefone: string;
-  tipo: number; // Foreign key to TipoInstituicao
-  criado_em: string;
-  disponibilidades?: DisponibilidadeInstituicao[];
+  endereco?: string;
+  cidade?: string;
+  uf?: string;
+  bairro?: string;
+  cep?: string;
+  responsavel?: string;
+  telefone?: string;
+  tipoId: number;
+  tipoNome: string;
+  criadoEm?: string;
+  disponibilidades?: DisponibilidadeDTO[];
+}
+
+export interface CadastroInstituicaoPayload {
+  nome: string;
+  endereco?: string;
+  cidade?: string;
+  uf?: string;
+  bairro?: string;
+  cep?: string;
+  responsavel?: string;
+  telefone?: string;
+  tipoId: number;
+  disponibilidades?: DisponibilidadeDTO[];
 }
 
 export interface Pena {
-  id_pena: number;
-  tipo_pena: string;
-  data_inicio: string;
-  data_termino?: string;
+  idPena: number;
+  usuarioId: number;
+  usuarioNome: string;
+  usuarioCodigo: string;
+  instituicaoPrincipalId: number;
+  instituicaoPrincipalNome: string;
+  tipoPena: string;
+  dataInicio: string;
+  dataTermino?: string;
   descricao?: string;
-  dias_semana_e_horarios_disponivel?: string;
-  atividades_acordadas?: string;
-  horas_semanais: number;
-  tempo_pena: number; // in weeks or days
-  horas_totais: number;
-  fk_usuario_id_usuario: number;
-  fk_instituicao_id_instituicao: number;
-  criado_em: string;
+  diasSemanaEHorariosDisponivel?: string;
+  atividadesAcordadas?: string;
+  horasSemanais: number;
+  tempoPena: number;
+  horasTotais: number;
+  outrasInstituicoesIds?: number[];
+  criadoEm?: string;
+}
+
+export interface CadastroPenaPayload {
+  usuarioId: number;
+  instituicaoId: number;
+  tipoPena: string;
+  dataInicio: string;
+  dataTermino?: string | null;
+  descricao?: string;
+  diasSemanaEHorariosDisponivel?: string;
+  atividadesAcordadas?: string;
+  horasSemanais: number;
+  horasTotais: number;
+  outrasInstituicoesIds?: number[];
+}
+
+export interface EstimativaPenaResponse {
+  tempoEstimadoMeses: number;
+  dataTerminoEstimada: string;
 }
 
 export interface RegistroDeTrabalho {
-  id_registro: number;
-  data_trabalho: string;
-  horas_cumpridas: number;
-  atividades?: string;
-  horario_inicio?: string;
-  horario_almoco?: string;
-  horario_volta?: string;
-  horario_saida?: string;
-  fk_pena_id_pena: number;
-  criado_em: string;
-}
-
-export interface DadosFaciais {
-  id_dados_faciais: number;
-  fk_usuario_id_usuario: number;
-  imagem_rosto?: string;
-  descritores_faciais: string; // JSON array string
-  data_cadastro: string;
-  data_atualizacao: string;
-  ativo: boolean;
-}
-
-export interface RegistroDTO {
-  data: string;
-  instituicao: string;
+  idRegistro: number;
+  penaId: number;
+  instituicaoId?: number;
+  instituicaoNome?: string;
+  dataTrabalho: string;
   horasCumpridas: number;
-  horasFalta: number;
   atividades?: string;
-  horario?: string;
+  horarioInicio?: string;
+  horarioAlmoco?: string;
+  horarioVolta?: string;
+  horarioSaida?: string;
+  criadoEm?: string;
 }
 
-export interface ElectronAPI {
-  isElectron: boolean;
-  platform: string;
-  getVersion: () => Promise<string>;
-  minimize: () => void;
-  maximize: () => void;
-  close: () => void;
-  toggleFullscreen: () => void;
-  print: () => void;
+export interface CadastroRegistroTrabalhoPayload {
+  penaId: number;
+  instituicaoId?: number;
+  dataTrabalho: string;
+  horasCumpridas: number;
+  atividades?: string;
+  horarioInicio?: string;
+  horarioAlmoco?: string;
+  horarioVolta?: string;
+  horarioSaida?: string;
 }
 
-declare global {
-  interface Window {
-    electronAPI?: ElectronAPI;
-  }
+export interface ResumoCumprimentoResponse {
+  penaId: number;
+  horasTotais: number;
+  horasCumpridas: number;
+  horasRestantes: number;
+  percentualConcluido: number;
 }
 
+export interface CodigoAcessoResponse {
+  codigo: string;
+  usuarioId: number;
+  usuarioNome: string;
+  dataGeracao: string;
+  dataExpiracao: string;
+  status: string;
+}
+
+export interface LogAuditoriaDTO {
+  idLog: number;
+  dataHora: string;
+  sucesso: boolean;
+  metodo: string;
+  usuarioNome?: string;
+  usuarioCpf?: string;
+  usuarioMatricula?: string;
+  codigoTentado?: string;
+  mensagem?: string;
+  nivelRisco: string;
+}
+
+export interface EstatisticasAuditoriaDTO {
+  totalLogs: number;
+  totalSucessos: number;
+  totalFalhas: number;
+  falhasBiometricas: number;
+  falhasCodigo: number;
+}
+
+export interface ReconhecimentoFacialResponse {
+  sucesso: boolean;
+  mensagem: string;
+  usuarioId?: number;
+  usuarioNome?: string;
+  usuarioCodigo?: string;
+  confidence?: number;
+}
+
+export interface BackendStatusResponse {
+  status: string;
+  service: string;
+  database?: string;
+}
+
+export type ViewName =
+  | 'dashboard'
+  | 'usuarios'
+  | 'instituicoes'
+  | 'penas'
+  | 'registros'
+  | 'facial'
+  | 'auditoria';

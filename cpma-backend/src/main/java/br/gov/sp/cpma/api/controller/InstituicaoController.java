@@ -31,6 +31,12 @@ public class InstituicaoController {
         return ResponseEntity.ok(res);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        instituicaoService.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
     public ResponseEntity<List<InstituicaoResponse>> listar() {
         return ResponseEntity.ok(instituicaoService.listarTodos());

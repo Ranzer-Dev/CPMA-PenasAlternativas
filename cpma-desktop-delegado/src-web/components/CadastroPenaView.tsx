@@ -1,26 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Usuario, Instituicao, Pena } from '../types';
+import {
+  Usuario,
+  Instituicao,
+  Pena,
+  CadastroPenaPayload,
+  EstimativaPenaResponse,
+} from '../types';
+import { api, ApiError } from '../services/api';
 import { formatarData } from '../utils/formatters';
 import {
   Scale,
-  Plus,
   Edit,
   Trash2,
-  Calendar,
-  Clock,
   Check,
   AlertCircle,
-  FileText,
 } from 'lucide-react';
 
 interface CadastroPenaViewProps {
   idUsuarioPreSelecionado?: number;
   onVoltar: () => void;
+  onSalvo?: () => void;
 }
 
 export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
   idUsuarioPreSelecionado,
   onVoltar,
+  onSalvo,
 }) => {
   const [penas, setPenas] = useState<Pena[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -28,8 +33,8 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
 
   // Form State
   const [idPena, setIdPena] = useState<number | undefined>();
-  const [idUsuario, setIdUsuario] = useState<number>(idUsuarioPreSelecionado || 0);
-  const [idInstituicao, setIdInstituicao] = useState<number>(0);
+  const [usuarioId, setUsuarioId] = useState<number>(idUsuarioPreSelecionado || 0);
+  const [instituicaoId, setInstituicaoId] = useState<number>(0);
   const [tipoPena, setTipoPena] = useState('Prestação de Serviços à Comunidade (PSC)');
   const [dataInicio, setDataInicio] = useState(new Date().toISOString().split('T')[0]);
   const [dataTermino, setDataTermino] = useState('');
@@ -37,44 +42,40 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
   const [horasSemanais, setHorasSemanais] = useState<number>(8);
   const [descricao, setDescricao] = useState('');
   const [atividadesAcordadas, setAtividadesAcordadas] = useState('');
-
-  // Weekly Schedule
-  const [diasSelecionados, setDiasSelecionados] = useState<string[]>([
-    'Segunda-feira (08:00 às 12:00)',
-    'Quarta-feira (08:00 às 12:00)',
-  ]);
+  const [diasSemanaEHorariosDisponivel, setDiasSemanaEHorariosDisponivel] = useState(
+    'Segunda-feira (08:00 às 12:00); Quarta-feira (08:00 às 12:00)'
+  );
 
   const [estimativa, setEstimativa] = useState({
     semanas: 15,
-    meses: 3.5,
+    meses: 3.8,
   });
 
   const [erro, setErro] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
 
   const carregarDados = async () => {
     try {
-      const resPenas = await fetch('/api/v1/penas');
-      if (resPenas.ok) setPenas(await resPenas.json());
+      const [penasData, uList, iList] = await Promise.all([
+        api.get<Pena[]>('/penas'),
+        api.get<Usuario[]>('/usuarios'),
+        api.get<Instituicao[]>('/instituicoes'),
+      ]);
 
-      const resUsers = await fetch('/api/v1/usuarios');
-      if (resUsers.ok) {
-        const uList: Usuario[] = await resUsers.json();
-        setUsuarios(uList);
-        if (!idUsuario && uList.length > 0) {
-          setIdUsuario(idUsuarioPreSelecionado || uList[0].id_usuario);
-        }
-      }
+      setPenas(penasData || []);
+      setUsuarios(uList || []);
+      setInstituicoes(iList || []);
 
-      const resInst = await fetch('/api/v1/instituicoes');
-      if (resInst.ok) {
-        const iList: Instituicao[] = await resInst.json();
-        setInstituicoes(iList);
-        if (iList.length > 0) setIdInstituicao(iList[0].id_instituicao);
+      if (!usuarioId && uList && uList.length > 0) {
+        setUsuarioId(idUsuarioPreSelecionado || uList[0].idUsuario);
       }
-    } catch (e) {
-      console.warn('Erro ao carregar dados:', e);
+      if (!instituicaoId && iList && iList.length > 0) {
+        setInstituicaoId(iList[0].idInstituicao);
+      }
+    } catch (e: any) {
+      setErro(e?.message || 'Erro ao carregar dados de penas.');
     }
   };
 
@@ -82,21 +83,45 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
     carregarDados();
   }, []);
 
-  // Recalculate estimated duration and completion date whenever hours change
+  // Recalcular estimativa via endpoint oficial ou fallback local
   useEffect(() => {
-    if (horasTotais > 0 && horasSemanais > 0) {
+    if (horasTotais > 0 && horasSemanais > 0 && dataInicio) {
       const semanas = Math.ceil(horasTotais / horasSemanais);
-      const meses = Math.round((semanas / 4.33) * 10) / 10;
-      setEstimativa({ semanas, meses });
+      const mesesLocal = Math.round((horasTotais / (horasSemanais * 4.0)) * 10) / 10;
+      setEstimativa({ semanas, meses: mesesLocal });
 
-      if (dataInicio) {
-        const inicio = new Date(dataInicio);
-        const dias = semanas * 7;
-        const fim = new Date(inicio.getTime() + dias * 24 * 60 * 60 * 1000);
-        setDataTermino(fim.toISOString().split('T')[0]);
-      }
+      let cancelado = false;
+      api
+        .post<EstimativaPenaResponse>('/penas/estimativa', {
+          horasTotais,
+          horasSemanais,
+          dataInicio,
+        })
+        .then((res) => {
+          if (cancelado || !res) return;
+          setEstimativa({
+            semanas,
+            meses: Math.round(res.tempoEstimadoMeses * 10) / 10,
+          });
+          if (res.dataTerminoEstimada && !idPena) {
+            setDataTermino(res.dataTerminoEstimada);
+          }
+        })
+        .catch(() => {
+          // fallback local
+          const inicio = new Date(dataInicio);
+          const dias = semanas * 7;
+          const fim = new Date(inicio.getTime() + dias * 24 * 60 * 60 * 1000);
+          if (!cancelado && !idPena) {
+            setDataTermino(fim.toISOString().split('T')[0]);
+          }
+        });
+
+      return () => {
+        cancelado = true;
+      };
     }
-  }, [horasTotais, horasSemanais, dataInicio]);
+  }, [horasTotais, horasSemanais, dataInicio, idPena]);
 
   const limparFormulario = () => {
     setIdPena(undefined);
@@ -107,6 +132,7 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
     setHorasSemanais(8);
     setDescricao('');
     setAtividadesAcordadas('');
+    setFieldErrors({});
     setErro(null);
     setSucesso(null);
   };
@@ -114,80 +140,81 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro(null);
+    setFieldErrors({});
     setSucesso(null);
 
-    if (!idUsuario) {
+    if (!usuarioId) {
       setErro('Selecione um apenado.');
       return;
     }
-    if (!idInstituicao) {
+    if (!instituicaoId) {
       setErro('Selecione uma instituição parceira.');
       return;
     }
 
     setSalvando(true);
     try {
-      const url = idPena ? `/api/v1/penas/${idPena}` : '/api/v1/penas';
-      const method = idPena ? 'PUT' : 'POST';
-
-      const payload = {
-        tipo_pena: tipoPena,
-        data_inicio: dataInicio,
-        data_termino: dataTermino,
-        descricao,
-        dias_semana_e_horarios_disponivel: diasSelecionados.join('; '),
-        atividades_acordadas: atividadesAcordadas,
-        horas_semanais: Number(horasSemanais),
-        tempo_pena: estimativa.semanas,
-        horas_totais: Number(horasTotais),
-        fk_usuario_id_usuario: Number(idUsuario),
-        fk_instituicao_id_instituicao: Number(idInstituicao),
+      const payload: CadastroPenaPayload = {
+        usuarioId: Number(usuarioId),
+        instituicaoId: Number(instituicaoId),
+        tipoPena: tipoPena.trim(),
+        dataInicio,
+        dataTermino: dataTermino && dataTermino.trim() ? dataTermino : null,
+        descricao: descricao.trim() || undefined,
+        diasSemanaEHorariosDisponivel: diasSemanaEHorariosDisponivel.trim() || undefined,
+        atividadesAcordadas: atividadesAcordadas.trim() || undefined,
+        horasSemanais: Number(horasSemanais),
+        horasTotais: Number(horasTotais),
       };
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao salvar pena.');
+      if (idPena) {
+        await api.put<Pena>(`/penas/${idPena}`, payload);
+      } else {
+        await api.post<Pena>('/penas', payload);
+      }
 
       setSucesso(idPena ? 'Pena atualizada com sucesso!' : 'Pena cadastrada com sucesso!');
       await carregarDados();
       if (!idPena) limparFormulario();
+      if (onSalvo) onSalvo();
     } catch (err: any) {
-      setErro(err.message || 'Falha ao salvar pena.');
+      if (err instanceof ApiError && err.fieldErrors) {
+        setFieldErrors(err.fieldErrors);
+      }
+      setErro(err?.message || 'Falha ao salvar pena.');
     } finally {
       setSalvando(false);
     }
   };
 
   const handleEditar = (p: Pena) => {
-    setIdPena(p.id_pena);
-    setIdUsuario(p.fk_usuario_id_usuario);
-    setIdInstituicao(p.fk_instituicao_id_instituicao);
-    setTipoPena(p.tipo_pena);
-    setDataInicio(p.data_inicio);
-    setDataTermino(p.data_termino || '');
-    setHorasTotais(p.horas_totais);
-    setHorasSemanais(p.horas_semanais);
+    setIdPena(p.idPena);
+    setUsuarioId(p.usuarioId);
+    setInstituicaoId(p.instituicaoPrincipalId);
+    setTipoPena(p.tipoPena);
+    setDataInicio(p.dataInicio);
+    setDataTermino(p.dataTermino || '');
+    setHorasTotais(p.horasTotais);
+    setHorasSemanais(p.horasSemanais);
     setDescricao(p.descricao || '');
-    setAtividadesAcordadas(p.atividades_acordadas || '');
+    setAtividadesAcordadas(p.atividadesAcordadas || '');
+    setDiasSemanaEHorariosDisponivel(p.diasSemanaEHorariosDisponivel || '');
+    setFieldErrors({});
     setErro(null);
     setSucesso(null);
   };
 
   const handleExcluir = async (id: number) => {
-    if (!confirm('Deseja excluir esta pena?')) return;
+    if (!confirm('Deseja excluir esta pena e seus registros de trabalho vinculados?')) return;
+    setErro(null);
+    setSucesso(null);
     try {
-      const res = await fetch(`/api/v1/penas/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        await carregarDados();
-        if (idPena === id) limparFormulario();
-      }
-    } catch (e) {
-      console.error(e);
+      await api.delete(`/penas/${id}`);
+      setSucesso('Pena excluída com sucesso.');
+      await carregarDados();
+      if (idPena === id) limparFormulario();
+    } catch (e: any) {
+      setErro(e?.message || 'Erro ao excluir pena.');
     }
   };
 
@@ -249,14 +276,16 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
                   Apenado Selecionado *
                 </label>
                 <select
-                  value={idUsuario}
-                  onChange={(e) => setIdUsuario(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-rose-500 focus:outline-hidden"
+                  value={usuarioId}
+                  onChange={(e) => setUsuarioId(Number(e.target.value))}
+                  className={`w-full px-3 py-2 border rounded-lg text-xs bg-white focus:ring-2 focus:ring-rose-500 focus:outline-hidden ${
+                    fieldErrors.usuarioId ? 'border-red-500' : 'border-slate-300'
+                  }`}
                   required
                 >
                   <option value={0}>Selecione um apenado...</option>
                   {usuarios.map((u) => (
-                    <option key={u.id_usuario} value={u.id_usuario}>
+                    <option key={u.idUsuario} value={u.idUsuario}>
                       {u.nome} ({u.codigo})
                     </option>
                   ))}
@@ -268,14 +297,16 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
                   Instituição Conveniada *
                 </label>
                 <select
-                  value={idInstituicao}
-                  onChange={(e) => setIdInstituicao(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-rose-500 focus:outline-hidden"
+                  value={instituicaoId}
+                  onChange={(e) => setInstituicaoId(Number(e.target.value))}
+                  className={`w-full px-3 py-2 border rounded-lg text-xs bg-white focus:ring-2 focus:ring-rose-500 focus:outline-hidden ${
+                    fieldErrors.instituicaoId ? 'border-red-500' : 'border-slate-300'
+                  }`}
                   required
                 >
                   <option value={0}>Selecione a instituição...</option>
                   {instituicoes.map((i) => (
-                    <option key={i.id_instituicao} value={i.id_instituicao}>
+                    <option key={i.idInstituicao} value={i.idInstituicao}>
                       {i.nome} ({i.bairro || i.cidade})
                     </option>
                   ))}
@@ -307,7 +338,7 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
                 <input
                   type="number"
                   min={1}
-                  max={2000}
+                  max={5000}
                   value={horasTotais}
                   onChange={(e) => setHorasTotais(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-hidden"
@@ -322,7 +353,7 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
                 <input
                   type="number"
                   min={1}
-                  max={40}
+                  max={44}
                   value={horasSemanais}
                   onChange={(e) => setHorasSemanais(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-hidden"
@@ -363,6 +394,20 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50 text-slate-700 focus:ring-2 focus:ring-rose-500 focus:outline-hidden"
                 />
               </div>
+            </div>
+
+            {/* Dias e horários disponíveis */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                Dias da Semana e Horários Acordados
+              </label>
+              <input
+                type="text"
+                value={diasSemanaEHorariosDisponivel}
+                onChange={(e) => setDiasSemanaEHorariosDisponivel(e.target.value)}
+                placeholder="Ex: Segunda e Quarta das 08:00 às 12:00"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-rose-500 focus:outline-hidden"
+              />
             </div>
 
             {/* Atividades Acordadas */}
@@ -423,50 +468,58 @@ export const CadastroPenaView: React.FC<CadastroPenaViewProps> = ({
           </div>
 
           <div className="space-y-3 max-h-[550px] overflow-y-auto pr-1">
-            {penas.map((p) => {
-              const u = usuarios.find(usr => usr.id_usuario === p.fk_usuario_id_usuario);
-              const i = instituicoes.find(inst => inst.id_instituicao === p.fk_instituicao_id_instituicao);
-
-              return (
-                <div
-                  key={p.id_pena}
-                  className={`p-4 rounded-xl border transition-all ${
-                    idPena === p.id_pena
-                      ? 'border-rose-500 bg-rose-50/40'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900">{u?.nome || `Apenado #${p.fk_usuario_id_usuario}`}</h4>
-                      <p className="text-2xs text-rose-700 font-semibold mt-0.5">{p.tipo_pena}</p>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={() => handleEditar(p)}
-                        title="Editar"
-                        className="p-1 text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded-md cursor-pointer"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleExcluir(p.id_pena)}
-                        title="Excluir"
-                        className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+            {penas.map((p) => (
+              <div
+                key={p.idPena}
+                className={`p-4 rounded-xl border transition-all ${
+                  idPena === p.idPena
+                    ? 'border-rose-500 bg-rose-50/40'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900">
+                      {p.usuarioNome || `Apenado #${p.usuarioId}`}
+                    </h4>
+                    <p className="text-2xs text-rose-700 font-semibold mt-0.5">{p.tipoPena}</p>
                   </div>
-
-                  <div className="mt-2 text-2xs text-slate-600 space-y-0.5">
-                    <p>Instituição: <strong className="text-slate-800">{i?.nome || 'Não localizada'}</strong></p>
-                    <p>Carga Horária: <strong className="text-slate-800">{p.horas_totais}h totais</strong> ({p.horas_semanais}h/sem)</p>
-                    <p>Período: {formatarData(p.data_inicio)} até {formatarData(p.data_termino)}</p>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => handleEditar(p)}
+                      title="Editar"
+                      className="p-1 text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded-md cursor-pointer"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleExcluir(p.idPena)}
+                      title="Excluir"
+                      className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
-              );
-            })}
+
+                <div className="mt-2 text-2xs text-slate-600 space-y-0.5">
+                  <p>
+                    Instituição:{' '}
+                    <strong className="text-slate-800">
+                      {p.instituicaoPrincipalNome || 'Não localizada'}
+                    </strong>
+                  </p>
+                  <p>
+                    Carga Horária:{' '}
+                    <strong className="text-slate-800">{p.horasTotais}h totais</strong> (
+                    {p.horasSemanais}h/sem)
+                  </p>
+                  <p>
+                    Período: {formatarData(p.dataInicio)} até {formatarData(p.dataTermino)}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

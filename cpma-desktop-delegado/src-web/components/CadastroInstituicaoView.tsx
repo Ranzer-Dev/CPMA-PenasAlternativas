@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Instituicao, TipoInstituicao, DisponibilidadeInstituicao } from '../types';
+import {
+  Instituicao,
+  TipoInstituicao,
+  DisponibilidadeDTO,
+  CadastroInstituicaoPayload,
+} from '../types';
+import { api, ApiError } from '../services/api';
 import { formatarTelefone, formatarCEP } from '../utils/formatters';
 import {
   Building2,
-  Plus,
   Edit,
   Trash2,
   Clock,
@@ -33,10 +38,10 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
   const [cep, setCep] = useState('');
   const [responsavel, setResponsavel] = useState('');
   const [telefone, setTelefone] = useState('');
-  const [tipo, setTipo] = useState<number>(1);
+  const [tipoId, setTipoId] = useState<number>(0);
 
   // Disponibilidades
-  const [disponibilidades, setDisponibilidades] = useState<DisponibilidadeInstituicao[]>([]);
+  const [disponibilidades, setDisponibilidades] = useState<DisponibilidadeDTO[]>([]);
   const [diaSemana, setDiaSemana] = useState('Segunda');
   const [horaInicio1, setHoraInicio1] = useState('08:00');
   const [horaFim1, setHoraFim1] = useState('12:00');
@@ -48,21 +53,23 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
   const [novoTipoNome, setNovoTipoNome] = useState('');
 
   const [erro, setErro] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
 
   const carregarDados = async () => {
     try {
-      const resInst = await fetch('/api/v1/instituicoes');
-      if (resInst.ok) {
-        setInstituicoes(await resInst.json());
+      const [instData, tiposData] = await Promise.all([
+        api.get<Instituicao[]>('/instituicoes'),
+        api.get<TipoInstituicao[]>('/instituicoes/tipos'),
+      ]);
+      setInstituicoes(instData || []);
+      setTipos(tiposData || []);
+      if (tiposData && tiposData.length > 0 && !tipoId) {
+        setTipoId(tiposData[0].idTipo);
       }
-      const resTipos = await fetch('/api/v1/instituicoes/tipos');
-      if (resTipos.ok) {
-        setTipos(await resTipos.json());
-      }
-    } catch (e) {
-      console.warn('Erro ao carregar instituições:', e);
+    } catch (e: any) {
+      setErro(e?.message || 'Erro ao carregar instituições.');
     }
   };
 
@@ -80,101 +87,106 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
     setCep('');
     setResponsavel('');
     setTelefone('');
-    setTipo(1);
+    setTipoId(tipos.length > 0 ? tipos[0].idTipo : 0);
     setDisponibilidades([]);
+    setFieldErrors({});
     setErro(null);
     setSucesso(null);
   };
 
   const handleAdicionarDisponibilidade = () => {
     if (!diaSemana) return;
-    const nova: DisponibilidadeInstituicao = {
-      id_disponibilidade: Date.now(),
-      dia_semana: diaSemana,
-      hora_inicio_1: horaInicio1,
-      hora_fim_1: horaFim1,
-      hora_inicio_2: horaInicio2,
-      hora_fim_2: horaFim2,
-      fk_instituicao_id_instituicao: idInst || 0,
-      criado_em: new Date().toISOString(),
+    const nova: DisponibilidadeDTO = {
+      diaSemana,
+      horaInicio1: horaInicio1 || undefined,
+      horaFim1: horaFim1 || undefined,
+      horaInicio2: horaInicio2 || undefined,
+      horaFim2: horaFim2 || undefined,
     };
-    setDisponibilidades(prev => [...prev.filter(d => d.dia_semana !== diaSemana), nova]);
+    setDisponibilidades((prev) => [
+      ...prev.filter((d) => d.diaSemana !== diaSemana),
+      nova,
+    ]);
   };
 
   const handleRemoverDisponibilidade = (dia: string) => {
-    setDisponibilidades(prev => prev.filter(d => d.dia_semana !== dia));
+    setDisponibilidades((prev) => prev.filter((d) => d.diaSemana !== dia));
   };
 
   const handleSalvarTipo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!novoTipoNome.trim()) return;
+    setErro(null);
     try {
-      const res = await fetch('/api/v1/instituicoes/tipos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo: novoTipoNome.trim() }),
+      const criado = await api.post<TipoInstituicao>('/instituicoes/tipos', {
+        tipo: novoTipoNome.trim(),
       });
-      if (res.ok) {
-        const criado = await res.json();
-        setTipos(prev => [...prev, criado]);
-        setTipo(criado.id_tipo);
-        setNovoTipoNome('');
-        setModalTipoAberto(false);
-      }
-    } catch (err) {
-      console.error(err);
+      setTipos((prev) => [...prev, criado]);
+      setTipoId(criado.idTipo);
+      setNovoTipoNome('');
+      setModalTipoAberto(false);
+    } catch (err: any) {
+      setErro(err?.message || 'Erro ao cadastrar novo tipo de instituição.');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro(null);
+    setFieldErrors({});
     setSucesso(null);
 
     if (!nome.trim()) {
       setErro('O nome da instituição é obrigatório.');
+      setFieldErrors({ nome: 'O nome da instituição é obrigatório.' });
+      return;
+    }
+
+    if (!tipoId) {
+      setErro('Selecione ou crie um tipo de instituição.');
       return;
     }
 
     setSalvando(true);
     try {
-      const url = idInst ? `/api/v1/instituicoes/${idInst}` : '/api/v1/instituicoes';
-      const method = idInst ? 'PUT' : 'POST';
-
-      const payload = {
+      const payload: CadastroInstituicaoPayload = {
         nome: nome.trim(),
-        endereco,
-        bairro,
-        cidade,
-        uf,
-        cep: cep.replace(/\D/g, ''),
-        responsavel,
-        telefone: telefone.replace(/\D/g, ''),
-        tipo,
+        endereco: endereco.trim() || undefined,
+        bairro: bairro.trim() || undefined,
+        cidade: cidade.trim() || 'Votorantim',
+        uf: (uf.trim() || 'SP').toUpperCase(),
+        cep: cep.replace(/\D/g, '') || undefined,
+        responsavel: responsavel.trim() || undefined,
+        telefone: telefone.replace(/\D/g, '') || undefined,
+        tipoId,
         disponibilidades,
       };
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      if (idInst) {
+        await api.put<Instituicao>(`/instituicoes/${idInst}`, payload);
+      } else {
+        await api.post<Instituicao>('/instituicoes', payload);
+      }
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao salvar instituição.');
-
-      setSucesso(idInst ? 'Instituição atualizada com sucesso!' : 'Instituição cadastrada com sucesso!');
+      setSucesso(
+        idInst
+          ? 'Instituição atualizada com sucesso!'
+          : 'Instituição cadastrada com sucesso!'
+      );
       await carregarDados();
       if (!idInst) limparFormulario();
     } catch (err: any) {
-      setErro(err.message || 'Falha ao salvar instituição.');
+      if (err instanceof ApiError && err.fieldErrors) {
+        setFieldErrors(err.fieldErrors);
+      }
+      setErro(err?.message || 'Falha ao salvar instituição.');
     } finally {
       setSalvando(false);
     }
   };
 
   const handleEditar = (inst: Instituicao) => {
-    setIdInst(inst.id_instituicao);
+    setIdInst(inst.idInstituicao);
     setNome(inst.nome);
     setEndereco(inst.endereco || '');
     setBairro(inst.bairro || '');
@@ -183,29 +195,32 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
     setCep(formatarCEP(inst.cep || ''));
     setResponsavel(inst.responsavel || '');
     setTelefone(formatarTelefone(inst.telefone || ''));
-    setTipo(inst.tipo || 1);
+    setTipoId(inst.tipoId || (tipos[0]?.idTipo ?? 0));
     setDisponibilidades(inst.disponibilidades || []);
+    setFieldErrors({});
     setErro(null);
     setSucesso(null);
   };
 
   const handleExcluir = async (id: number) => {
-    if (!confirm('Deseja excluir esta instituição?')) return;
+    if (!confirm('Deseja excluir esta instituição parceira?')) return;
+    setErro(null);
+    setSucesso(null);
     try {
-      const res = await fetch(`/api/v1/instituicoes/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        await carregarDados();
-        if (idInst === id) limparFormulario();
-      }
-    } catch (e) {
-      console.error(e);
+      await api.delete(`/instituicoes/${id}`);
+      setSucesso('Instituição excluída com sucesso.');
+      await carregarDados();
+      if (idInst === id) limparFormulario();
+    } catch (e: any) {
+      setErro(e?.message || 'Não foi possível excluir esta instituição.');
     }
   };
 
-  const instituicoesFiltradas = instituicoes.filter(i =>
-    i.nome.toLowerCase().includes(filtro.toLowerCase()) ||
-    (i.responsavel && i.responsavel.toLowerCase().includes(filtro.toLowerCase())) ||
-    (i.bairro && i.bairro.toLowerCase().includes(filtro.toLowerCase()))
+  const instituicoesFiltradas = instituicoes.filter(
+    (i) =>
+      i.nome.toLowerCase().includes(filtro.toLowerCase()) ||
+      (i.responsavel && i.responsavel.toLowerCase().includes(filtro.toLowerCase())) ||
+      (i.bairro && i.bairro.toLowerCase().includes(filtro.toLowerCase()))
   );
 
   return (
@@ -268,7 +283,9 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Ex: E.M. Professora Dely de Oliveira"
-                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                className={`w-full px-3.5 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-hidden ${
+                  fieldErrors.nome ? 'border-red-500 bg-red-50/30' : 'border-slate-300'
+                }`}
                 required
               />
             </div>
@@ -276,16 +293,20 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Tipo / Categoria
+                  Tipo / Categoria *
                 </label>
                 <div className="flex space-x-2">
                   <select
-                    value={tipo}
-                    onChange={(e) => setTipo(Number(e.target.value))}
+                    value={tipoId}
+                    onChange={(e) => setTipoId(Number(e.target.value))}
                     className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                    required
                   >
+                    <option value={0} disabled>
+                      Selecione um tipo...
+                    </option>
                     {tipos.map((t) => (
-                      <option key={t.id_tipo} value={t.id_tipo}>
+                      <option key={t.idTipo} value={t.idTipo}>
                         {t.tipo}
                       </option>
                     ))}
@@ -309,6 +330,7 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                   value={telefone}
                   onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
                   placeholder="(15) 3243-0000"
+                  maxLength={15}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                 />
               </div>
@@ -351,19 +373,30 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                   value={bairro}
                   onChange={(e) => setBairro(e.target.value)}
                   placeholder="Bairro"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                  className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                   Cidade / UF
                 </label>
-                <input
-                  type="text"
-                  value={`${cidade} - ${uf}`}
-                  disabled
-                  className="w-full px-3 py-2 border border-slate-200 bg-slate-50 text-slate-600 rounded-lg text-xs"
-                />
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={cidade}
+                    onChange={(e) => setCidade(e.target.value)}
+                    placeholder="Votorantim"
+                    className="flex-1 px-2.5 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                  />
+                  <input
+                    type="text"
+                    value={uf}
+                    maxLength={2}
+                    onChange={(e) => setUf(e.target.value.toUpperCase())}
+                    placeholder="SP"
+                    className="w-12 px-2 py-2 border border-slate-300 rounded-lg text-xs text-center uppercase focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
@@ -374,6 +407,7 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                   value={cep}
                   onChange={(e) => setCep(formatarCEP(e.target.value))}
                   placeholder="18110-000"
+                  maxLength={9}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                 />
               </div>
@@ -386,12 +420,11 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                   <Clock className="w-4 h-4 text-emerald-600" />
                   <span>Dias e Horários Disponíveis para Trabalho</span>
                 </span>
-                <span className="text-2xs text-slate-400">cadastroDisponibilidade.fxml</span>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-2 sm:grid-cols-6 gap-2 items-end">
                 <div>
-                  <label className="text-2xs font-semibold text-slate-600">Dia da Semana</label>
+                  <label className="text-2xs font-semibold text-slate-600">Dia</label>
                   <select
                     value={diaSemana}
                     onChange={(e) => setDiaSemana(e.target.value)}
@@ -407,7 +440,7 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                   </select>
                 </div>
                 <div>
-                  <label className="text-2xs font-semibold text-slate-600">Turno 1 Início</label>
+                  <label className="text-2xs font-semibold text-slate-600">T1 Início</label>
                   <input
                     type="time"
                     value={horaInicio1}
@@ -416,7 +449,7 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                   />
                 </div>
                 <div>
-                  <label className="text-2xs font-semibold text-slate-600">Turno 1 Fim</label>
+                  <label className="text-2xs font-semibold text-slate-600">T1 Fim</label>
                   <input
                     type="time"
                     value={horaFim1}
@@ -425,11 +458,20 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                   />
                 </div>
                 <div>
-                  <label className="text-2xs font-semibold text-slate-600">Turno 2 (opc)</label>
+                  <label className="text-2xs font-semibold text-slate-600">T2 Início</label>
                   <input
                     type="time"
                     value={horaInicio2}
                     onChange={(e) => setHoraInicio2(e.target.value)}
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-2xs font-semibold text-slate-600">T2 Fim</label>
+                  <input
+                    type="time"
+                    value={horaFim2}
+                    onChange={(e) => setHoraFim2(e.target.value)}
                     className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white"
                   />
                 </div>
@@ -438,26 +480,25 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                   onClick={handleAdicionarDisponibilidade}
                   className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer h-[34px]"
                 >
-                  + Adicionar
+                  + Incluir
                 </button>
               </div>
 
-              {/* Lista de disponibilidades adicionadas */}
               {disponibilidades.length > 0 && (
                 <div className="space-y-1.5">
                   {disponibilidades.map((d) => (
                     <div
-                      key={d.dia_semana}
+                      key={d.diaSemana}
                       className="flex items-center justify-between px-3 py-2 bg-emerald-50/50 border border-emerald-200 rounded-lg text-xs"
                     >
-                      <span className="font-bold text-slate-800">{d.dia_semana}:</span>
+                      <span className="font-bold text-slate-800">{d.diaSemana}:</span>
                       <span className="text-slate-600 font-mono">
-                        {d.hora_inicio_1} às {d.hora_fim_1}
-                        {d.hora_inicio_2 && ` e ${d.hora_inicio_2} às ${d.hora_fim_2}`}
+                        {d.horaInicio1} às {d.horaFim1}
+                        {d.horaInicio2 && ` e ${d.horaInicio2} às ${d.horaFim2}`}
                       </span>
                       <button
                         type="button"
-                        onClick={() => handleRemoverDisponibilidade(d.dia_semana)}
+                        onClick={() => handleRemoverDisponibilidade(d.diaSemana)}
                         className="text-red-600 hover:text-red-800 font-bold px-2 py-0.5 cursor-pointer"
                       >
                         ×
@@ -481,7 +522,11 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                 disabled={salvando}
                 className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
               >
-                {salvando ? 'Salvando...' : idInst ? 'Salvar Alterações' : 'Cadastrar Instituição'}
+                {salvando
+                  ? 'Salvando...'
+                  : idInst
+                  ? 'Salvar Alterações'
+                  : 'Cadastrar Instituição'}
               </button>
             </div>
           </form>
@@ -508,63 +553,66 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
           </div>
 
           <div className="space-y-3 max-h-[550px] overflow-y-auto pr-1">
-            {instituicoesFiltradas.map((inst) => {
-              const tipoObj = tipos.find(t => t.id_tipo === inst.tipo);
-              return (
-                <div
-                  key={inst.id_instituicao}
-                  className={`p-4 rounded-xl border transition-all ${
-                    idInst === inst.id_instituicao
-                      ? 'border-emerald-500 bg-emerald-50/40'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900">{inst.nome}</h4>
-                      <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-2xs font-semibold mt-1">
-                        {tipoObj?.tipo || 'Convênio'}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={() => handleEditar(inst)}
-                        title="Editar"
-                        className="p-1 text-slate-600 hover:text-emerald-600 hover:bg-slate-100 rounded-md cursor-pointer"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleExcluir(inst.id_instituicao)}
-                        title="Excluir"
-                        className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+            {instituicoesFiltradas.map((inst) => (
+              <div
+                key={inst.idInstituicao}
+                className={`p-4 rounded-xl border transition-all ${
+                  idInst === inst.idInstituicao
+                    ? 'border-emerald-500 bg-emerald-50/40'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900">{inst.nome}</h4>
+                    <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-2xs font-semibold mt-1">
+                      {inst.tipoNome || 'Convênio'}
+                    </span>
                   </div>
-
-                  <p className="text-2xs text-slate-500 mt-2">
-                    {inst.endereco ? `${inst.endereco}, ` : ''}{inst.bairro ? `${inst.bairro} • ` : ''}{inst.cidade}
-                  </p>
-                  {inst.responsavel && (
-                    <p className="text-2xs text-slate-500 mt-0.5">
-                      Resp: <strong className="text-slate-700">{inst.responsavel}</strong> {inst.telefone && `• ${inst.telefone}`}
-                    </p>
-                  )}
-
-                  {inst.disponibilidades && inst.disponibilidades.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1">
-                      {inst.disponibilidades.map((d) => (
-                        <span key={d.dia_semana} className="text-3xs px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded">
-                          {d.dia_semana}: {d.hora_inicio_1}-{d.hora_fim_1}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => handleEditar(inst)}
+                      title="Editar"
+                      className="p-1 text-slate-600 hover:text-emerald-600 hover:bg-slate-100 rounded-md cursor-pointer"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleExcluir(inst.idInstituicao)}
+                      title="Excluir"
+                      className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-              );
-            })}
+
+                <p className="text-2xs text-slate-500 mt-2">
+                  {inst.endereco ? `${inst.endereco}, ` : ''}
+                  {inst.bairro ? `${inst.bairro} • ` : ''}
+                  {inst.cidade}
+                </p>
+                {inst.responsavel && (
+                  <p className="text-2xs text-slate-500 mt-0.5">
+                    Resp: <strong className="text-slate-700">{inst.responsavel}</strong>{' '}
+                    {inst.telefone && `• ${formatarTelefone(inst.telefone)}`}
+                  </p>
+                )}
+
+                {inst.disponibilidades && inst.disponibilidades.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1">
+                    {inst.disponibilidades.map((d) => (
+                      <span
+                        key={d.diaSemana}
+                        className="text-3xs px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded"
+                      >
+                        {d.diaSemana}: {d.horaInicio1}-{d.horaFim1}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -588,13 +636,13 @@ export const CadastroInstituicaoView: React.FC<CadastroInstituicaoViewProps> = (
                 <button
                   type="button"
                   onClick={() => setModalTipoAberto(false)}
-                  className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-600"
+                  className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold"
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold cursor-pointer"
                 >
                   Salvar Tipo
                 </button>

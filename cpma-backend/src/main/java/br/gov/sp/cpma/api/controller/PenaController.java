@@ -55,9 +55,14 @@ public class PenaController {
         return ResponseEntity.ok(penaService.atualizar(id, req));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        penaService.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/estimativa")
     public ResponseEntity<EstimativaPenaResponse> calcularEstimativa(@Valid @RequestBody EstimativaPenaRequest req) {
         return ResponseEntity.ok(penaService.calcularEstimativa(req));
     }
 }
-
