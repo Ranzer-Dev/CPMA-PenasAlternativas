@@ -115,6 +115,19 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
       if (loading) return;
       if (ev.ctrlKey || ev.altKey || ev.metaKey) return;
 
+      // Não intercepta teclas quando o usuário está digitando em um input/modal (ex: ConfigServidorModal)
+      const target = ev.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable ||
+          target.closest('[role="dialog"]'))
+      ) {
+        return;
+      }
+
       if (/^[0-9]$/.test(ev.key)) {
         ev.preventDefault();
         setErro(null);
