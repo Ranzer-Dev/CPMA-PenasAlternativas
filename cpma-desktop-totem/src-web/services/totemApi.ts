@@ -11,13 +11,22 @@ import {
 } from '../types';
 
 const STORAGE_KEY = 'cpma_totem_config_v1';
+const OFFICIAL_TERMINAL_KEY = 'CPMA-TOTEM-KIOSK-TERMINAL-01-SP-GOV-AUTH-2026';
+const LEGACY_TERMINAL_KEY = 'CPMA-TOTEM-TERMINAL-SECRET-2026-KEY';
 
 const DEFAULT_TOTEM_CONFIG: TotemConfig = {
   serverIp: '127.0.0.1',
   serverPort: 8080,
   terminalId: 'TOTEM-DELEGACIA-01',
-  terminalKey: 'CPMA-TOTEM-TERMINAL-SECRET-2026-KEY',
+  terminalKey: OFFICIAL_TERMINAL_KEY,
 };
+
+function normalizeTerminalKey(key?: string): string {
+  if (!key || key.trim() === '' || key.trim() === LEGACY_TERMINAL_KEY) {
+    return OFFICIAL_TERMINAL_KEY;
+  }
+  return key.trim();
+}
 
 let currentConfig: TotemConfig = loadFromLocalStorage();
 
@@ -30,6 +39,7 @@ function loadFromLocalStorage(): TotemConfig {
         ...DEFAULT_TOTEM_CONFIG,
         ...parsed,
         serverPort: Number(parsed.serverPort || 8080),
+        terminalKey: normalizeTerminalKey(parsed.terminalKey),
       };
     }
   } catch {
@@ -47,6 +57,7 @@ export async function initTotemConfig(): Promise<TotemConfig> {
           ...currentConfig,
           ...electronCfg,
           serverPort: Number(electronCfg.serverPort || 8080),
+          terminalKey: normalizeTerminalKey(electronCfg.terminalKey),
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(currentConfig));
       }
@@ -68,9 +79,7 @@ export async function saveTotemConfig(partial: Partial<TotemConfig>): Promise<To
     serverIp: String(partial.serverIp ?? currentConfig.serverIp).trim() || '127.0.0.1',
     serverPort: Number(partial.serverPort ?? currentConfig.serverPort) || 8080,
     terminalId: String(partial.terminalId ?? currentConfig.terminalId).trim() || 'TOTEM-DELEGACIA-01',
-    terminalKey:
-      String(partial.terminalKey ?? currentConfig.terminalKey).trim() ||
-      'CPMA-TOTEM-TERMINAL-SECRET-2026-KEY',
+    terminalKey: normalizeTerminalKey(partial.terminalKey ?? currentConfig.terminalKey),
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(currentConfig));
@@ -116,7 +125,9 @@ async function totemFetch<T>(
   optionsExtra: { timeoutMs?: number; overrideConfig?: Partial<TotemConfig>; bearerToken?: string } = {},
 ): Promise<T> {
   const baseUrl = getTotemApiBaseUrl(optionsExtra.overrideConfig);
-  const terminalKey = optionsExtra.overrideConfig?.terminalKey ?? currentConfig.terminalKey;
+  const terminalKey = normalizeTerminalKey(
+    optionsExtra.overrideConfig?.terminalKey ?? currentConfig.terminalKey,
+  );
   const timeoutMs = optionsExtra.timeoutMs ?? 12000;
 
   const controller = new AbortController();
@@ -151,7 +162,7 @@ async function totemFetch<T>(
       const msg =
         (body && typeof body === 'object' && (body.message || body.motivo || body.mensagem || body.error)) ||
         `Erro HTTP ${response.status} ao comunicar com o servidor da Delegacia.`;
-      const code = body && typeof body === 'object' ? body.errorCode : undefined;
+      const code = body && typeof body === 'object' ? body.errorCode || body.code : undefined;
       throw new TotemApiError(msg, response.status, code);
     }
 
@@ -196,7 +207,7 @@ export const totemApi = {
       method: 'POST',
       body: JSON.stringify({
         codigo: codigo.trim(),
-        ipOrigem: `LAN:${currentConfig.terminalId}`,
+        terminalId: currentConfig.terminalId,
       }),
     }),
 
@@ -213,7 +224,7 @@ export const totemApi = {
           codigo: codigo.trim(),
           fotoCapturadaBase64,
           threshold,
-          ipOrigem: `LAN:${currentConfig.terminalId}`,
+          terminalId: currentConfig.terminalId,
         }),
       },
       { timeoutMs: 20000 },
@@ -251,7 +262,7 @@ export const totemApi = {
     if (penaPrincipal) {
       const [resumoResp, registrosResp] = await Promise.all([
         totemFetch<ResumoCumprimentoResponse>(
-          `/registros-trabalho/pena/${penaPrincipal.id}/resumo`,
+          `/penas/${penaPrincipal.id}/resumo`,
           { method: 'GET' },
           { bearerToken: tokenSessao },
         ).catch(() => null),

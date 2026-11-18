@@ -7,26 +7,35 @@ export interface TotemConfig {
 
 export interface TotemStatusResponse {
   status: string;
-  facialService: 'ONLINE' | 'OFFLINE';
+  facialService?: 'ONLINE' | 'OFFLINE';
   database?: string;
   service: string;
 }
 
 export interface ValidarCodigoEtapa1Response {
-  codigoValido: boolean;
+  sucesso?: boolean;
+  codigoValido?: boolean;
   usuarioId?: number;
+  usuarioNome?: string;
   nomeApenado?: string;
-  possuiBiometriaFacial: boolean;
-  etapaSeguinte: 'BIOMETRIA_FACIAL' | 'BLOQUEADO';
+  usuarioCodigo?: string;
+  codigo?: string;
+  etapaBiometriaObrigatoria?: boolean;
+  possuiBiometriaFacial?: boolean;
+  etapaSeguinte?: 'BIOMETRIA_FACIAL' | 'BLOQUEADO';
   mensagem: string;
 }
 
 export interface ValidarAcessoResponse {
-  autorizado: boolean;
+  sucesso?: boolean;
+  autorizado?: boolean;
   usuarioId?: number;
+  usuarioNome?: string;
   nomeApenado?: string;
+  usuarioCodigo?: string;
   similaridadeObtida?: number;
-  motivo: string;
+  mensagem?: string;
+  motivo?: string;
   tokenSessao?: string;
 }
 
@@ -73,15 +82,18 @@ export interface RegistroTrabalhoResponse {
 export interface ResumoCumprimentoResponse {
   penaId: number;
   usuarioId: number;
-  nomeApenado: string;
-  instituicaoId: number;
-  nomeInstituicao: string;
-  horasTotaisACumprir: number;
+  usuarioNome?: string;
+  nomeApenado?: string;
+  instituicaoId?: number;
+  nomeInstituicao?: string;
+  horasTotais?: number;
+  horasTotaisACumprir?: number;
   horasCumpridas: number;
   horasRestantes: number;
   percentualConcluido: number;
-  quantidadeRegistrosPresenca: number;
-  statusCumprimento: 'CONCLUIDA' | 'EM_ANDAMENTO' | 'NAO_INICIADA';
+  quantidadeRegistrosPresenca?: number;
+  status?: string;
+  statusCumprimento?: 'CONCLUIDA' | 'EM_ANDAMENTO' | 'NAO_INICIADA' | 'EM_CUMPRIMENTO';
 }
 
 export interface ProntuarioApenado {
