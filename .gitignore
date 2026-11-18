@@ -12,6 +12,16 @@ target/
 /logs/
 cpma-server-ip.txt
 
+# Bancos de dados locais e backups (SQLite, dumps, dados sensiveis)
+*.db
+*.db*
+*.sqlite
+*.sqlite3
+*.bak
+*.bak*
+penas_alternativas.db*
+
+
 # Arquivos de crash da JVM (Java Virtual Machine)
 hs_err_pid*
 replay_pid*
