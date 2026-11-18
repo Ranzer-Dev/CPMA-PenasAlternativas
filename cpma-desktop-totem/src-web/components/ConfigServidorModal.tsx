@@ -81,7 +81,12 @@ export const ConfigServidorModal: React.FC<ConfigServidorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 no-print">
+    <div
+      role="dialog"
+      aria-modal="true"
+      onKeyDown={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 no-print select-text"
+    >
       <div className="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden text-slate-100">
         {/* Cabeçalho */}
         <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/60 px-6 py-4">
@@ -116,10 +121,11 @@ export const ConfigServidorModal: React.FC<ConfigServidorModalProps> = ({
               <input
                 type="text"
                 required
+                autoFocus
                 placeholder="Ex: 192.168.0.10 ou 127.0.0.1"
                 value={formData.serverIp}
                 onChange={(e) => setFormData({ ...formData, serverIp: e.target.value })}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-base font-mono text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-base font-mono text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none select-text"
               />
             </div>
 
@@ -132,11 +138,19 @@ export const ConfigServidorModal: React.FC<ConfigServidorModalProps> = ({
                 required
                 min={1}
                 max={65535}
-                value={formData.serverPort}
+                value={formData.serverPort || ''}
                 onChange={(e) =>
-                  setFormData({ ...formData, serverPort: Number(e.target.value) || 8080 })
+                  setFormData({
+                    ...formData,
+                    serverPort: e.target.value === '' ? 0 : Number(e.target.value),
+                  })
                 }
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-base font-mono text-white focus:border-blue-500 focus:outline-none"
+                onBlur={() => {
+                  if (!formData.serverPort) {
+                    setFormData((prev) => ({ ...prev, serverPort: 8080 }));
+                  }
+                }}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-base font-mono text-white focus:border-blue-500 focus:outline-none select-text"
               />
             </div>
           </div>
@@ -150,7 +164,7 @@ export const ConfigServidorModal: React.FC<ConfigServidorModalProps> = ({
                 type="text"
                 value={formData.terminalId}
                 onChange={(e) => setFormData({ ...formData, terminalId: e.target.value })}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm font-mono text-slate-200 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm font-mono text-slate-200 focus:border-blue-500 focus:outline-none select-text"
               />
             </div>
 
@@ -162,7 +176,7 @@ export const ConfigServidorModal: React.FC<ConfigServidorModalProps> = ({
                 type="password"
                 value={formData.terminalKey}
                 onChange={(e) => setFormData({ ...formData, terminalKey: e.target.value })}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm font-mono text-slate-200 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm font-mono text-slate-200 focus:border-blue-500 focus:outline-none select-text"
               />
             </div>
           </div>
