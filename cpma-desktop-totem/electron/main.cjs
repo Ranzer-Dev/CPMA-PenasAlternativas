@@ -11,7 +11,7 @@ const DEFAULT_CONFIG = {
   serverIp: process.env.CPMA_SERVER_IP || '127.0.0.1',
   serverPort: Number(process.env.CPMA_SERVER_PORT || 8080),
   terminalId: process.env.CPMA_TERMINAL_ID || 'TOTEM-DELEGACIA-01',
-  terminalKey: process.env.CPMA_TERMINAL_KEY || 'CPMA-TOTEM-TERMINAL-SECRET-2026-KEY',
+  terminalKey: process.env.CPMA_TERMINAL_KEY || 'CPMA-TOTEM-KIOSK-TERMINAL-01-SP-GOV-AUTH-2026',
 };
 
 function getConfigFilePath() {

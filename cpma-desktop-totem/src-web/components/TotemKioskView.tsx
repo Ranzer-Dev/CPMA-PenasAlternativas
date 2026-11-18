@@ -239,7 +239,8 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
 
       try {
         const resp = await totemApi.validarCodigoEtapa1(codigoPin);
-        if (!resp.codigoValido || resp.etapaSeguinte === 'BLOQUEADO') {
+        const valido = resp.sucesso ?? resp.codigoValido;
+        if (!valido || resp.etapaSeguinte === 'BLOQUEADO') {
           setErro(resp.mensagem || 'Código inválido, expirado ou já utilizado.');
           setPin('');
           return;
@@ -290,10 +291,12 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
       }
 
       const resultadoBio = await totemApi.validarBiometriaEtapa2(pin, fotoBase64, 0.6);
+      const bioAutorizada = resultadoBio.sucesso ?? resultadoBio.autorizado;
 
-      if (!resultadoBio.autorizado || !resultadoBio.tokenSessao || !resultadoBio.usuarioId) {
+      if (!bioAutorizada || !resultadoBio.tokenSessao || !resultadoBio.usuarioId) {
         setErro(
-          resultadoBio.motivo ||
+          resultadoBio.mensagem ||
+            resultadoBio.motivo ||
             'Biometria facial não reconhecida. Posicione o rosto de frente para a câmera e tente novamente.',
         );
         return;
@@ -347,7 +350,8 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
     setPin('');
   };
 
-  const online = !!serverStatus && serverStatus.status === 'ONLINE';
+  const online =
+    !!serverStatus && (serverStatus.status === 'UP' || serverStatus.status === 'ONLINE');
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
@@ -643,7 +647,7 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
                     Código Validado • Etapa 2 de 3
                   </span>
                   <h2 className="text-2xl font-extrabold text-white">
-                    Olá, {dadosEtapa1.nomeApenado}
+                    Olá, {dadosEtapa1.usuarioNome || dadosEtapa1.nomeApenado || 'Prestador'}
                   </h2>
                 </div>
               </div>
@@ -894,12 +898,14 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
 
                       <span
                         className={`rounded-full px-3.5 py-1 text-xs font-extrabold uppercase tracking-wider ${
+                          prontuario.resumo?.status === 'CONCLUIDA' ||
                           prontuario.resumo?.statusCumprimento === 'CONCLUIDA'
                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                             : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
                         }`}
                       >
-                        {prontuario.resumo?.statusCumprimento === 'CONCLUIDA'
+                        {prontuario.resumo?.status === 'CONCLUIDA' ||
+                        prontuario.resumo?.statusCumprimento === 'CONCLUIDA'
                           ? 'Pena Concluída'
                           : 'Em Cumprimento'}
                       </span>
@@ -910,7 +916,8 @@ export const TotemKioskView: React.FC<TotemKioskViewProps> = ({
                       <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
                         <span className="text-xs text-slate-400">Total a Cumprir</span>
                         <p className="text-2xl font-extrabold text-white mt-1">
-                          {prontuario.resumo?.horasTotaisACumprir ??
+                          {prontuario.resumo?.horasTotais ??
+                            prontuario.resumo?.horasTotaisACumprir ??
                             prontuario.penaPrincipal.horasCumprir}
                           h
                         </p>
