@@ -77,37 +77,6 @@ export function formatarHora(hora?: string): string {
   return hora.slice(0, 5);
 }
 
-// HashUtil equivalent: SHA-256 in hexadecimal
-export async function gerarHashSHA256(senha: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(senha);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-// Fast synchronous SHA-256 fallback for demo / mock matching
-export function hashSimplesSync(str: string): string {
-  // Common precalculated SHA-256 hash for default test password "123456"
-  if (str === '123456') return '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
-  if (str === 'admin123') return '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash).toString(16).padStart(64, '0');
-}
-
-// Replicates CodigoPenaUtil.java logic: PENA-001, PENA-002, etc.
-export function calcularCodigoAtual(numeroPenas: number): string {
-  if (numeroPenas <= 0) return 'Nenhuma pena cadastrada';
-  return `PENA-${String(numeroPenas).padStart(3, '0')}`;
-}
-
-export function calcularProximoCodigo(numeroPenas: number): string {
-  return `PENA-${String(numeroPenas + 1).padStart(3, '0')}`;
-}
-
 // Compute hours worked between times (handles lunch break)
 export function calcularHorasTrabalhadas(
   inicio?: string,

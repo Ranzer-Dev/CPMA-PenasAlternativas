@@ -1,5 +1,0 @@
-# SQLite Database Configuration
-# O arquivo do banco será criado automaticamente se não existir
-db.url=jdbc:sqlite:penas_alternativas.db
-db.user=
-db.password=

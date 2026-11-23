@@ -33,14 +33,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@ActiveProfiles("postgres")
 @EnabledIf("isPostgresAvailable")
 public class TotemConcurrencyTest {
 
     static boolean isPostgresAvailable() {
         try {
             DriverManager.setLoginTimeout(2);
-            String url = "jdbc:postgresql://127.0.0.1:5432/cpma";
+            String url = System.getenv().getOrDefault("CPMA_DB_URL", "jdbc:postgresql://127.0.0.1:5432/cpma");
             String user = System.getenv().getOrDefault("CPMA_DB_USER", "postgres");
             String pass = System.getenv().getOrDefault("CPMA_DB_PASS", "postgres");
             try (Connection conn = DriverManager.getConnection(url, user, pass)) {

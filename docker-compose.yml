@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cpma-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_DB: ${CPMA_DB_NAME:-cpma}
+      POSTGRES_USER: ${CPMA_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${CPMA_DB_PASS:-postgres}
+    volumes:
+      - cpma_pgdata:/var/lib/postgresql/data
+
+volumes:
+  cpma_pgdata:

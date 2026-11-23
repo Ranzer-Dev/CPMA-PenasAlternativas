@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Continue"
+﻿$ErrorActionPreference = "Continue"
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "   INICIANDO CPMA - PC DO DELEGADO (SERVIDOR + PAINEL)    " -ForegroundColor Cyan
@@ -30,10 +30,10 @@ try {
     # Caso não esteja rodando como Administrador, segue normalmente
 }
 
-Write-Host "[1/4] Verificando Banco de Dados Local (127.0.0.1)..." -ForegroundColor Yellow
+Write-Host "[1/4] Verificando Banco de Dados PostgreSQL Local (127.0.0.1:5432)..." -ForegroundColor Yellow
 $pgCheck = Test-NetConnection -ComputerName "127.0.0.1" -Port 5432 -InformationLevel Quiet -WarningAction SilentlyContinue
 if (-not $pgCheck) {
-    Write-Host "  -> PostgreSQL nao detectado em 127.0.0.1:5432. Tentando iniciar container cpma-postgres (ou usando SQLite local)..." -ForegroundColor DarkYellow
+    Write-Host "  -> PostgreSQL nao detectado em 127.0.0.1:5432. Tentando iniciar container cpma-postgres..." -ForegroundColor DarkYellow
     docker start cpma-postgres 2>$null | Out-Null
     Start-Sleep -Seconds 2
 } else {

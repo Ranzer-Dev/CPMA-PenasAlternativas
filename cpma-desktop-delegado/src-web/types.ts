@@ -204,11 +204,3 @@ export interface BackendStatusResponse {
   database?: string;
 }
 
-export type ViewName =
-  | 'dashboard'
-  | 'usuarios'
-  | 'instituicoes'
-  | 'penas'
-  | 'registros'
-  | 'facial'
-  | 'auditoria';

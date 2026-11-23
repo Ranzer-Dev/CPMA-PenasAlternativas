@@ -13,8 +13,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
   onLoginSuccess,
   onNavigateRedefinir,
 }) => {
-  const [cpf, setCpf] = useState('123.456.789-00');
-  const [senha, setSenha] = useState('admin123');
+  const [cpf, setCpf] = useState('');
+  const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
@@ -180,8 +180,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-xs text-slate-500">Credencial padrão: admin123</span>
+            <div className="flex items-center justify-end text-sm">
               <button
                 type="button"
                 onClick={onNavigateRedefinir}
@@ -200,22 +199,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <span>{carregando ? 'Autenticando...' : 'Entrar no Sistema'}</span>
             </button>
           </form>
-
-          {/* Quick autofill helper */}
-          <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs text-slate-400">Ambiente CPMA Delegacia</span>
-            <button
-              type="button"
-              onClick={() => {
-                setCpf('123.456.789-00');
-                setSenha('admin123');
-                setErro(null);
-              }}
-              className="text-xs text-blue-600 hover:underline cursor-pointer font-medium"
-            >
-              Preencher dados padrão
-            </button>
-          </div>
         </div>
       </div>
     </div>

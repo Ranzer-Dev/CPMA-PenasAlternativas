@@ -1,47 +1,25 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
-const isWindows = process.platform === 'win32';
 const target = process.argv[2] || 'admin';
 const rootDir = path.resolve(__dirname, '..');
 
 let cmd;
-let args = [];
-
 if (target === 'admin') {
-    if (isWindows) {
-        cmd = path.join(rootDir, 'start_admin.bat');
-    } else {
-        cmd = 'bash';
-        args = [path.join(rootDir, 'scripts', 'start_admin.sh')];
-    }
+    cmd = path.join(rootDir, 'start_admin.bat');
 } else if (target === 'totem') {
-    if (isWindows) {
-        cmd = path.join(rootDir, 'start_totem.bat');
-    } else {
-        cmd = 'bash';
-        args = [path.join(rootDir, 'scripts', 'start_totem.sh')];
-    }
-} else if (target === 'totem-web' || target === 'web') {
-    if (isWindows) {
-        cmd = path.join(rootDir, 'start_totem_web.bat');
-    } else {
-        cmd = 'bash';
-        args = [path.join(rootDir, 'scripts', 'start_totem_web.sh')];
-    }
+    cmd = path.join(rootDir, 'start_totem.bat');
 } else if (target === 'test') {
-    if (isWindows) {
-        cmd = path.join(rootDir, 'test_all.bat');
-    } else {
-        cmd = 'bash';
-        args = [path.join(rootDir, 'scripts', 'test_all.sh')];
-    }
+    cmd = path.join(rootDir, 'test_all.bat');
+} else {
+    console.error(`Alvo desconhecido: ${target}. Use: admin, totem ou test.`);
+    process.exit(1);
 }
 
-const child = spawn(cmd, args, {
+const child = spawn(cmd, [], {
     stdio: 'inherit',
     cwd: rootDir,
-    shell: isWindows
+    shell: true
 });
 
 child.on('exit', (code) => {

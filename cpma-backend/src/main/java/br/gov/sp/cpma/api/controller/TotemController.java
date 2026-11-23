@@ -3,7 +3,6 @@ package br.gov.sp.cpma.api.controller;
 import br.gov.sp.cpma.api.dto.*;
 import br.gov.sp.cpma.domain.service.TotemService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,27 +13,16 @@ public class TotemController {
 
     private final TotemService totemService;
 
-    @Value("${spring.datasource.url:jdbc:sqlite}")
-    private String datasourceUrl;
-
     public TotemController(TotemService totemService) {
         this.totemService = totemService;
     }
 
-    @GetMapping({"", "/"})
-    public void redirecionarIndex(jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
-        response.sendRedirect("/api/v1/totem/index.html");
-    }
-
     @GetMapping("/status")
     public ResponseEntity<java.util.Map<String, String>> status() {
-        String dbType = (datasourceUrl != null && datasourceUrl.toLowerCase().contains("postgresql"))
-                ? "PostgreSQL"
-                : "SQLite";
         return ResponseEntity.ok(java.util.Map.of(
                 "status", "UP",
                 "service", "cpma-backend",
-                "database", dbType
+                "database", "PostgreSQL"
         ));
     }
 

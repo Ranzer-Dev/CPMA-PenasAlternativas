@@ -8,8 +8,8 @@ interface RedefinirSenhaViewProps {
 }
 
 export const RedefinirSenhaView: React.FC<RedefinirSenhaViewProps> = ({ onVoltar }) => {
-  const [cpf, setCpf] = useState('123.456.789-00');
-  const [respostaSecreta, setRespostaSecreta] = useState('Branco');
+  const [cpf, setCpf] = useState('');
+  const [respostaSecreta, setRespostaSecreta] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmaSenha, setConfirmaSenha] = useState('');
   const [sucesso, setSucesso] = useState(false);
@@ -111,17 +111,16 @@ export const RedefinirSenhaView: React.FC<RedefinirSenhaViewProps> = ({ onVoltar
             </div>
 
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
-              <p className="text-xs font-bold text-slate-600 uppercase">Pergunta de Segurança:</p>
-              <p className="text-sm font-medium text-slate-800">"Qual é a cor do seu cavalo branco?"</p>
+              <p className="text-xs font-bold text-slate-600 uppercase">Pergunta de Segurança</p>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mt-2 mb-1">
-                  Sua Resposta:
+                <label className="block text-xs font-semibold text-slate-600 mt-1 mb-1">
+                  Sua Resposta Secreta:
                 </label>
                 <input
                   type="text"
                   value={respostaSecreta}
                   onChange={(e) => setRespostaSecreta(e.target.value)}
-                  placeholder="Digite sua resposta secreta (Padrão: Branco)"
+                  placeholder="Digite sua resposta secreta"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                   required
                 />
